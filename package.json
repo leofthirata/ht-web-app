@@ -9,7 +9,8 @@
     "build": "ng build",
     "test": "ng test",
     "lint": "ng lint",
-    "e2e": "ng e2e"
+    "e2e": "ng e2e",
+    "gh-pages": "ng build --base-href 'https://leofth.github.io/ht-web-app/' --prod && npx ngh --dir=www/"
   },
   "private": true,
   "dependencies": {
@@ -40,6 +41,7 @@
     "@types/jasmine": "~3.6.0",
     "@types/jasminewd2": "~2.0.3",
     "@types/node": "^12.11.1",
+    "@types/web-bluetooth": "0.0.10",
     "@typescript-eslint/eslint-plugin": "4.16.1",
     "@typescript-eslint/parser": "4.16.1",
     "eslint": "^7.6.0",
