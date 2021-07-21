@@ -106,18 +106,38 @@ export class BluetoothService {
   public scanWifi(): Promise<boolean> {
     return new Promise(async resolve => {
       console.log("before scanwifiiiiiiii")
-      const data = '75a51081a4f1c66d2f9195c85d6e02534b0333ab4bbc813cd2edf794a6c3582d1b9451a5d5';
-      
+      // const data = '75a51081a4f1c66d2f9195c85d6e02534b0333ab4bbc813cd2edf794a6c3582d1b9451a5d5';
+      const data = '75a5300a7b44245d492a005caf3794075680a2905877626742abd0dbca4aedb5a886caef80318c4a186315952b95abd4ce30d34e2c9f7c3fb0f50a780571fef6381ad5a5d5';
       //converter data para hexa e depois colocar no arraybuffer
 
-      let buffer = new ArrayBuffer(data.length/32);
-      // let buffer = [];
-      for(let i = 0; (i*32) < data.length; 32*(i++)) {
-        buffer[i] = data.substring(i*32, (i+1)*32);
+      const str2ab = str => {
+        var buf = new ArrayBuffer(str.length/2); // 2 bytes for each char
+        var bufView = new Uint8Array(buf);
+        for (var i=0; i < str.length/2; i++) {
+          bufView[i] = parseInt(str.substring(i * 2, (i + 1)*2), 16);
+        }
+        console.log(bufView.length);
+        console.log(bufView);
+        return buf;
       }
-      console.log(buffer);
 
-      await this.m_writeCharacteristic.writeValue(buffer);
+      let buffer = str2ab(data);
+
+      // let bufferSize = data.length/32;
+      // let buffer = new ArrayBuffer(32);
+
+      // // let buffer = [];
+      // for(let j = 0; j < bufferSize; j++) {
+      //   for(let i = 0; i < data.length; i++) {
+      //     await this.m_writeCharacteristic.writeValue(buffer);
+      //     buffer[i] = data.substring(i, (i+1)*32);
+      //   }
+      //   console.log(buffer);
+      // }
+      for (let i = 0; i < data.length/32; i++) {
+        await this.m_writeCharacteristic.writeValue(buffer.slice(i*16, (i+1)*16));
+        console.log(buffer.slice(i*16, (i+1)*16));
+      }
       console.log("after scanwifiiiiiiii")
       resolve(true);
     });
