@@ -1,8 +1,8 @@
 /// <reference types="web-bluetooth" />
 
 import { Component } from '@angular/core';
-import { BluetoothService } from './ble/ble';
-import { WebSocketService } from './websocket/ws'
+import { BluetoothService } from './services/ble/ble';
+import { WebSocketService } from './services/websocket/ws'
 
 @Component({
   selector: 'app-home',
@@ -23,7 +23,7 @@ export class HomePage {
     await bleClient.connect();
     await bleClient.getService();
     await bleClient.getCharacteristics();
-    await bleClient.scanWifi();
+    await bleClient.scanWifi(15);
     // await bleClient.listen();
     // await bleClient.disconnect();
     console.log("oi");

@@ -1,3 +1,11 @@
+import { str2arr, arr2str, ascii2hex, str2ArrayBuffer, concatBuffers, pack } from "../../utils/utils";
+import { crc8, checkCrc8 } from "../../utils/crc8";
+import { encrypt, decrypt,  } from "../../utils/encrypt";
+import * as CryptoJS from 'crypto-js';
+
+const header = [0x75, 0xa5];
+const tail = [0xa5, 0xd5];
+
 export class BluetoothService {
   constructor(mac: string) {
     this.m_mac = mac;
@@ -7,7 +15,6 @@ export class BluetoothService {
   private m_name: string;
   private m_ble: Bluetooth;
   private m_device: BluetoothDevice;
-  // private m_device: BluetoothDevice[];
   private m_server: BluetoothRemoteGATTServer;
   private m_service: BluetoothRemoteGATTService;
   private m_readCharacteristic: BluetoothRemoteGATTCharacteristic;
@@ -103,45 +110,79 @@ export class BluetoothService {
     });
   }
 
-  public scanWifi(): Promise<boolean> {
+  private _write(buffer: ArrayBuffer, length: number): Promise<void> {
     return new Promise(async resolve => {
-      console.log("before scanwifiiiiiiii")
-      // const data = '75a51081a4f1c66d2f9195c85d6e02534b0333ab4bbc813cd2edf794a6c3582d1b9451a5d5';
-      const data = '75a5300a7b44245d492a005caf3794075680a2905877626742abd0dbca4aedb5a886caef80318c4a186315952b95abd4ce30d34e2c9f7c3fb0f50a780571fef6381ad5a5d5';
-      //converter data para hexa e depois colocar no arraybuffer
-
-      const str2ab = str => {
-        var buf = new ArrayBuffer(str.length/2); // 2 bytes for each char
-        var bufView = new Uint8Array(buf);
-        for (var i=0; i < str.length/2; i++) {
-          bufView[i] = parseInt(str.substring(i * 2, (i + 1)*2), 16);
-        }
-        console.log(bufView.length);
-        console.log(bufView);
-        return buf;
-      }
-
-      let buffer = str2ab(data);
-
-      // let bufferSize = data.length/32;
-      // let buffer = new ArrayBuffer(32);
-
-      // // let buffer = [];
-      // for(let j = 0; j < bufferSize; j++) {
-      //   for(let i = 0; i < data.length; i++) {
-      //     await this.m_writeCharacteristic.writeValue(buffer);
-      //     buffer[i] = data.substring(i, (i+1)*32);
-      //   }
-      //   console.log(buffer);
-      // }
-      for (let i = 0; i < data.length/32; i++) {
+      for (let i = 0; i < length/16; i++) {
         await this.m_writeCharacteristic.writeValue(buffer.slice(i*16, (i+1)*16));
-        console.log(buffer.slice(i*16, (i+1)*16));
       }
-      console.log("after scanwifiiiiiiii")
+    });
+  }
+
+  public scanWifi(ap: number): Promise<boolean> {
+    return new Promise(async resolve => {
+      // const data = '75a5300a7b44245d492a005caf3794075680a2905877626742abd0dbca4aedb5a886caef80318c4a186315952b95abd4ce30d34e2c9f7c3fb0f50a780571fef6381ad5a5d5';
+      // const scanCmd = this._createWifiScanCmd(ap);
+      const scanCmd = this._createWifiConnCmd('Leo', '12079412');
+      const request = await this._createRequest(scanCmd);
+      // const buffer = str2ArrayBuffer(request.value);
+      console.log(request.value.byteLength);
+      await this._write(request.value, request.value.byteLength);
+
       resolve(true);
     });
   }
+
+  private _createWifiScanCmd(ap: number): Number[] {
+    return [0x01, ap];
+  }
+
+  private _createWifiConnCmd(ssid: String, pswd: String): Number[] {
+    let cmd = str2arr('02' + ascii2hex(ssid) + '00' + ascii2hex(pswd) + '00');
+
+    for(let i = 0; i < 12; i++) {
+      cmd[cmd.length] = 0x00;
+    }
+
+    return cmd;
+  }
+
+  private _createFindMeCmd(): Number[] {
+    return [0x03, 0x00];
+  }
+
+  private async _createRequest(cmd) {
+    let crc = crc8(cmd);
+
+    let cmd_crc = arr2str(cmd) + (crc < 10 ? '0' + crc.toString(16) : crc.toString(16));
+
+    const key = '02E596CDAB2D81320A94BFD6D52BAFAE';
+
+    let data = await encrypt(cmd_crc, key);
+
+    let length = Math.ceil(cmd_crc.length/32) + '0';
+
+    let pack = concatBuffers(header, str2ArrayBuffer(length));
+    pack = concatBuffers(pack, data.package);
+    pack = concatBuffers(pack, tail);
+
+    let request = {
+      'value': pack,
+      'header': header,
+      'iv': data.iv,
+      'data': cmd,
+      'crc': crc,
+      'enc': data.enc,
+      'tail': tail,
+      'key': key.toString()
+    };
+
+    console.log("Request to be sent:");
+    console.log(request);
+
+    return request;
+  } 
+
+  // public createRequest()
 
   // public write()
 }
