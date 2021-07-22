@@ -1,5 +1,5 @@
-export function str2arr(str: String): Number[] {
-  let arr = [];
+export function str2arr(str: String): Uint8Array {
+  let arr = new Uint8Array[str.length/2];
 
   for(let i = 0; i < str.length/2; i++) {
     arr[i] = parseInt((str.substring(i*2, i*2 + 2)), 16);

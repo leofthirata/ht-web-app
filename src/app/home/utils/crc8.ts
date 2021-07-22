@@ -17,29 +17,31 @@ const crc8_table = [
   0x7F,0x62,0x45,0x58,0x0B,0x16,0x31,0x2C,0x97,0x8A,0xAD,0xB0,0xE3,0xFE,0xD9,0xC4,
 ];
   
-export function crc8(data: Uint8Array): Number {
-  let crc = 0xFF;
+export function crc8(data: Uint8Array): Promise<Uint8Array> {
+  return new Promise(resolve => {
+    let crc = 0xFF;
 
-  for(let i = 0; i < data.length; i++) {
-      crc = crc8_table[crc ^ data[i]];
-  }
-
-  return crc ^ 0xFF;
+    for(let i = 0; i < data.length; i++) {
+        crc = crc8_table[crc ^ data[i]];
+    }
+  
+    resolve(new Uint8Array([crc ^ 0xFF]));
+  })
 }
 
-export function checkCrc8(msg: String): Promise<boolean> {
-  return new Promise (resolve => {
-    let data = new Uint8Array;
-    for(let i = 0; i < (msg.length-2)/2; i++) {
-      data[i] = parseInt(msg.substring(i*2, (i+1)*2),16);
-    }
-    let crc = crc8(data);
-    let dataCrc = parseInt(msg.substring(msg.length-2,msg.length),16)
+// export function checkCrc8(msg: String): Promise<boolean> {
+//   return new Promise (resolve => {
+//     let data = new Uint8Array;
+//     for(let i = 0; i < (msg.length-2)/2; i++) {
+//       data[i] = parseInt(msg.substring(i*2, (i+1)*2),16);
+//     }
+//     let crc = crc8(data);
+//     let dataCrc = parseInt(msg.substring(msg.length-2,msg.length),16)
 
-    if (crc === dataCrc) {
-      resolve(true);
-    } else {
-      resolve(false);
-    }
-  });
-}
+//     if (crc === dataCrc) {
+//       resolve(true);
+//     } else {
+//       resolve(false);
+//     }
+//   });
+// }
