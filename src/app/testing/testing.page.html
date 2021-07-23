@@ -1,0 +1,20 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>testing</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="auth-form">
+  <ion-grid>
+    <ion-row>
+      <ion-col align-self-center>
+        <ion-button (click)="getKey()" [routerLink]="['/testing']" expand="block" color="primary">GET_KEY</ion-button>
+        <ion-button (click)="setSecret()" [routerLink]="['/testing']" expand="block" color="primary">SET_SECRET</ion-button>
+        <ion-button (click)="setTicket()" [routerLink]="['/testing']" expand="block" color="primary">SET_TICKET</ion-button>
+        <ion-button (click)="register()" [routerLink]="['/testing']" expand="block" color="primary">BACKEND</ion-button>
+
+        <span class="divider line one-line">or</span>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+</ion-content>

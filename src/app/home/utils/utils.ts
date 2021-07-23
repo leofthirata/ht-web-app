@@ -17,6 +17,14 @@ export function ascii2hex(str: String): String {
   return arr1.join('');
 }
 
+export function hex2ascii(hexx) {
+  var hex = hexx.toString();
+  var str = '';
+  for (var i = 0; (i < hex.length && hex.substr(i, 2) !== '00'); i += 2)
+      str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
+  return str.substring(2);
+}
+
 export function arr2str(arr: Uint8Array): String {
   let res = "";
 
@@ -68,4 +76,22 @@ function concatTypedArrays(a, b) { // a, b TypedArray of same type
   c.set(a, 0);
   c.set(b, a.length);
   return c;
+}
+
+export function str2Uint8arr(str) {
+  let arr = new Uint8Array(str.length / 2);
+
+  for(let i = 0; i < str.length/2; i++) {
+    arr[i] = parseInt((str.substring(i*2, i*2 + 2)), 16);
+  }
+
+  return arr;
+}
+
+export function uint8ArrayToHexString(val: Uint8Array): string {
+  const rslt = val.reduce(
+    (str, value) => str + value.toString(16).padStart(2, '0'),
+    '',
+  );
+  return rslt.toUpperCase();
 }

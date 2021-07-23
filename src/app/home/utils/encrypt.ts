@@ -36,86 +36,40 @@ export async function encrypt(msg: Uint8Array, key: Uint8Array) {
   };
 }
 
-// export function decrypt(msg, key: CryptoJS.lib.WordArray) {
-//   var iv = CryptoJS.enc.Hex.parse(msg.toString('hex').substring(0, iv_size));
-//   var encrypted = CryptoJS.enc.Hex.parse(msg.toString('hex').substring(iv_size)).toString(CryptoJS.enc.Base64);
+export function generateKeyRSA(size: number) {
+  const rsa = forge.pki.rsa;
 
-//   var decrypted = CryptoJS.AES.decrypt(encrypted, key, { 
-//     iv: iv, 
-//     mode: CryptoJS.mode.CBC,
-//     padding: CryptoJS.pad.Pkcs7
-//   });
+  return rsa.generateKeyPair({bits: size, workers: 2});
+}
 
-//   return decrypted.toString(CryptoJS.enc.Hex);
-// }
+export function importPubKeyRSA(key: string) {
+  return forge.pki.publicKeyFromPem(key);
+}
 
-// export function generateKeyRSA(size: number) {
-//   var rsa = forge.pki.rsa;
+export function importPrivKeyRSA(key: string) {
+  return forge.pki.privateKeyFromPem(key);
+}
 
-//   return rsa.generateKeyPair({bits: size, workers: 2});
-// }
+export function getPublicKey(key) {
+  return key.publicKey;
+}
 
-// export function importPubKeyRSA(key: string) {
-//   return forge.pki.publicKeyFromPem(key);
-// }
+export function getPrivateKey(key) {
+  return key.privateKey;
+}
 
-// export function importPrivKeyRSA(key: string) {
-//   return forge.pki.privateKeyFromPem(key);
-// }
+export function encryptRSA(msg: string, key): forge.Base64 {
+  return key.encrypt(msg);
+}
 
-// export function getPublicKey(key) {
-//   return key.publicKey;
-// }
+export function decryptRSA(enc, key): forge.Utf8 {
+  return forge.util.encodeUtf8(key.decrypt(enc));
+}
 
-// export function getPrivateKey(key) {
-//   return key.privateKey;
-// }
+export function printPubKeyRSA(key) {
+  console.log(forge.pki.publicKeyToPem(key));
+}
 
-// export function encryptRSA(msg: string, key): forge.Base64 {
-//   return forge.util.encode64(key.encrypt(msg));
-// }
-
-// export function decryptRSA(enc: string, key): forge.Utf8 {
-//   return forge.util.encodeUtf8(key.decrypt(enc));
-// }
-
-// export function printPubKeyRSA(key) {
-//   console.log(forge.pki.publicKeyToPem(key));
-// }
-
-// export function printPrivKeyRSA(key) {
-//   console.log(forge.pki.privateKeyToPem(key));
-// }
-
-// export function test() {
-//   // var key = generateKeyRSA(1024);
-//   // var pub = getPublicKey(key);
-//   // var priv = getPrivateKey(key);
-
-//   // console.log(forge.pki.publicKeyToPem(pub));
-//   // console.log(forge.pki.privateKeyToPem(priv));
-
-//   // var encrypted = encryptRSA("hausenn", pub);
-//   // console.log("encrypted:", forge.util.encode64(encrypted));
-//   // var decrypted = priv.decrypt(encrypted);
-//   // console.log("decrypted:", decrypted);
-  
-//   // encrypted = encryptRSA("xablau", priv);
-//   // console.log("encrypted:", forge.util.encode64(encrypted));
-
-//   // decrypted = priv.decrypt(encrypted);
-//   // console.log("decrypted:", decrypted);
-
-//   let newKey = `-----BEGIN PUBLIC KEY-----
-//   MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDDqYfGcHnUguCljDyguS8LjbXJ 
-//   jidGkvMYUhipEF9a7fSjbqxZ40hKqFitXIxpgsL94rUcWeBM3BTQ7+g233t2lYLW 
-//   Mh6FYaf7+qu7xcE7Upni449ngFzl/vtQsTQU30FZ12iOHh9tPramopRV0IkKnpbO 
-//   FuDT7TD+R3wmiRqppwIDAQAB
-//   -----END PUBLIC KEY-----`;
-
-//   var key = importPubKeyRSA(newKey);
-//   var encrypted = encryptRSA("hausenn", key);
-//   console.log("encrypted:", forge.util.encode64(encrypted));
-// }
-
-// // test();
+export function printPrivKeyRSA(key) {
+  console.log(forge.pki.privateKeyToPem(key));
+}
