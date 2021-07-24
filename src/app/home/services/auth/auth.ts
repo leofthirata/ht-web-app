@@ -21,6 +21,4 @@ export class AuthService {
   public getPrivKey() {
     return this.m_privKey;
   }
-
-  
 }

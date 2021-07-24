@@ -24,6 +24,11 @@ export class BluetoothService {
   private m_readCharacteristic: BluetoothRemoteGATTCharacteristic;
   private m_writeCharacteristic:BluetoothRemoteGATTCharacteristic;
 
+  private readonly BUFFER_SIZE = 1024;
+  private m_buffer = new Uint8Array(this.BUFFER_SIZE);
+  private m_index = 0;
+  private m_rslt;
+
   public find(): Promise<boolean> {
     return new Promise(async resolve => {
       this.m_device = await navigator.bluetooth.requestDevice({
@@ -103,26 +108,48 @@ export class BluetoothService {
     });
   }
 
-  public listen(): Promise<boolean> {
+  private _listen(): Promise<boolean> {
     return new Promise(async resolve => {
       console.log('listening');
       const notify = await this.m_readCharacteristic.startNotifications();
-      notify.addEventListener('characteristicvaluechanged', this._read);
+      notify.addEventListener('characteristicvaluechanged', this._read.bind(this));
       resolve(true);
     });
   }
 
-  private _read(event) {
+  private async _read(event) {
     const data = new Uint8Array(event.target.value.buffer);
-    console.log(data);
+    await this._parsePacket(data);
+  }
+
+  private async _parsePacket(data: Uint8Array): Promise<void> {
+    this.m_buffer.set(data, this.m_index);
+    this.m_index += data.length;
+    
+    if (this.m_buffer[0] != 0x75 || this.m_buffer[1] != 0xa5) {
+      this.m_index = 0;
+      console.warn('Dropped packet: [' + data.toString() + ']');
+    }
+
+    // End of packet, assemble  and report.
+    if (
+      this.m_buffer[this.m_index - 2] == 0xa5 &&
+      this.m_buffer[this.m_index - 1] == 0xd5
+    ) {
+      console.log('Received packet: [' + this.m_buffer.subarray(0, this.m_index).toString() + ']');
+      const id = this.m_index;
+      this.m_index = 0;
+
+      const response = new Packet();
+      this.m_rslt = await response.decode(this.m_buffer.subarray(0, id));
+      console.log(this.m_rslt);
+    } 
   }
 
   private _write(buffer: ArrayBuffer, length: number): Promise<void> {
     return new Promise(async resolve => {
-      console.log(buffer);
       for (let i = 0; i < length/16; i++) {
         await this.m_writeCharacteristic.writeValue(buffer.slice(i*16, (i+1)*16));
-        console.log('aa');
       }
     });
   }
@@ -130,71 +157,71 @@ export class BluetoothService {
   public scanWifi(ap: number): Promise<boolean> {
     return new Promise(async resolve => {
       const request = new Packet(bleMode.SCAN);
+
+      console.log(request);
+
       const data = {
         "ap": ap,
         "ssid": null,
         "pswd": null 
       }
+
       await request.setData(data);
-      console.log(request);
+
       this._write(request.getPackage().buffer, request.getPackage().byteLength);
+
       await this.m_readCharacteristic.readValue();
-      this.listen();
+      
+      await this._listen();
+      
       resolve(true);
     });
   }
 
-  // private _createWifiScanCmd(ap: number): Number[] {
-  //   return [0x01, ap];
-  // }
+  public connectToWifi(ssid: string, pswd: string): Promise<boolean> {
+    return new Promise(async resolve => {
+      const request = new Packet(bleMode.CONN);
 
-  // private _createWifiConnCmd(ssid: String, pswd: String): Number[] {
-  //   let cmd = str2arr('02' + ascii2hex(ssid) + '00' + ascii2hex(pswd) + '00');
+      console.log(request);
 
-  //   for(let i = 0; i < 12; i++) {
-  //     cmd[cmd.length] = 0x00;
-  //   }
+      const data = {
+        "ap": null,
+        "ssid": ssid,
+        "pswd": pswd 
+      }
 
-  //   return cmd;
-  // }
+      await request.setData(data);
 
-  // private _createFindMeCmd(): Number[] {
-  //   return [0x03, 0x00];
-  // }
+      this._write(request.getPackage().buffer, request.getPackage().byteLength);
 
-  // private async _createRequest(cmd) {
-  //   let crc = crc8(cmd);
+      await this.m_readCharacteristic.readValue();
 
-  //   let cmd_crc = arr2str(cmd) + (crc < 10 ? '0' + crc.toString(16) : crc.toString(16));
+      await this._listen();
 
-  //   const key = '02E596CDAB2D81320A94BFD6D52BAFAE';
+      resolve(true);
+    });
+  }
 
-  //   let data = await encrypt(cmd_crc, key);
+  public findMe(): Promise<boolean> {
+    return new Promise(async resolve => {
+      const request = new Packet(bleMode.FIND_ME);
 
-  //   let length = Math.ceil(cmd_crc.length/32) + '0';
+      console.log(request);
 
-  //   let pack = concatBuffers(header, str2ArrayBuffer(length));
-  //   pack = concatBuffers(pack, data.package);
-  //   pack = concatBuffers(pack, tail);
+      await request.setData();
 
-  //   let request = {
-  //     'value': pack,
-  //     'header': header,
-  //     'iv': data.iv,
-  //     'data': cmd,
-  //     'crc': crc,
-  //     'enc': data.enc,
-  //     'tail': tail,
-  //     'key': key.toString()
-  //   };
+      this._write(request.getPackage().buffer, request.getPackage().byteLength);
 
-  //   console.log("Request to be sent:");
-  //   console.log(request);
+      await this.m_readCharacteristic.readValue();
 
-  //   return request;
-  // } 
+      await this._listen();
 
-  // public createRequest()
+      resolve(true);
+    });
+  }
 
-  // public write()
+  public getIp() {
+    return this.m_rslt;
+  }
+
 }

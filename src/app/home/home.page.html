@@ -14,18 +14,40 @@
 <ion-header>
   <ion-toolbar>
     <ion-title>
-      Ionic 5 Form
+      Hausenn Products Testing
     </ion-title>
+    <ion-label slot="end">Address: </ion-label>
+    <ion-input [(ngModel)]="address" class="address" slot="end" [disabled]="connected"></ion-input>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="auth-form">
+  <ion-item> 
+    <ion-label>
+      Hausenn Products
+    </ion-label>
+    <ion-select placeholder="Choose a product">
+      <ion-select-option value="one">
+        ONE
+      </ion-select-option>
+      <ion-select-option value="lumina">
+        Lumina
+      </ion-select-option>
+      <ion-select-option value="tbd">
+        tbd
+      </ion-select-option>
+    </ion-select>
+  </ion-item>
+</ion-content>
+
+  <ion-content class="auth-form">
   <ion-grid>
     <ion-row>
       <ion-col align-self-center>
-        <ion-button (click)="test()" [routerLink]="['/testing']" expand="block" color="primary">Register</ion-button>
-
-        <span class="divider line one-line">or</span>
+        <ion-button (click)="deviceSelectionOnClick()" expand="block" color="primary" >SELECT DEVICE</ion-button>
+        <ion-button (click)="scanWifiOnClick()" expand="block" color="primary" [disabled]="!deviceSelected" >SCAN WIFI</ion-button>
+        <ion-button (click)="findMeOnClick()" expand="block" color="primary" [disabled]="!deviceSelected" >FIND_ME</ion-button>
+        <ion-button (click)="connectToWifiOnClick()" [routerLink]="['/testing']" expand="block" color="primary" [disabled]="!deviceSelected" >CONNECT TO WIFI</ion-button>
       </ion-col>
     </ion-row>
   </ion-grid>

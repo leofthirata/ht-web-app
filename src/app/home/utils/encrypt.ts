@@ -3,7 +3,7 @@ import { str2ArrayBuffer, concatBuffers } from "./utils";
 
 const iv_size = 32;
 
-export async function encrypt(msg: Uint8Array, key: Uint8Array) {
+export async function encrypt(msg: Uint8Array, key: Uint8Array): Promise<any> {
   const importedKey = await window.crypto.subtle.importKey(
     "raw", 
     key,
@@ -34,6 +34,29 @@ export async function encrypt(msg: Uint8Array, key: Uint8Array) {
     "iv": iv,
     "enc": encrypted
   };
+}
+
+export async function decrypt(msg: Uint8Array, iv: Uint8Array, key: Uint8Array): Promise<Uint8Array> {
+  const importedKey = await window.crypto.subtle.importKey(
+    "raw", 
+    key,
+    {   
+      name: "AES-CBC",
+    },
+    false, 
+    ["encrypt", "decrypt"] 
+  );
+
+  const decrypted = await window.crypto.subtle.decrypt(
+    {
+      name: "AES-CBC",
+      iv,
+    },
+    importedKey, 
+    msg
+  );
+
+  return new Uint8Array(decrypted);
 }
 
 export function generateKeyRSA(size: number) {
