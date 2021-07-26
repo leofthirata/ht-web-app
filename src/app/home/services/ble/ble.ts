@@ -23,6 +23,9 @@ export class BluetoothService {
   private m_service: BluetoothRemoteGATTService;
   private m_readCharacteristic: BluetoothRemoteGATTCharacteristic;
   private m_writeCharacteristic:BluetoothRemoteGATTCharacteristic;
+  private readonly HAUSENN_READ_CHARACTERISTIC = '3b274ac1-e910-4188-95aa-452018d93750';
+  private readonly HAUSENN_WRITE_CHARACTERISTIC ='bf6d9667-bd7f-4e33-a608-21520546c82d';
+  private readonly HAUSENN_SERVICE_UUID = '000075a5-0000-1000-8000-00805f9b34fb';
 
   private readonly BUFFER_SIZE = 1024;
   private m_buffer = new Uint8Array(this.BUFFER_SIZE);
@@ -39,11 +42,6 @@ export class BluetoothService {
         ] 
       });
 
-      // this.m_device.addEventListener('advertisementreceived', (event) => {
-      //   console.log('> Received advertisement from "' + this.m_device.name + '"...');
-      // });
-      // await this.m_device.watchAdvertisements();
-          
       if (this.m_device) {
         console.log("find true");
         resolve(true);
@@ -69,7 +67,7 @@ export class BluetoothService {
 
   public disconnect(): Promise<boolean> {
     return new Promise(async resolve => {
-      await this.m_device.gatt.disconnect();
+      this.m_device.gatt.disconnect();
       console.log("disc");
       resolve(true);
     });
@@ -77,7 +75,7 @@ export class BluetoothService {
 
   public getService(): Promise<boolean> {
     return new Promise(async resolve => {
-      this.m_service = await this.m_device.gatt.getPrimaryService('000075a5-0000-1000-8000-00805f9b34fb');
+      this.m_service = await this.m_device.gatt.getPrimaryService(this.HAUSENN_SERVICE_UUID);
       console.log(this.m_service);
       if (this.m_service) {
         console.log("svc true");
@@ -92,9 +90,9 @@ export class BluetoothService {
   public getCharacteristics(): Promise<boolean> {
     return new Promise(async resolve => {
       this.m_readCharacteristic = await this.m_service.getCharacteristic(
-              '3b274ac1-e910-4188-95aa-452018d93750');
+              this.HAUSENN_READ_CHARACTERISTIC);
       this.m_writeCharacteristic = await this.m_service.getCharacteristic(
-        'bf6d9667-bd7f-4e33-a608-21520546c82d');
+              this.HAUSENN_WRITE_CHARACTERISTIC);
 
       console.log(this.m_readCharacteristic);
       console.log(this.m_writeCharacteristic);
@@ -173,7 +171,7 @@ export class BluetoothService {
       await this.m_readCharacteristic.readValue();
       
       await this._listen();
-      
+
       resolve(true);
     });
   }
@@ -210,11 +208,13 @@ export class BluetoothService {
 
       await request.setData();
 
+      await this._listen();
+
       this._write(request.getPackage().buffer, request.getPackage().byteLength);
 
       await this.m_readCharacteristic.readValue();
 
-      await this._listen();
+      console.log('find me end');
 
       resolve(true);
     });

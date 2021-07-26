@@ -70,7 +70,6 @@ export class PacketResponse {
         'auth': new TextDecoder().decode(this.m_data.subarray(this.m_data.length - 2, this.m_data.length - 1)),
         'ciph': new TextDecoder().decode(this.m_data.subarray(this.m_data.length - 1, this.m_data.length)),
       };
-      console.log(res);
       resolve(res);
     });
     // TODO: print rssi, authmode and cipher correctly

@@ -2,7 +2,6 @@
 
 import { Component } from '@angular/core';
 import { BluetoothService } from './services/ble/ble';
-import { WebSocketService } from './services/websocket/ws'
 import { NavController } from '@ionic/angular';
 
 @Component({
@@ -14,40 +13,52 @@ import { NavController } from '@ionic/angular';
 export class HomePage {
   private m_ble: BluetoothService;
   public deviceSelected = false;
+  public product = "ONE";
+  public wifiSsid = "PADOTEC";
+  public wifiPassword = "P@d0t3c2021";
+  public bleMac = "7C9EBDD71678";
 
   constructor(private nav: NavController) {}
 
   public async deviceSelectionOnClick() {
-    this.m_ble = new BluetoothService('7C9EBDD71678');
+    this.m_ble = new BluetoothService(this.bleMac);
     this.deviceSelected = true;
-  }
-
-  public async scanWifiOnClick() {
     await this.m_ble.find();
     await this.m_ble.connect();
     await this.m_ble.getService();
     await this.m_ble.getCharacteristics();
-    await this.m_ble.findMe();
-    await this.m_ble.disconnect();
+    console.log(this.wifiSsid);
+    console.log(this.wifiPassword);
+    console.log(this.product);
+  }
+
+  //TODO: disconnect after getting IP
+  public async scanWifiOnClick() {
+    console.log(this.m_ble);
+    // await this.m_ble.find();
+    // await this.m_ble.connect();
+    // await this.m_ble.getService();
+    // await this.m_ble.getCharacteristics();
+    await this.m_ble.scanWifi(15);
+    // await this.m_ble.disconnect();
   }
 
   public async findMeOnClick() {
-    await this.m_ble.find();
-    await this.m_ble.connect();
-    await this.m_ble.getService();
-    await this.m_ble.getCharacteristics();
+    // await this.m_ble.find();
+    // await this.m_ble.connect();
+    // await this.m_ble.getService();
+    // await this.m_ble.getCharacteristics();
     await this.m_ble.findMe();
-    await this.m_ble.disconnect();
+    // await this.m_ble.disconnect();
   }
 
   public async connectToWifiOnClick() {
-    await this.m_ble.find();
-    await this.m_ble.connect();
-    await this.m_ble.getService();
-    await this.m_ble.getCharacteristics();
-    await this.m_ble.connectToWifi('Leo', '12079412');
-    this.pushToNextScreenWithParams('testing', this.m_ble.getIp());
-    await this.m_ble.disconnect();
+    // await this.m_ble.find();
+    // await this.m_ble.connect();
+    // await this.m_ble.getService();
+    // await this.m_ble.getCharacteristics();
+    await this.m_ble.connectToWifi(this.wifiSsid, this.wifiPassword);
+    this.pushToNextScreenWithParams('authentication', this.m_ble.getIp());
   }
 
   private pushToNextScreenWithParams(pageUrl: any, params: any) {
