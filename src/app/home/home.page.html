@@ -16,8 +16,8 @@
     <ion-title>
       Hausenn Products Testing
     </ion-title>
-    <ion-label slot="end">Address: </ion-label>
-    <ion-input [(ngModel)]="address" class="address" slot="end" [disabled]="connected"></ion-input>
+    <!-- <ion-label slot="end">Address: </ion-label>
+    <ion-input [(ngModel)]="address" class="address" slot="end" [disabled]="connected"></ion-input> -->
   </ion-toolbar>
 </ion-header>
 
@@ -27,27 +27,36 @@
       Hausenn Products
     </ion-label>
     <ion-select placeholder="Choose a product">
-      <ion-select-option value="one">
-        ONE
-      </ion-select-option>
-      <ion-select-option value="lumina">
-        Lumina
-      </ion-select-option>
-      <ion-select-option value="tbd">
-        tbd
-      </ion-select-option>
+      <ion-select-option value="one">ONE</ion-select-option>
+      <ion-select-option value="lumina">Lumina</ion-select-option>
+      <ion-select-option value="tbd">tbd</ion-select-option>
     </ion-select>
   </ion-item>
-</ion-content>
 
-  <ion-content class="auth-form">
+<!-- Input with placeholder -->
+<ion-item>
+  <ion-label>Wi-Fi Configuration</ion-label>
+  </ion-item>
+  <ion-item>
+  <ion-input clearInput value="PADOTEC" placeholder="Enter access point name (ssid) "></ion-input>
+  </ion-item>
+  
+  <ion-item>
+  <ion-input clearInput value="P@d0t3c2021" placeholder="Enter access point password "></ion-input>
+  </ion-item>
+  
+  <!-- <ion-input value="Disabled" disabled></ion-input>
+  
+  Readonly input
+  <ion-input value="Readonly" readonly></ion-input> -->
+
   <ion-grid>
     <ion-row>
-      <ion-col align-self-center>
-        <ion-button (click)="deviceSelectionOnClick()" expand="block" color="primary" >SELECT DEVICE</ion-button>
-        <ion-button (click)="scanWifiOnClick()" expand="block" color="primary" [disabled]="!deviceSelected" >SCAN WIFI</ion-button>
-        <ion-button (click)="findMeOnClick()" expand="block" color="primary" [disabled]="!deviceSelected" >FIND_ME</ion-button>
-        <ion-button (click)="connectToWifiOnClick()" [routerLink]="['/testing']" expand="block" color="primary" [disabled]="!deviceSelected" >CONNECT TO WIFI</ion-button>
+      <ion-col>
+        <ion-button (click)="deviceSelectionOnClick()" expand="block" color="dark" >SELECT DEVICE</ion-button>
+        <ion-button (click)="scanWifiOnClick()" expand="block" color="dark" [disabled]="!deviceSelected" >SCAN WIFI</ion-button>
+        <ion-button (click)="findMeOnClick()" expand="block" color="dark" [disabled]="!deviceSelected" >FIND_ME</ion-button>
+        <ion-button (click)="connectToWifiOnClick()" [routerLink]="['/testing']" expand="block" color="dark" [disabled]="!deviceSelected" >CONNECT TO WIFI</ion-button>
       </ion-col>
     </ion-row>
   </ion-grid>

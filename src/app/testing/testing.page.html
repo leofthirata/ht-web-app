@@ -1,12 +1,12 @@
 <ion-header>
   <ion-toolbar>
     <ion-title>Authentication</ion-title>
-    <ion-label slot="end">Address: </ion-label>
-    <ion-input [(ngModel)]="address" class="address" slot="end" [disabled]="connected"></ion-input>
-    <ion-button (click)="onConnect()" color="dark" size="medium" slot="end" [hidden]="connected"> Connect </ion-button>
-    <ion-button (click)="onDisconnect()" color="dark" size="medium" slot="end" fill="clear" [hidden]="!connected">
-      Disconnect
-    </ion-button>
+    <!-- <ion-label slot="end">Address: </ion-label>
+    <ion-input [(ngModel)]="address" class="address" slot="end" [disabled]="connected"></ion-input> -->
+    <!-- <ion-button (click)="onConnect()" color="dark" size="medium" slot="end" [hidden]="connected"> Connect </ion-button>
+    <ion-button (click)="onDisconnect()" color="dark" size="medium" slot="end" fill="clear" [hidden]="!connected"> -->
+      <!-- Disconnect
+    </ion-button> -->
   </ion-toolbar>
 </ion-header>
 
@@ -14,10 +14,10 @@
   <ion-grid>
     <ion-row>
       <ion-col align-self-center>
-        <ion-button (click)="getKey()" [routerLink]="['/testing']" expand="block" color="primary" [disabled]="gotKey" >GET_KEY</ion-button>
-        <ion-button (click)="setSecret()" [routerLink]="['/testing']" expand="block" color="primary" [disabled]="secretSet" >SET_SECRET</ion-button>
-        <ion-button (click)="registerDevice()" [routerLink]="['/testing']" expand="block" color="primary" [disabled]="deviceRegistered">REGISTER_DEVICE</ion-button>
-        <ion-button (click)="setTicket()" [routerLink]="['/testing']" expand="block" color="primary" [disabled]="ticketSet" >SET_TICKET</ion-button>
+        <ion-button (click)="getKey()" [routerLink]="['/testing']" expand="block" color="dark" [disabled]="gotKey" >GET_KEY</ion-button>
+        <ion-button (click)="setSecret()" [routerLink]="['/testing']" expand="block" color="dark" [disabled]="secretSet" >SET_SECRET</ion-button>
+        <ion-button (click)="registerDevice()" [routerLink]="['/testing']" expand="block" color="dark" [disabled]="deviceRegistered">REGISTER_DEVICE</ion-button>
+        <ion-button (click)="setTicket()" [routerLink]="['/testing']" expand="block" color="dark" [disabled]="ticketSet" >SET_TICKET</ion-button>
       </ion-col>
     </ion-row>
   </ion-grid>
