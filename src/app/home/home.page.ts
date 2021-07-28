@@ -35,33 +35,15 @@ export class HomePage {
   //TODO: disconnect after getting IP
   public async scanWifiOnClick() {
     console.log(this.m_ble);
-    // await this.m_ble.find();
-    // await this.m_ble.connect();
-    // await this.m_ble.getService();
-    // await this.m_ble.getCharacteristics();
     await this.m_ble.scanWifi(15);
-    // await this.m_ble.disconnect();
   }
 
   public async findMeOnClick() {
-    // await this.m_ble.find();
-    // await this.m_ble.connect();
-    // await this.m_ble.getService();
-    // await this.m_ble.getCharacteristics();
     await this.m_ble.findMe();
-    // await this.m_ble.disconnect();
   }
 
   public async connectToWifiOnClick() {
-    // await this.m_ble.find();
-    // await this.m_ble.connect();
-    // await this.m_ble.getService();
-    // await this.m_ble.getCharacteristics();
     await this.m_ble.connectToWifi(this.wifiSsid, this.wifiPassword);
-    this.pushToNextScreenWithParams('authentication', this.m_ble.getIp());
-  }
-
-  private pushToNextScreenWithParams(pageUrl: any, params: any) {
-    this.nav.navigateForward(pageUrl, { state: params });
+    this.nav.navigateForward('authentication', { state: this.m_ble.getIp() });
   }
 }

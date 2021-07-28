@@ -27,13 +27,9 @@ export class AuthenticationPage implements OnInit {
   public deviceRegistered = false;
 
   constructor(public router: Router) {
-    console.log('bbbbbbbbbbb');
-    this.m_ip = this.router.getCurrentNavigation().extras.state;
-    console.log(this.m_ip); 
-    if (router.getCurrentNavigation().extras.state) {
+    if (this.router.getCurrentNavigation().extras.state) {
       this.m_ip = this.router.getCurrentNavigation().extras.state;
       console.log(this.m_ip); 
-      console.log('aaaaaaaaaaaaaaaaaaaaa');
     }
   }
 

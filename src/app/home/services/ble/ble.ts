@@ -37,7 +37,7 @@ export class BluetoothService {
       this.m_device = await navigator.bluetooth.requestDevice({
         // acceptAllDevices: true
         filters: [ 
-          {name: `Hausenn ONE:${this.m_name}`},
+          // {name: `Hausenn ONE:${this.m_name}`},
           {services: [0x75A5]}
         ] 
       });
@@ -110,38 +110,58 @@ export class BluetoothService {
     return new Promise(async resolve => {
       console.log('listening');
       const notify = await this.m_readCharacteristic.startNotifications();
-      notify.addEventListener('characteristicvaluechanged', this._read.bind(this));
-      resolve(true);
+      // notify.addEventListener('characteristicvaluechanged', this._read.bind(this));
+      notify.addEventListener('characteristicvaluechanged', async ev => {
+        const target = (<BluetoothRemoteGATTCharacteristic>ev.target);
+        const data = new Uint8Array(target.value.buffer);
+        const rslt = await this._parsePacket(data);
+        this.m_rslt = rslt;
+        console.log('000000000000000000000000000')
+        console.log(rslt);
+        if (this.isIpValid(rslt)) {
+          console.log('111111111111111111111111111')
+          this.m_rslt = rslt;
+          resolve(true);
+        }
+      });
+      // if (this.m_rslt) {
+    // resolve(true);
+      // }
     });
   }
 
   private async _read(event) {
-    const data = new Uint8Array(event.target.value.buffer);
-    await this._parsePacket(data);
+    return new Promise(async resolve => {
+      const data = new Uint8Array(event.target.value.buffer);
+      await this._parsePacket(data);
+      resolve(true);
+    })
   }
 
-  private async _parsePacket(data: Uint8Array): Promise<void> {
-    this.m_buffer.set(data, this.m_index);
-    this.m_index += data.length;
-    
-    if (this.m_buffer[0] != 0x75 || this.m_buffer[1] != 0xa5) {
-      this.m_index = 0;
-      console.warn('Dropped packet: [' + data.toString() + ']');
-    }
+  private async _parsePacket(data: Uint8Array): Promise<string> {
+    return new Promise(async resolve => {
+      this.m_buffer.set(data, this.m_index);
+      this.m_index += data.length;
+      
+      if (this.m_buffer[0] != 0x75 || this.m_buffer[1] != 0xa5) {
+        this.m_index = 0;
+        console.warn('Dropped packet: [' + data.toString() + ']');
+      }
 
-    // End of packet, assemble  and report.
-    if (
-      this.m_buffer[this.m_index - 2] == 0xa5 &&
-      this.m_buffer[this.m_index - 1] == 0xd5
-    ) {
-      console.log('Received packet: [' + this.m_buffer.subarray(0, this.m_index).toString() + ']');
-      const id = this.m_index;
-      this.m_index = 0;
+      // End of packet, assemble  and report.
+      if (
+        this.m_buffer[this.m_index - 2] == 0xa5 &&
+        this.m_buffer[this.m_index - 1] == 0xd5
+      ) {
+        console.log('Received packet: [' + this.m_buffer.subarray(0, this.m_index).toString() + ']');
+        const id = this.m_index;
+        this.m_index = 0;
 
-      const response = new Packet();
-      this.m_rslt = await response.decode(this.m_buffer.subarray(0, id));
-      console.log(this.m_rslt);
-    } 
+        const response = new Packet();
+        const rslt = await response.decode(this.m_buffer.subarray(0, id));
+        resolve(rslt);
+      } 
+    });
   }
 
   private _write(buffer: ArrayBuffer, length: number): Promise<void> {
@@ -224,4 +244,10 @@ export class BluetoothService {
     return this.m_rslt;
   }
 
+  private isIpValid(ip: string) {  
+    if (/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(ip)) {  
+      return true;  
+    }  
+    // throw `Invalid IP address: ${ip}`;  
+  } 
 }

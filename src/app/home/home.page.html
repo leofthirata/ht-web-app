@@ -56,7 +56,7 @@
         <ion-button (click)="deviceSelectionOnClick()" expand="block" color="dark" >SELECT DEVICE</ion-button>
         <ion-button (click)="scanWifiOnClick()" expand="block" color="dark" [disabled]="!deviceSelected" >SCAN WIFI</ion-button>
         <ion-button (click)="findMeOnClick()" expand="block" color="dark" [disabled]="!deviceSelected" >FIND_ME</ion-button>
-        <ion-button (click)="connectToWifiOnClick()" [routerLink]="['/authentication']" expand="block" color="dark" [disabled]="!deviceSelected" >CONNECT TO WIFI</ion-button>
+        <ion-button (click)="connectToWifiOnClick()" expand="block" color="dark" [disabled]="!deviceSelected" >CONNECT TO WIFI</ion-button>
       </ion-col>
     </ion-row>
   </ion-grid>
