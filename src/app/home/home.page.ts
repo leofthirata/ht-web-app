@@ -1,8 +1,10 @@
 /// <reference types="web-bluetooth" />
 
-import { Component } from '@angular/core';
+import { Component, ElementRef, ViewChild } from '@angular/core';
 import { BluetoothService } from './services/ble/ble';
-import { NavController } from '@ionic/angular';
+import { NavController, AlertController } from '@ionic/angular';
+import { Terminal } from 'xterm';
+import { FitAddon } from 'xterm-addon-fit';
 
 @Component({
   selector: 'app-home',
@@ -11,14 +13,20 @@ import { NavController } from '@ionic/angular';
 })
 
 export class HomePage {
+  @ViewChild('terminal1') terminal: ElementRef;
+  @ViewChild('terminal2') terminal2: ElementRef;
+
   private m_ble: BluetoothService;
   public deviceSelected = false;
   public product = "ONE";
-  public wifiSsid = "PADOTEC";
-  public wifiPassword = "P@d0t3c2021";
+  public wifiSsid = "Hausenn";
+  public wifiPassword = "9@.2da!fc7";
   public bleMac = "7C9EBDD71678";
 
-  constructor(private nav: NavController) {}
+  private term = new Terminal();
+  private term2 = new Terminal();
+
+  constructor(private nav: NavController, private alertController: AlertController) {}
 
   public async deviceSelectionOnClick() {
     this.m_ble = new BluetoothService(this.bleMac);
@@ -45,5 +53,61 @@ export class HomePage {
   public async connectToWifiOnClick() {
     await this.m_ble.connectToWifi(this.wifiSsid, this.wifiPassword);
     this.nav.navigateForward('authentication', { state: this.m_ble.getIp() });
+  }
+
+  public ionViewDidEnter() {
+    const fitAddon = new FitAddon();
+    this.term.loadAddon(fitAddon);
+    this.term.open(this.terminal.nativeElement);
+    fitAddon.fit();
+
+    const fitAddon2 = new FitAddon();
+    this.term2.loadAddon(fitAddon2);
+    this.term2.open(this.terminal2.nativeElement);
+    fitAddon2.fit();
+
+    window.onresize = () => {
+      fitAddon.fit();
+      fitAddon2.fit();
+    };
+  }
+
+  async presentAlertPrompt() {
+    const alert = await this.alertController.create({
+      header: 'Wi-Fi Configuration',
+      inputs: [
+        {
+          name: 'ssid',
+          type: 'text',
+          value: this.wifiSsid,
+          placeholder: 'Enter ssid'
+        },
+        {
+          name: 'pswd',
+          type: 'text',
+          value: this.wifiPassword,
+          placeholder: 'Enter password'
+        }
+      ],
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel',
+          cssClass: 'secondary',
+          handler: () => {
+            console.log('Confirm Cancel');
+          }
+        }, {
+          text: 'Ok',
+          handler: ans => {
+            this.wifiSsid = ans.ssid;
+            this.wifiPassword = ans.pswd;
+            this.connectToWifiOnClick()          
+          }
+        }
+      ]
+    });
+
+    await alert.present();
   }
 }

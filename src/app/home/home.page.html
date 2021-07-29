@@ -11,53 +11,100 @@
   </ion-content> -->
 
 
-<ion-header>
-  <ion-toolbar>
-    <ion-title>
-      Hausenn Products Testing
-    </ion-title>
-    <!-- <ion-label slot="end">Address: </ion-label>
-    <ion-input [(ngModel)]="address" class="address" slot="end" [disabled]="connected"></ion-input> -->
+<ion-header [translucent]="true">
+    <ion-toolbar>
+      <ion-buttons slot="start">
+        <ion-button>
+          <ion-icon slot="icon-only" class="icon" name="add-circle"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+
+        <ion-title>
+        Hausenn Product Test Tool
+        </ion-title>
+
+        <ion-buttons slot="end">
+          <ion-button (click)="presentAlertPrompt()" expand="full" color="dark" >
+            <ion-icon name="flash"></ion-icon>
+          </ion-button>
+         </ion-buttons>
+
+        <ion-select slot="end" class="select" [(ngModel)]="product" placeholder="Choose a product">
+          <ion-select-option value="one">ONE</ion-select-option>
+          <ion-select-option value="lumina">Lumina</ion-select-option>
+          <ion-select-option value="tbd">tbd</ion-select-option>
+        </ion-select>
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="auth-form">
-  <ion-item> 
-    <ion-label>
-      Hausenn Products
-    </ion-label>
-    <ion-select [(ngModel)]="product" placeholder="Choose a product">
-      <ion-select-option value="one">ONE</ion-select-option>
-      <ion-select-option value="lumina">Lumina</ion-select-option>
-      <ion-select-option value="tbd">tbd</ion-select-option>
-    </ion-select>
-  </ion-item>
+<ion-content [fullscreen]="true">
+  <div class="wrapper">
+    <div class="main">
+      <ion-item>
+        <ion-label><h1>Test Log</h1></ion-label>
+      </ion-item>
 
-<!-- Input with placeholder -->
-<ion-item>
-  <ion-label>Wi-Fi Configuration</ion-label>
-  </ion-item>
-  <ion-item>
-  <ion-input [(ngModel)]="wifiSsid" clearInput value="PADOTEC" placeholder="Enter access point name (ssid) "></ion-input>
-  </ion-item>
-  
-  <ion-item>
-  <ion-input [(ngModel)]="wifiPassword" clearInput value="P@d0t3c2021" placeholder="Enter access point password "></ion-input>
-  </ion-item>
-  
-  <!-- <ion-input value="Disabled" disabled></ion-input>
-  
-  Readonly input
-  <ion-input value="Readonly" readonly></ion-input> -->
+      <div #terminal1 id="terminal1" class="term"></div>
+      <ion-item>
+        <ion-label><h1>Device Log</h1></ion-label>
+      </ion-item>
+      <div #terminal2 id="terminal2" class="term"></div>
+    </div>
 
-  <ion-grid>
-    <ion-row>
-      <ion-col>
-        <ion-button (click)="deviceSelectionOnClick()" expand="block" color="dark" >SELECT DEVICE</ion-button>
-        <ion-button (click)="scanWifiOnClick()" expand="block" color="dark" [disabled]="!deviceSelected" >SCAN WIFI</ion-button>
-        <ion-button (click)="findMeOnClick()" expand="block" color="dark" [disabled]="!deviceSelected" >FIND_ME</ion-button>
-        <ion-button (click)="connectToWifiOnClick()" expand="block" color="dark" [disabled]="!deviceSelected" >CONNECT TO WIFI</ion-button>
-      </ion-col>
-    </ion-row>
-  </ion-grid>
+    <div class="menu">
+      <h4 class="box-title">Test Status</h4>
+      <div class="box-connect ion-text-center">
+        <h2 [ngClass]="stateClass">{{stateEn}}</h2>
+        <h2 [ngClass]="stateClass">{{stateCn}}</h2>
+      </div>
+      
+      <h4 class="box-title">Bluetooth</h4> 
+      <div class="box-connect">
+        <ion-button (click)="deviceSelectionOnClick()" expand="full" color="dark" >
+          CONNECT DEVICE
+        </ion-button>
+
+        <br/>
+
+        <ion-button (click)="scanWifiOnClick()" expand="full" color="dark" [disabled]="!deviceSelected" >
+          SCAN WIFI
+        </ion-button>
+
+        <br/>
+
+        <ion-button (click)="findMeOnClick()" expand="full" color="dark" [disabled]="!deviceSelected" >
+          FIND ME
+        </ion-button>
+
+        <br/>
+
+        <ion-button (click)="connectToWifiOnClick()" expand="full" color="dark" [disabled]="!deviceSelected" >
+          CONNECT TO WIFI
+        </ion-button>
+      </div>
+
+      <!-- <h4 class="box-title">Operation (程序)</h4>
+      <div class="box-connect">
+        <ion-button (click)="onBurnFirmware()" color="danger" expand="full" [disabled]="!canBurn()">
+          <ng-container *ngIf="!isBurning">
+            <ion-icon slot="start" name="flame-outline"></ion-icon>
+            Burn FIRMWARE (烧录固件)
+          </ng-container>
+          <ng-container *ngIf="isBurning">
+            <ion-spinner name="circles"></ion-spinner>
+          </ng-container>
+        </ion-button>
+        <br />
+        <ion-button (click)="onRun()" color="success" expand="full" [disabled]="!canRun()">
+          <ng-container *ngIf="!isTesting">
+            <ion-icon name="play"></ion-icon>
+            RUN FCT (测试)
+          </ng-container>
+          <ng-container *ngIf="isTesting">
+            <ion-spinner name="circles"></ion-spinner>
+          </ng-container>
+        </ion-button>
+      </div> -->
+    </div>
+  </div>
 </ion-content>

@@ -1,38 +1,52 @@
-#container {
-  text-align: center;
-
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
+.icon {
+  font-size: 30px;
 }
 
-#container strong {
-  font-size: 20px;
-  line-height: 26px;
+.select {
+  padding-right: 2em;
 }
 
-#container p {
-  font-size: 16px;
-  line-height: 22px;
+.term {
+  width: 100%;
+  max-width: 100%;
+  height: 40%;
+  max-height: 40%;
+}
 
-  color: #8c8c8c;
+.wrapper {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: 100%;
+  padding-top: 1em;
 
+  .main {
+    flex: 1 1 auto;
+  }
+
+  .menu {
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: column;
+    align-items: center;
+    width: 450px;
+    height: 100%;
+
+    .box-title {
+      margin-bottom: 5px;
+    }
+
+    .box-connect {
+      height: fit-content;
+      width: 90%;
+      margin: 0 1em;
+      padding: 2em;
+      border: 1px solid black;
+      border-radius: 1em;
+    }
+  }
+}
+
+h2 {
   margin: 0;
-}
-
-#container a {
-  text-decoration: none;
-}
-
-ion-select {
-  /* Applies to the value and placeholder color */
-  color: #545ca7;
-
-  /* Set a different placeholder color */
-  --placeholder-color: #971e49;
-
-  /* Set full opacity on the placeholder */
-  --placeholder-opacity: 1;
 }

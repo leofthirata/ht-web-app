@@ -42,7 +42,7 @@ export class TestingPage implements OnInit {
       'key': this.m_myPubKey,
     };
     
-    request.command = '{"cm": 3}';
+    request.command = {"cm": 3};
     const socket = new WebSocketService(DeviceState.SEND_CMD);
     const onOpen = await socket.open(`ws://${this.m_ip}/ws`, this.m_myPrivKey);
     const onSend = await socket.send(request, this.m_devicePublicKey);
