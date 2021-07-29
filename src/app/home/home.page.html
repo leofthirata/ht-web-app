@@ -24,7 +24,7 @@
         </ion-title>
 
         <ion-buttons slot="end">
-          <ion-button (click)="presentAlertPrompt()" expand="full" color="dark" >
+          <ion-button (click)="onConnectDevice()" expand="full" color="dark" >
             <ion-icon name="flash"></ion-icon>
           </ion-button>
          </ion-buttons>
@@ -49,6 +49,7 @@
         <ion-label><h1>Device Log</h1></ion-label>
       </ion-item>
       <div #terminal2 id="terminal2" class="term"></div>
+
     </div>
 
     <div class="menu">
@@ -78,7 +79,7 @@
 
         <br/>
 
-        <ion-button (click)="connectToWifiOnClick()" expand="full" color="dark" [disabled]="!deviceSelected" >
+        <ion-button (click)="wifiConfigAndConnectOnClick()" expand="full" color="dark" [disabled]="!deviceSelected" >
           CONNECT TO WIFI
         </ion-button>
       </div>
@@ -105,6 +106,7 @@
           </ng-container>
         </ion-button>
       </div> -->
+
     </div>
   </div>
 </ion-content>

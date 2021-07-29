@@ -2,7 +2,6 @@ import { str2arr, arr2str, ascii2hex, str2ArrayBuffer, concatBuffers, pack } fro
 import { crc8 } from "../../utils/crc8";
 import { encrypt } from "../../utils/encrypt";
 import { Packet } from "./packet";
-import { ɵINTERNAL_BROWSER_PLATFORM_PROVIDERS } from "@angular/platform-browser";
 
 export enum bleMode {
   SCAN = 'scan',
