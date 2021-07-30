@@ -17,6 +17,7 @@ import { uint8ArrayToHexString } from '../home/utils/utils';
 import * as forge from "node-forge";
 import { printPubKeyRSA, importPubKeyRSA } from '../home/utils/encrypt';
 import { getAccessToken, sync, createPlace, createEnvironment, createDevice } from '../home/services/backend/backend'
+import { LocalTestingService } from '../testing/testing';
 
 @Component({
   selector: 'app-home',
@@ -30,19 +31,20 @@ export class HomePage {
 
   private m_ble: BluetoothService;
   public deviceSelected = false;
+  public backend = "Staging";
   public product = "ONE";
   public wifiSsid = "PADOTEC";
   public wifiPassword = "P@d0t3c2021";
   public bleMac = "7C9EBDD71678";
-
+  public localTest: LocalTestingService;
+  // public remoteTest: 
   private term = new Terminal();
   private term2 = new Terminal();
 
   private devPort!: SerialPort;
   private devConnected = false;
 
-  public isTesting = false;
-  public isAuthenticated = false;
+  // public isTesting = false;
 
   // authentication
   private m_auth: AuthService;
@@ -52,10 +54,20 @@ export class HomePage {
   private m_secret: string;
   private m_deviceTicket: string;
   private m_deviceUuid: string;
+  private m_userTicket: string;
+  private m_userUuid: string;
   public gotKey = false;
   public secretSet = false;
   public ticketSet = false;
   public deviceRegistered = false;
+  private readonly refreshToken = 'eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICI2NTZkZTY4Yi1mMGVjLTQzOTEtODk4Yi0xMjliNWRhYWExYjkifQ.eyJpYXQiOjE2Mjc0OTE2NjEsImp0aSI6ImI1ZTNkYTgxLWIzMDUtNGE1Zi04M2RiLWFkMWY4NzEwNGZiZCIsImlzcyI6Imh0dHBzOi8vYXV0aC5oYXVzZW5uLmNvbS5ici9hdXRoL3JlYWxtcy9oYXVzZW5uIiwiYXVkIjoiaHR0cHM6Ly9hdXRoLmhhdXNlbm4uY29tLmJyL2F1dGgvcmVhbG1zL2hhdXNlbm4iLCJzdWIiOiJjOGY2NzkxMy0zNGJjLTRmNDQtYTNjZC00OTEzNjY1NzBkMjYiLCJ0eXAiOiJPZmZsaW5lIiwiYXpwIjoiaGF1c2Vubi1jbGllbnQtYXBwIiwic2Vzc2lvbl9zdGF0ZSI6ImQ4Y2YzNjk0LTE2ZDgtNDUyOS1iYmQ3LWVkZTRlMTFiNzgxNiIsInNjb3BlIjoib3BlbmlkIG9mZmxpbmVfYWNjZXNzIGVtYWlsIHByb2ZpbGUifQ.evxZeBQZQl0YIbhTM8WYjiGu1hchGDGKLkNV8NmZ31g';
+
+  // testing
+  private m_deviceToken;
+  private m_myPubKey; 
+  private m_myPubKeyPem; 
+  private m_myPrivKey;
+  private m_myPrivKeyPem;
 
   constructor(private nav: NavController, private alertController: AlertController) {
     navigator.serial.addEventListener('disconnect', (event) => {
@@ -66,12 +78,10 @@ export class HomePage {
         this.devConnected = false;
       }
     });
-
   }
 
   public async deviceSelectionOnClick() {
     this.m_ble = new BluetoothService(this.bleMac);
-    this.deviceSelected = true;
     await this.m_ble.find();
     await this.m_ble.connect();
     await this.m_ble.getService();
@@ -79,6 +89,7 @@ export class HomePage {
     console.log(this.wifiSsid);
     console.log(this.wifiPassword);
     console.log(this.product);
+    this.deviceSelected = true;
   }
 
   //TODO: disconnect after getting IP
@@ -104,13 +115,17 @@ export class HomePage {
 
   public async getKey() {
     this.gotKey = true;
+    this.m_myPubKey = this.m_auth.getPubKey();
+    this.m_myPubKeyPem = forge.pki.publicKeyToPem(this.m_auth.getPubKey());
+    this.m_myPrivKeyPem = forge.pki.privateKeyToPem(this.m_auth.getPrivKey());
+    this.m_myPrivKey = this.m_auth.getPrivKey();
 
-    let request = {
-      "key": forge.pki.publicKeyToPem(this.m_auth.getPubKey())
+    const request = {
+      "key": this.m_myPubKeyPem
     };
 
-    const socket = new WebSocketService(this.m_state);
-    const onOpen = await socket.open(`ws://${this.m_ip}/get_key`, this.m_auth.getPrivKey());
+    const socket = new WebSocketService(this.m_state, this.term);
+    const onOpen = await socket.open(`ws://${this.m_ip}/get_key`, this.m_myPrivKey);
     const onSend = await socket.send(request);
     const resp = await socket.receive();
     console.log(resp);
@@ -127,11 +142,11 @@ export class HomePage {
     this.m_secret = uint8ArrayToHexString(window.crypto.getRandomValues(new Uint8Array(16)));
     let secretRequest = { 
       'secret': this.m_secret,
-      'key': forge.pki.publicKeyToPem(this.m_auth.getPubKey())
+      'key': this.m_myPubKeyPem
     };
     
-    const socket = new WebSocketService(this.m_state);
-    const onOpen = await socket.open(`ws://${this.m_ip}/set_secret`, this.m_auth.getPrivKey());
+    const socket = new WebSocketService(this.m_state, this.term);
+    const onOpen = await socket.open(`ws://${this.m_ip}/set_secret`, this.m_myPrivKey);
     const onSend = await socket.send(secretRequest, this.m_devicePublicKey);
     const resp = await socket.receive();
     const success = JSON.parse(resp).mg;
@@ -142,27 +157,29 @@ export class HomePage {
   }
 
   public async registerDevice() {
-    const refreshToken = 'eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICI2NTZkZTY4Yi1mMGVjLTQzOTEtODk4Yi0xMjliNWRhYWExYjkifQ.eyJpYXQiOjE2Mjc0OTE2NjEsImp0aSI6ImI1ZTNkYTgxLWIzMDUtNGE1Zi04M2RiLWFkMWY4NzEwNGZiZCIsImlzcyI6Imh0dHBzOi8vYXV0aC5oYXVzZW5uLmNvbS5ici9hdXRoL3JlYWxtcy9oYXVzZW5uIiwiYXVkIjoiaHR0cHM6Ly9hdXRoLmhhdXNlbm4uY29tLmJyL2F1dGgvcmVhbG1zL2hhdXNlbm4iLCJzdWIiOiJjOGY2NzkxMy0zNGJjLTRmNDQtYTNjZC00OTEzNjY1NzBkMjYiLCJ0eXAiOiJPZmZsaW5lIiwiYXpwIjoiaGF1c2Vubi1jbGllbnQtYXBwIiwic2Vzc2lvbl9zdGF0ZSI6ImQ4Y2YzNjk0LTE2ZDgtNDUyOS1iYmQ3LWVkZTRlMTFiNzgxNiIsInNjb3BlIjoib3BlbmlkIG9mZmxpbmVfYWNjZXNzIGVtYWlsIHByb2ZpbGUifQ.evxZeBQZQl0YIbhTM8WYjiGu1hchGDGKLkNV8NmZ31g';
-    // const refreshToken = 'eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICIwZDU4YmIzYy1hNzZjLTQwYzEtYjA4ZS01MjJkOGQwMmE1ZjUifQ.eyJqdGkiOiJiZmI4ZTA1MC0zMGE0LTQyMmItOTc5Ni0xMzEzMzQ3YjRjMTUiLCJleHAiOjAsIm5iZiI6MCwiaWF0IjoxNjI1NzQ4MDkwLCJpc3MiOiJodHRwczovL3N0YWdlLnBhZG90ZWMuY29tLmJyL2F1dGgvcmVhbG1zL2hhdXNlbm4iLCJhdWQiOiJodHRwczovL3N0YWdlLnBhZG90ZWMuY29tLmJyL2F1dGgvcmVhbG1zL2hhdXNlbm4iLCJzdWIiOiJkZTFjMmIyMy1hNGM0LTRiYzQtYjQ2Ni0zNTM4OTVmNTgxOTAiLCJ0eXAiOiJPZmZsaW5lIiwiYXpwIjoiaGF1c2Vubi1jbGllbnQtYXBwIiwiYXV0aF90aW1lIjowLCJzZXNzaW9uX3N0YXRlIjoiMTM5MzAyZjgtZDBhZC00ZjFjLWJlOWQtOTRlYjdkMGNhNTJmIiwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbIm9mZmxpbmVfYWNjZXNzIiwidW1hX2F1dGhvcml6YXRpb24iXX0sInJlc291cmNlX2FjY2VzcyI6eyJhY2NvdW50Ijp7InJvbGVzIjpbIm1hbmFnZS1hY2NvdW50IiwibWFuYWdlLWFjY291bnQtbGlua3MiLCJ2aWV3LXByb2ZpbGUiXX19LCJzY29wZSI6Im9wZW5pZCBvZmZsaW5lX2FjY2VzcyBlbWFpbCBwcm9maWxlIn0.TqvywFzLXqEYZHCi1w4EAwFNQPfGPyfA14IJ5Bu_bac';
-    const accessToken = await getAccessToken(refreshToken);
+    // const refreshToken = "eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICIwZDU4YmIzYy1hNzZjLTQwYzEtYjA4ZS01MjJkOGQwMmE1ZjUifQ.eyJqdGkiOiJiZmI4ZTA1MC0zMGE0LTQyMmItOTc5Ni0xMzEzMzQ3YjRjMTUiLCJleHAiOjAsIm5iZiI6MCwiaWF0IjoxNjI1NzQ4MDkwLCJpc3MiOiJodHRwczovL3N0YWdlLnBhZG90ZWMuY29tLmJyL2F1dGgvcmVhbG1zL2hhdXNlbm4iLCJhdWQiOiJodHRwczovL3N0YWdlLnBhZG90ZWMuY29tLmJyL2F1dGgvcmVhbG1zL2hhdXNlbm4iLCJzdWIiOiJkZTFjMmIyMy1hNGM0LTRiYzQtYjQ2Ni0zNTM4OTVmNTgxOTAiLCJ0eXAiOiJPZmZsaW5lIiwiYXpwIjoiaGF1c2Vubi1jbGllbnQtYXBwIiwiYXV0aF90aW1lIjowLCJzZXNzaW9uX3N0YXRlIjoiMTM5MzAyZjgtZDBhZC00ZjFjLWJlOWQtOTRlYjdkMGNhNTJmIiwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbIm9mZmxpbmVfYWNjZXNzIiwidW1hX2F1dGhvcml6YXRpb24iXX0sInJlc291cmNlX2FjY2VzcyI6eyJhY2NvdW50Ijp7InJvbGVzIjpbIm1hbmFnZS1hY2NvdW50IiwibWFuYWdlLWFjY291bnQtbGlua3MiLCJ2aWV3LXByb2ZpbGUiXX19LCJzY29wZSI6Im9wZW5pZCBvZmZsaW5lX2FjY2VzcyBlbWFpbCBwcm9maWxlIn0.TqvywFzLXqEYZHCi1w4EAwFNQPfGPyfA14IJ5Bu_bac";
+    const accessToken = await getAccessToken(this.refreshToken);
     const user = await sync(accessToken);
     const place = await createPlace(accessToken, 'Local1', 'Address1');
     const env = await createEnvironment(accessToken, place, 'Environment1');
     const dev = await createDevice(this.m_secret, accessToken, env, 'Device1', this.m_ip, '123123', '321321', 'PADOTEC', 'one', forge.pki.publicKeyToPem(this.m_devicePublicKey));
+    this.m_userTicket = user[0];
+    this.m_userUuid = user[1];
     this.m_deviceTicket = dev[0];
     this.m_deviceUuid = dev[1];
+    this.m_deviceToken = dev[2];
     this.deviceRegistered = true;
   }
 
   public async setTicket() {
     let ticketRequest = { 
-      'ticket': this.m_deviceTicket,
-      'uuid': this.m_deviceUuid,
-      'key': forge.pki.publicKeyToPem(this.m_auth.getPubKey())
+      'ticket': this.m_userTicket,
+      'uuid': this.m_userUuid,
+      'key': this.m_myPubKeyPem
     };
     
-    const socket = new WebSocketService(this.m_state);
-    const onOpen = await socket.open(`ws://${this.m_ip}/set_ticket`, this.m_auth.getPrivKey());
+    const socket = new WebSocketService(this.m_state, this.term);
+    const onOpen = await socket.open(`ws://${this.m_ip}/set_ticket`, this.m_myPrivKey);
     const onSend = await socket.send(ticketRequest, this.m_devicePublicKey);
     const resp = await socket.receive();
     const success = JSON.parse(resp).mg;
@@ -170,7 +187,101 @@ export class HomePage {
       throw 'TICKET_FAIL';
     }
     this.ticketSet = true;
+
+    this.startTesting();
   }
+
+  private startTesting() {
+    this.localTest = new LocalTestingService(this.m_ip, this.m_myPubKeyPem, this.m_myPrivKey, this.m_devicePublicKey, this.m_deviceToken, this.term);
+    // const local = new LocalTestingService();
+    // const remote = new RemoteTestingService();
+  }
+
+  public isNotConnectedToWifiorIsTesting() {
+    return (this.m_ip === '' ? true : false) || this.isTesting();
+  }
+
+  public isTesting() {
+    return this.ticketSet;
+  }
+
+  public getInfoOnClick() {
+    this.localTest.GET_INFO();
+  }
+
+  private yellow(text: string) {
+    text = text.replace(/\n/g, '\r\n');
+    const utf8 = Cast.stringToBytes(text);
+    this.term.write(Colors.yellow);
+    this.term.write(utf8);
+    this.term.write('\r\n');
+  }
+
+  public eraseIrOnClick() {
+    this.localTest.ERASE_IR();
+  }
+
+  public getIrOnClick() {
+    this.localTest.GET_IR();
+  }
+
+  public setIrOnClick() {
+    this.localTest.SET_IR();
+  }
+
+  public cancelIrOnClick() {
+    this.localTest.CANCEL_IR();
+  }
+
+  public editIrOnClick() {
+    this.localTest.EDIT_IR();
+  }
+
+  public runSceneOnClick() {
+    this.localTest.RUN_SCENE();
+  }
+
+  public facResetOnClick() {
+    this.localTest.FAC_RESET();
+  }
+
+  public getHeapOnClick() {
+    this.localTest.GET_HEAP();
+  }
+
+  public resetOnClick() {
+    this.localTest.RESET();
+  }
+
+  public bleOnOnClick() {
+    this.localTest.BLE_ON();
+  }
+
+  public bleOffOnClick() {
+    this.localTest.BLE_OFF();
+  }
+
+  public findMeWsOnClick() {
+    this.localTest.FIND_ME();
+  }
+
+  // public async localTests() {
+  //   let request: any = { 
+  //     'token': this.m_deviceToken,
+  //     'key': this.m_myPubKey,
+  //   };
+    
+  //   request.command = {"cm": 3};
+  //   const socket = new WebSocketService(DeviceState.SEND_CMD);
+  //   const onOpen = await socket.open(`ws://${this.m_ip}/ws`, this.m_myPrivKey);
+  //   const onSend = await socket.send(request, this.m_devicePublicKey);
+  //   const resp = await socket.receive();
+  //   console.log(resp);
+  //   // const success = JSON.parse(resp).mg;
+  //   // if (success == 'fail') {
+  //   //   throw 'SECRET_FAIL';
+  //   // }
+  // }
 
   public ionViewDidEnter() {
     const fitAddon = new FitAddon();
@@ -233,6 +344,7 @@ export class HomePage {
 
     if (this.devPort) {
       this.devConnected = true;
+      this.term.writeln(Colors.green + '[SUCS] Serial port connected');
     }
 
     this.readUntilClosed();

@@ -23,6 +23,11 @@
         Hausenn Product Test Tool
         </ion-title>
 
+        <ion-select slot="end" class="select" [(ngModel)]="backend" placeholder="Choose backend version">
+          <ion-select-option value="Staging">Staging</ion-select-option>
+          <ion-select-option value="Production">Production</ion-select-option>
+        </ion-select>
+
         <ion-buttons slot="end">
           <ion-button (click)="onConnectDevice()" expand="full" color="dark" >
             <ion-icon name="flash"></ion-icon>
@@ -54,45 +59,70 @@
 
     <div class="menu">
       <h4 class="box-title">Test Status</h4>
-      <div class="box-connect ion-text-center">
-        <!-- <ion-button (click)="onRun()" color="success" expand="full"> -->
-          <ng-container *ngIf="!isTesting">
-            RUNNING
+
+      <div class="box-connect ion-text-center" [hidden]="isConnectedToWifi()"> 
+        <ion-button color="primary" expand="full">
+          <ng-container *ngIf="isTesting">
+            BLUETOOTH CONFIGURATION
             <ion-spinner name="circles"></ion-spinner>
           </ng-container>
-        <!-- </ion-button> -->
+        </ion-button>
+        <h2 [ngClass]="stateClass">{{stateEn}}</h2>
+        <h2 [ngClass]="stateClass">{{stateCn}}</h2>
+      </div>
+
+      <div class="box-connect ion-text-center" [hidden]="isNotConnectedToWifiorIsTesting()"> 
+        <ion-button color="warning" expand="full">
+          <ng-container *ngIf="isTesting">
+            AUTHENTICATION
+            <ion-spinner name="circles"></ion-spinner>
+          </ng-container>
+        </ion-button>
+        <h2 [ngClass]="stateClass">{{stateEn}}</h2>
+        <h2 [ngClass]="stateClass">{{stateCn}}</h2>
+      </div>
+
+      <div class="box-connect ion-text-center" [hidden]="!isTesting()"> 
+        <ion-button color="warning" expand="full">
+          <ng-container *ngIf="isTesting">
+            RUNNING TESTS
+            <ion-spinner name="circles"></ion-spinner>
+          </ng-container>
+        </ion-button>
         <h2 [ngClass]="stateClass">{{stateEn}}</h2>
         <h2 [ngClass]="stateClass">{{stateCn}}</h2>
       </div>
       
-      <h4 class="box-title">Bluetooth</h4> 
+      <h4 class="box-title" [hidden]="isConnectedToWifi()">
+        Operation 
+      </h4>
+      <!-- <h4 class="box-title" [hidden]="isNotConnectedToWifiorIsTesting()">
+        Authentication
+      </h4>
+      <h4 class="box-title" [hidden]="!isTesting()">
+        Testing
+      </h4> -->
       <div class="box-connect">
         <div [hidden]="isConnectedToWifi()">
           <ion-button (click)="deviceSelectionOnClick()" expand="full" color="dark">
             CONNECT DEVICE
           </ion-button>
-
           <br/>
-
           <ion-button (click)="scanWifiOnClick()" expand="full" color="dark" [disabled]="!deviceSelected">
             SCAN WIFI
           </ion-button>
-
           <br/>
-
           <ion-button (click)="findMeOnClick()" expand="full" color="dark" [disabled]="!deviceSelected">
             FIND ME
           </ion-button>
-
           <br/>
-
           <ion-button (click)="wifiConfigAndConnectOnClick()" expand="full" color="dark" [disabled]="!deviceSelected">
             CONNECT TO WIFI
           </ion-button>
           <br/>
         </div>
 
-        <div [hidden]="!isConnectedToWifi()">
+        <div [hidden]="isNotConnectedToWifiorIsTesting()">
           <ion-button (click)="getKey()" expand="block" color="dark" [disabled]="gotKey">
             GET_KEY
           </ion-button>
@@ -111,15 +141,66 @@
           <br/>
         </div>
 
-        <ion-button (click)="onRun()" color="success" expand="full">
+        <!-- <ion-button (click)="onRun()" color="success" expand="full">
           <ng-container *ngIf="isTesting">
             <ion-icon slot="start" name="play"></ion-icon>
             teste
           </ng-container>
-          <ng-container *ngIf="!isTesting">
-            <ion-spinner name="circles"></ion-spinner>
-          </ng-container>
-        </ion-button>
+        </ion-button> -->
+
+        <div [hidden]="!isTesting()">
+          <ion-button (click)="eraseIrOnClick()" expand="block" color="dark">
+            ERASE_IR
+          </ion-button>
+          <br/>
+          <ion-button (click)="getIrOnClick()" expand="block" color="dark">
+            GET_IR
+          </ion-button>
+          <br/>
+          <ion-button (click)="setIrOnClick()" expand="block" color="dark">
+            SET_IR
+          </ion-button>
+          <br/>
+          <ion-button (click)="getInfoOnClick()" expand="block" color="dark">
+            GET_INFO
+          </ion-button>
+          <br/>
+          <ion-button (click)="cancelIrOnClick()" expand="block" color="dark">
+            CANCEL_IR
+          </ion-button>
+          <br/>
+          <ion-button (click)="editIrOnClick()" expand="block" color="dark">
+            EDIT_IR
+          </ion-button>
+          <br/>
+          <ion-button (click)="runSceneOnClick()" expand="block" color="dark">
+            RUN_SCENE
+          </ion-button>
+          <br/>
+          <ion-button (click)="facResetOnClick()" expand="block" color="dark">
+            FAC_RESET
+          </ion-button>
+          <br/>
+          <ion-button (click)="getHeapOnClick()" expand="block" color="dark">
+            GET_HEAP
+          </ion-button>
+          <br/>
+          <ion-button (click)="resetOnClick()" expand="block" color="dark">
+            RESET
+          </ion-button>
+          <br/>
+          <ion-button (click)="bleOnOnClick()" expand="block" color="dark">
+            BLE_ON
+          </ion-button>
+          <br/>
+          <ion-button (click)="bleOffOnClick()" expand="block" color="dark">
+            BLE_OFF
+          </ion-button>
+          <br/>
+          <ion-button (click)="findMeWsOnClick()" expand="block" color="dark">
+            FIND_ME
+          </ion-button>
+        </div>
       </div>
 
       <!-- <h4 class="box-title">Operation (程序)</h4>

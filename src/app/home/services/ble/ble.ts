@@ -115,10 +115,8 @@ export class BluetoothService {
         const data = new Uint8Array(target.value.buffer);
         const rslt = await this._parsePacket(data);
         this.m_rslt = rslt;
-        console.log('000000000000000000000000000')
         console.log(rslt);
         if (this.isIpValid(rslt)) {
-          console.log('111111111111111111111111111')
           this.m_rslt = rslt;
           resolve(true);
         }

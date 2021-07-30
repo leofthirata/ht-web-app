@@ -39,10 +39,7 @@ export async function sync(aToken: string): Promise<Object> {
   });
   const jRes = await res.json(); 
 
-  return {
-    'uuid': jRes.user_profile[0].uuid,
-    'ticket': jRes.user_profile[0].ticket
-  };
+  return [jRes.user_profile[0].uuid, jRes.user_profile[0].ticket];
 }
 
 export async function createPlace(aToken: string, name: string, address: string): Promise<any> {
@@ -126,7 +123,7 @@ export async function createDevice(
   //   'uuid': jRes.idDevice
   // };
 
-  return [jRes.device_ticket, jRes.idDevice];
+  return [jRes.device_ticket, jRes.idDevice, jRes.macToken];
 }
 
 async function test() {

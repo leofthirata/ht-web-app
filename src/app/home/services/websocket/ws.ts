@@ -1,5 +1,8 @@
+import { Terminal } from "xterm";
 import { encryptRSA, decryptRSA } from "../../utils/encrypt";
 import { hex2ascii, str2Uint8arr } from "../../utils/utils"; 
+import * as Colors from '../../utils/color';
+import { Cast } from '../../utils/cast';
 
 declare const Buffer;
 
@@ -17,9 +20,11 @@ export class WebSocketService {
   private readonly RSA_BLOCK_SIZE_B64 = 256;
   private m_privKey;
   private m_devicePublicKey;
+  private term: Terminal;
 
-  constructor(state: DeviceState) {
+  constructor(state: DeviceState, term: Terminal) {
     this.m_state = state;
+    this.term = term;
   }
 
   public open(uri: string, privKey?): Promise<boolean> {
@@ -73,6 +78,10 @@ export class WebSocketService {
       this.m_ws.binaryType = 'arraybuffer';
       this.m_ws.onmessage = event => {
         const decrypted = this.decryptWebsocketJSON(new Uint8Array(event.data));
+        this.term.writeln(Colors.white + '[RCVD] ');
+        const obj = JSON.parse(decrypted);
+        const str = JSON.stringify(obj, null, 2);
+        this.yellow(str);
         resolve(decrypted);
       }
     });
@@ -133,5 +142,13 @@ export class WebSocketService {
     return [...new Uint8Array(buffer)]
       .map(x => x.toString(16).padStart(2, '0'))
       .join('');
+  }
+
+  private yellow(text: string) {
+    text = text.replace(/\n/g, '\r\n');
+    const utf8 = Cast.stringToBytes(text);
+    this.term.write(Colors.yellow);
+    this.term.write(utf8);
+    this.term.write('\r\n');
   }
 }
