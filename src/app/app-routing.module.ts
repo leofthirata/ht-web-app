@@ -30,11 +30,7 @@ const routes: Routes = [
   {
     path: 'testing',
     loadChildren: () => import('./testing/testing.module').then( m => m.TestingPageModule)
-  },  {
-    path: 'authentication',
-    loadChildren: () => import('./authentication/authentication.module').then( m => m.AuthenticationPageModule)
   },
-
 ];
 
 @NgModule({

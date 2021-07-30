@@ -1,6 +1,7 @@
 /// <reference types="web-bluetooth" />
 /// <reference types="w3c-web-serial" />
 
+// home
 import { Component, ElementRef, ViewChild } from '@angular/core';
 import { BluetoothService } from './services/ble/ble';
 import { NavController, AlertController } from '@ionic/angular';
@@ -8,6 +9,14 @@ import { Terminal } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
 import { Cast } from './utils/cast';
 import * as Colors from './utils/color';
+
+// authentication
+import { AuthService } from '../home/services/auth/auth';
+import { DeviceState, WebSocketService } from '../home/services/websocket/ws';
+import { uint8ArrayToHexString } from '../home/utils/utils';
+import * as forge from "node-forge";
+import { printPubKeyRSA, importPubKeyRSA } from '../home/utils/encrypt';
+import { getAccessToken, sync, createPlace, createEnvironment, createDevice } from '../home/services/backend/backend'
 
 @Component({
   selector: 'app-home',
@@ -31,6 +40,22 @@ export class HomePage {
 
   private devPort!: SerialPort;
   private devConnected = false;
+
+  public isTesting = false;
+  public isAuthenticated = false;
+
+  // authentication
+  private m_auth: AuthService;
+  private m_devicePublicKey;
+  private m_ip: string = '';
+  private m_state = DeviceState.GET_KEY;
+  private m_secret: string;
+  private m_deviceTicket: string;
+  private m_deviceUuid: string;
+  public gotKey = false;
+  public secretSet = false;
+  public ticketSet = false;
+  public deviceRegistered = false;
 
   constructor(private nav: NavController, private alertController: AlertController) {
     navigator.serial.addEventListener('disconnect', (event) => {
@@ -68,7 +93,83 @@ export class HomePage {
 
   public async connectToWifiOnClick() {
     await this.m_ble.connectToWifi(this.wifiSsid, this.wifiPassword);
-    this.nav.navigateForward('authentication', { state: this.m_ble.getIp() });
+    this.m_ip = this.m_ble.getIp();
+    this.m_auth = new AuthService();
+    // this.nav.navigateForward('authentication', { state: this.m_ble.getIp() });
+  }
+
+  public isConnectedToWifi() {
+    return this.m_ip !== '' ? true : false;
+  }
+
+  public async getKey() {
+    this.gotKey = true;
+
+    let request = {
+      "key": forge.pki.publicKeyToPem(this.m_auth.getPubKey())
+    };
+
+    const socket = new WebSocketService(this.m_state);
+    const onOpen = await socket.open(`ws://${this.m_ip}/get_key`, this.m_auth.getPrivKey());
+    const onSend = await socket.send(request);
+    const resp = await socket.receive();
+    console.log(resp);
+
+    this.m_devicePublicKey = importPubKeyRSA(JSON.parse(resp).key);
+
+    printPubKeyRSA(this.m_devicePublicKey);
+
+    this.m_state = DeviceState.SEND_CMD;
+    this.gotKey = true;
+  }
+
+  public async setSecret() {
+    this.m_secret = uint8ArrayToHexString(window.crypto.getRandomValues(new Uint8Array(16)));
+    let secretRequest = { 
+      'secret': this.m_secret,
+      'key': forge.pki.publicKeyToPem(this.m_auth.getPubKey())
+    };
+    
+    const socket = new WebSocketService(this.m_state);
+    const onOpen = await socket.open(`ws://${this.m_ip}/set_secret`, this.m_auth.getPrivKey());
+    const onSend = await socket.send(secretRequest, this.m_devicePublicKey);
+    const resp = await socket.receive();
+    const success = JSON.parse(resp).mg;
+    if (success == 'fail') {
+      throw 'SECRET_FAIL';
+    }
+    this.secretSet = true;
+  }
+
+  public async registerDevice() {
+    const refreshToken = 'eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICI2NTZkZTY4Yi1mMGVjLTQzOTEtODk4Yi0xMjliNWRhYWExYjkifQ.eyJpYXQiOjE2Mjc0OTE2NjEsImp0aSI6ImI1ZTNkYTgxLWIzMDUtNGE1Zi04M2RiLWFkMWY4NzEwNGZiZCIsImlzcyI6Imh0dHBzOi8vYXV0aC5oYXVzZW5uLmNvbS5ici9hdXRoL3JlYWxtcy9oYXVzZW5uIiwiYXVkIjoiaHR0cHM6Ly9hdXRoLmhhdXNlbm4uY29tLmJyL2F1dGgvcmVhbG1zL2hhdXNlbm4iLCJzdWIiOiJjOGY2NzkxMy0zNGJjLTRmNDQtYTNjZC00OTEzNjY1NzBkMjYiLCJ0eXAiOiJPZmZsaW5lIiwiYXpwIjoiaGF1c2Vubi1jbGllbnQtYXBwIiwic2Vzc2lvbl9zdGF0ZSI6ImQ4Y2YzNjk0LTE2ZDgtNDUyOS1iYmQ3LWVkZTRlMTFiNzgxNiIsInNjb3BlIjoib3BlbmlkIG9mZmxpbmVfYWNjZXNzIGVtYWlsIHByb2ZpbGUifQ.evxZeBQZQl0YIbhTM8WYjiGu1hchGDGKLkNV8NmZ31g';
+    // const refreshToken = 'eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICIwZDU4YmIzYy1hNzZjLTQwYzEtYjA4ZS01MjJkOGQwMmE1ZjUifQ.eyJqdGkiOiJiZmI4ZTA1MC0zMGE0LTQyMmItOTc5Ni0xMzEzMzQ3YjRjMTUiLCJleHAiOjAsIm5iZiI6MCwiaWF0IjoxNjI1NzQ4MDkwLCJpc3MiOiJodHRwczovL3N0YWdlLnBhZG90ZWMuY29tLmJyL2F1dGgvcmVhbG1zL2hhdXNlbm4iLCJhdWQiOiJodHRwczovL3N0YWdlLnBhZG90ZWMuY29tLmJyL2F1dGgvcmVhbG1zL2hhdXNlbm4iLCJzdWIiOiJkZTFjMmIyMy1hNGM0LTRiYzQtYjQ2Ni0zNTM4OTVmNTgxOTAiLCJ0eXAiOiJPZmZsaW5lIiwiYXpwIjoiaGF1c2Vubi1jbGllbnQtYXBwIiwiYXV0aF90aW1lIjowLCJzZXNzaW9uX3N0YXRlIjoiMTM5MzAyZjgtZDBhZC00ZjFjLWJlOWQtOTRlYjdkMGNhNTJmIiwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbIm9mZmxpbmVfYWNjZXNzIiwidW1hX2F1dGhvcml6YXRpb24iXX0sInJlc291cmNlX2FjY2VzcyI6eyJhY2NvdW50Ijp7InJvbGVzIjpbIm1hbmFnZS1hY2NvdW50IiwibWFuYWdlLWFjY291bnQtbGlua3MiLCJ2aWV3LXByb2ZpbGUiXX19LCJzY29wZSI6Im9wZW5pZCBvZmZsaW5lX2FjY2VzcyBlbWFpbCBwcm9maWxlIn0.TqvywFzLXqEYZHCi1w4EAwFNQPfGPyfA14IJ5Bu_bac';
+    const accessToken = await getAccessToken(refreshToken);
+    const user = await sync(accessToken);
+    const place = await createPlace(accessToken, 'Local1', 'Address1');
+    const env = await createEnvironment(accessToken, place, 'Environment1');
+    const dev = await createDevice(this.m_secret, accessToken, env, 'Device1', this.m_ip, '123123', '321321', 'PADOTEC', 'one', forge.pki.publicKeyToPem(this.m_devicePublicKey));
+    this.m_deviceTicket = dev[0];
+    this.m_deviceUuid = dev[1];
+    this.deviceRegistered = true;
+  }
+
+  public async setTicket() {
+    let ticketRequest = { 
+      'ticket': this.m_deviceTicket,
+      'uuid': this.m_deviceUuid,
+      'key': forge.pki.publicKeyToPem(this.m_auth.getPubKey())
+    };
+    
+    const socket = new WebSocketService(this.m_state);
+    const onOpen = await socket.open(`ws://${this.m_ip}/set_ticket`, this.m_auth.getPrivKey());
+    const onSend = await socket.send(ticketRequest, this.m_devicePublicKey);
+    const resp = await socket.receive();
+    const success = JSON.parse(resp).mg;
+    if (success == 'fail') {
+      throw 'TICKET_FAIL';
+    }
+    this.ticketSet = true;
   }
 
   public ionViewDidEnter() {
