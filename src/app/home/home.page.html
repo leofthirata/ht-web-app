@@ -1,223 +1,300 @@
-<!-- <ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>
-      Websocket Chat
-    </ion-title>
-  </ion-toolbar>
-</ion-header>
-
-  <ion-content padding>
-    <button ion-button full (click)="test()" >Start Websocket Client</button>
-  </ion-content> -->
-
-
 <ion-header [translucent]="true">
-    <ion-toolbar>
-      <ion-buttons slot="start">
-        <ion-button>
-          <ion-icon slot="icon-only" class="icon" name="add-circle"></ion-icon>
+  <ion-toolbar>
+
+    <ion-buttons slot="start">
+      <ion-menu-button autoHide="false"></ion-menu-button>
+    </ion-buttons>
+      <ion-title>
+      Hausenn Product Test Tool
+      </ion-title>
+
+      <ion-buttons slot="end">
+        <ion-button (click)="deviceSelectionOnClick()" expand="full" color="dark">
+          <ion-icon name="bluetooth"></ion-icon>
         </ion-button>
       </ion-buttons>
 
-        <ion-title>
-        Hausenn Product Test Tool
-        </ion-title>
+      <ion-buttons slot="end">
+        <ion-button (click)="onConnectDevice()" expand="full" color="dark" >
+          <ion-icon name="flash"></ion-icon>
+        </ion-button>
+      </ion-buttons>
 
-        <ion-select slot="end" class="select" [(ngModel)]="backend" placeholder="Choose backend version">
-          <ion-select-option value="Staging">Staging</ion-select-option>
-          <ion-select-option value="Production">Production</ion-select-option>
-        </ion-select>
+      <ion-select slot="end" class="select" [(ngModel)]="backend">
+        <ion-select-option value="Staging">Staging</ion-select-option>
+        <ion-select-option value="Production">Production</ion-select-option>
+      </ion-select>
 
-        <ion-buttons slot="end">
-          <ion-button (click)="onConnectDevice()" expand="full" color="dark" >
-            <ion-icon name="flash"></ion-icon>
-          </ion-button>
-         </ion-buttons>
+      <ion-select slot="end" class="select" [(ngModel)]="product">
+        <ion-select-option value="ONE">ONE</ion-select-option>
+        <ion-select-option value="Lumina">Lumina</ion-select-option>
+        <ion-select-option value="tbd">tbd</ion-select-option>
+      </ion-select>
 
-        <ion-select slot="end" class="select" [(ngModel)]="product" placeholder="Choose a product">
-          <ion-select-option value="one">ONE</ion-select-option>
-          <ion-select-option value="lumina">Lumina</ion-select-option>
-          <ion-select-option value="tbd">tbd</ion-select-option>
-        </ion-select>
+      <ion-buttons slot="end" class="button-end">
+        <ion-button (click)="shareOnClick()" expand="full" color="dark" >
+          <ion-icon name="person-add"></ion-icon>
+        </ion-button>
+      </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <div class="wrapper">
-    <div class="main">
-      <ion-item>
-        <ion-label><h1>Test Log</h1></ion-label>
-      </ion-item>
+<div class="wrapper">
+  <div class="main">
+    <ion-item>
+      <ion-label><h1>Test Log</h1></ion-label>
 
-      <div #terminal1 id="terminal1" class="term"></div>
-      <ion-item>
-        <ion-label><h1>Device Log</h1></ion-label>
-      </ion-item>
-      <div #terminal2 id="terminal2" class="term"></div>
+      <ion-buttons slot="end">
+        <ion-button (click)="saveTermOnClick()" expand="block" color="dark">
+          <ion-icon name="save"></ion-icon>
+          <!-- Save log -->
+        </ion-button>
 
+        <ion-button (click)="eraseTermOnClick()" expand="block" color="dark">
+          <ion-icon name="trash"></ion-icon>
+          <!-- Save log -->
+        </ion-button>
+      </ion-buttons>
+    </ion-item>
+
+    <div #terminal1 id="terminal1" class="term"></div>
+    <ion-item>
+      <ion-label><h1>Device Log</h1></ion-label>
+
+      <ion-buttons slot="end">
+        <ion-button (click)="saveTerm2OnClick()" expand="block" color="dark">
+          <ion-icon name="save"></ion-icon>
+          <!-- Save log -->
+        </ion-button>
+
+        <ion-button (click)="eraseTerm2OnClick()" expand="block" color="dark">
+          <ion-icon name="trash"></ion-icon>
+          <!-- Save log -->
+        </ion-button>
+      </ion-buttons>
+    </ion-item>
+    <div #terminal2 id="terminal2" class="term"></div>
+  </div>
+
+  <div class="menu">
+    <h4 class="box-title">Test Status</h4>
+    <div class="box-connect ion-text-center">
+      <h2 [ngClass]="stateClass">{{stateEn}}</h2>
+    </div>
+    <!-- <div class="box-connect ion-text-center" [hidden]="isConnectedToWifi()"> 
+      <ion-button color="primary" expand="full">
+        <ng-container *ngIf="isStateTesting">
+          BLUETOOTH CONFIGURATION
+          <ion-spinner name="circles"></ion-spinner>
+        </ng-container>
+      </ion-button>
+      <h2 [ngClass]="stateClass">{{stateEn}}</h2>
     </div>
 
-    <div class="menu">
-      <h4 class="box-title">Test Status</h4>
+    <div class="box-connect ion-text-center" [hidden]="isNotConnectedToWifiorIsTesting()"> 
+      <ion-button color="warning" expand="full">
+        <ng-container *ngIf="isStateTesting">
+          AUTHENTICATION
+          <ion-spinner name="circles"></ion-spinner>
+        </ng-container>
+      </ion-button>
+      <h2 [ngClass]="stateClass">{{stateEn}}</h2>
+    </div>
 
-      <div class="box-connect ion-text-center" [hidden]="isConnectedToWifi()"> 
-        <ion-button color="primary" expand="full">
-          <ng-container *ngIf="isTesting">
-            BLUETOOTH CONFIGURATION
-            <ion-spinner name="circles"></ion-spinner>
-          </ng-container>
+    <div class="box-connect ion-text-center" [hidden]="!isStateTesting()"> 
+      <ion-button color="warning" expand="full">
+        <ng-container *ngIf="isStateTesting">
+          RUNNING TESTS
+          <ion-spinner name="circles"></ion-spinner>
+        </ng-container>
+      </ion-button>
+      <h2 [ngClass]="stateClass">{{stateEn}}</h2>
+    </div> -->
+    
+    <h4 class="box-title" [hidden]="isConnectedToWifi()">
+      Operation 
+    </h4>
+    <!-- <h4 class="box-title" [hidden]="isNotConnectedToWifiorIsTesting()">
+      Authentication
+    </h4>
+    <h4 class="box-title" [hidden]="!isTesting()">
+      Testing
+    </h4> -->
+    <div class="box-connect">
+      <div [hidden]="isConnectedToWifi()">
+        <!-- <ion-button (click)="deviceSelectionOnClick()" expand="full" color="dark">
+          CONNECT DEVICE
         </ion-button>
-        <h2 [ngClass]="stateClass">{{stateEn}}</h2>
-        <h2 [ngClass]="stateClass">{{stateCn}}</h2>
+        <br/> -->
+        <ion-button (click)="scanWifiOnClick()" expand="full" color="dark" [disabled]="!deviceSelected">
+          SCAN WIFI
+        </ion-button>
+        <br/>
+        <ion-button (click)="findMeOnClick()" expand="full" color="dark" [disabled]="!deviceSelected">
+          FIND ME
+        </ion-button>
+        <br/>
+        <ion-button (click)="wifiConfigAndConnectOnClick()" expand="full" color="dark" [disabled]="!deviceSelected">
+          CONNECT TO WIFI
+        </ion-button>
       </div>
 
-      <div class="box-connect ion-text-center" [hidden]="isNotConnectedToWifiorIsTesting()"> 
-        <ion-button color="warning" expand="full">
-          <ng-container *ngIf="isTesting">
-            AUTHENTICATION
-            <ion-spinner name="circles"></ion-spinner>
-          </ng-container>
+      <div [hidden]="isNotConnectedToWifiorIsTesting()">
+        <ion-button (click)="getKey()" expand="block" color="dark" [disabled]="gotKey">
+          GET_KEY
         </ion-button>
-        <h2 [ngClass]="stateClass">{{stateEn}}</h2>
-        <h2 [ngClass]="stateClass">{{stateCn}}</h2>
+        <br/>
+        <ion-button (click)="setSecret()" expand="block" color="dark" [disabled]="secretSet">
+          SET_SECRET
+        </ion-button>
+        <br/>
+        <ion-button (click)="registerDevice()" expand="block" color="dark" [disabled]="deviceRegistered">
+          REGISTER_DEVICE
+        </ion-button>
+        <br/>
+        <ion-button (click)="setTicket()" expand="block" color="dark" [disabled]="ticketSet">
+          SET_TICKET
+        </ion-button>
       </div>
 
-      <div class="box-connect ion-text-center" [hidden]="!isTesting()"> 
-        <ion-button color="warning" expand="full">
-          <ng-container *ngIf="isTesting">
-            RUNNING TESTS
-            <ion-spinner name="circles"></ion-spinner>
-          </ng-container>
+      <!-- <ion-button (click)="onRun()" color="success" expand="full">
+        <ng-container *ngIf="isTesting">
+          <ion-icon slot="start" name="play"></ion-icon>
+          teste
+        </ng-container>
+      </ion-button> -->
+
+      <div class="middle" [hidden]="!isStateTesting()">
+        <ion-row>
+        <ion-button (click)="eraseIrOnClick()" expand="block" color="dark">
+          ERASE_IR
         </ion-button>
-        <h2 [ngClass]="stateClass">{{stateEn}}</h2>
-        <h2 [ngClass]="stateClass">{{stateCn}}</h2>
+        <ion-button (click)="getIrOnClick()" expand="block" color="dark">
+          GET_IR
+        </ion-button>
+        </ion-row>
+        <br/>
+        <ion-row>
+        <ion-button (click)="setIrOnClick()" expand="block" color="dark">
+          SET_IR
+        </ion-button>
+        <br/>
+        <ion-button (click)="getInfoOnClick()" expand="block" color="dark">
+          GET_INFO
+        </ion-button>
+        </ion-row>
+        <br/>
+        <ion-row>
+        <ion-button (click)="cancelIrOnClick()" expand="block" color="dark">
+          CANCEL_IR
+        </ion-button>
+        <br/>
+        <ion-button (click)="editIrOnClick()" expand="block" color="dark">
+          EDIT_IR
+        </ion-button>
+        </ion-row>
+        <br/>
+        <ion-row>
+        <ion-button (click)="runSceneOnClick()" expand="block" color="dark">
+          RUN_SCENE
+        </ion-button>
+        <br/>
+        <ion-button (click)="facResetOnClick()" expand="block" color="dark">
+          FAC_RESET
+        </ion-button>
+        </ion-row>
+        <br/>
+        <ion-row>
+        <ion-button (click)="getHeapOnClick()" expand="block" color="dark">
+          GET_HEAP
+        </ion-button>
+        <br/>
+        <ion-button (click)="resetOnClick()" expand="block" color="dark">
+          RESET
+        </ion-button>
+        </ion-row>
+        <br/>
+        <ion-row>
+        <ion-button (click)="bleOnOnClick()" expand="block" color="dark">
+          BLE_ON
+        </ion-button>
+        <br/>
+        <ion-button (click)="bleOffOnClick()" expand="block" color="dark">
+          BLE_OFF
+        </ion-button>
+        </ion-row>
+        <br/>
+        <ion-row>
+        <ion-button (click)="findMeWsOnClick()" expand="block" color="dark">
+          FIND_ME
+        </ion-button>
+        </ion-row>
       </div>
-      
-      <h4 class="box-title" [hidden]="isConnectedToWifi()">
-        Operation 
-      </h4>
-      <!-- <h4 class="box-title" [hidden]="isNotConnectedToWifiorIsTesting()">
-        Authentication
-      </h4>
-      <h4 class="box-title" [hidden]="!isTesting()">
-        Testing
-      </h4> -->
+    </div>
+
+    <h4 class="box-title">Automated tests</h4>
+    <div class="box-connect ion-text-center">
+      <ion-button (click)="onRun()" color="success" expand="full">
+        <ng-container *ngIf="!isTesting">
+          <ion-icon name="play"></ion-icon>
+          LOCAL TESTS
+        </ng-container>
+        <ng-container *ngIf="isTesting">
+          <ion-spinner name="circles"></ion-spinner>
+        </ng-container>
+      </ion-button>
+      <br/>
+
+      <ion-button (click)="onRun()" color="success" expand="full">
+        <ng-container *ngIf="!isTesting">
+          <ion-icon name="play"></ion-icon>
+          LOCAL STRESS TESTS
+        </ng-container>
+        <ng-container *ngIf="isTesting">
+          <ion-spinner name="circles"></ion-spinner>
+        </ng-container>
+      </ion-button>
+      <br/>
+
+      <ion-button (click)="onRun()" color="success" expand="full">
+        <ng-container *ngIf="!isTesting">
+          <ion-icon name="play"></ion-icon>
+          REMOTE TESTS
+        </ng-container>
+        <ng-container *ngIf="isTesting">
+          <ion-spinner name="circles"></ion-spinner>
+        </ng-container>
+      </ion-button>
+      <br/>
+
+      <ion-button (click)="onRun()" color="success" expand="full">
+        <ng-container *ngIf="!isTesting">
+          <ion-icon name="play"></ion-icon>
+          REMOTE STRESS TESTS
+        </ng-container>
+        <ng-container *ngIf="isTesting">
+          <ion-spinner name="circles"></ion-spinner>
+        </ng-container>
+      </ion-button>
+      <br/>
+
+      <ion-button (click)="onRun()" color="danger" expand="full">
+        <ng-container *ngIf="!isTesting">
+          <ion-icon name="play"></ion-icon>
+          STOP
+        </ng-container>
+        <ng-container *ngIf="isTesting">
+          <ion-spinner name="circles"></ion-spinner>
+        </ng-container>
+      </ion-button>
+    </div>
+
+    <!-- <h4 class="box-title">Operation (程序)</h4>
       <div class="box-connect">
-        <div [hidden]="isConnectedToWifi()">
-          <ion-button (click)="deviceSelectionOnClick()" expand="full" color="dark">
-            CONNECT DEVICE
-          </ion-button>
-          <br/>
-          <ion-button (click)="scanWifiOnClick()" expand="full" color="dark" [disabled]="!deviceSelected">
-            SCAN WIFI
-          </ion-button>
-          <br/>
-          <ion-button (click)="findMeOnClick()" expand="full" color="dark" [disabled]="!deviceSelected">
-            FIND ME
-          </ion-button>
-          <br/>
-          <ion-button (click)="wifiConfigAndConnectOnClick()" expand="full" color="dark" [disabled]="!deviceSelected">
-            CONNECT TO WIFI
-          </ion-button>
-          <br/>
-        </div>
-
-        <div [hidden]="isNotConnectedToWifiorIsTesting()">
-          <ion-button (click)="getKey()" expand="block" color="dark" [disabled]="gotKey">
-            GET_KEY
-          </ion-button>
-          <br/>
-          <ion-button (click)="setSecret()" expand="block" color="dark" [disabled]="secretSet">
-            SET_SECRET
-          </ion-button>
-          <br/>
-          <ion-button (click)="registerDevice()" expand="block" color="dark" [disabled]="deviceRegistered">
-            REGISTER_DEVICE
-          </ion-button>
-          <br/>
-          <ion-button (click)="setTicket()" expand="block" color="dark" [disabled]="ticketSet">
-            SET_TICKET
-          </ion-button>
-          <br/>
-        </div>
-
-        <!-- <ion-button (click)="onRun()" color="success" expand="full">
-          <ng-container *ngIf="isTesting">
-            <ion-icon slot="start" name="play"></ion-icon>
-            teste
-          </ng-container>
-        </ion-button> -->
-
-        <div [hidden]="!isTesting()">
-          <ion-button (click)="eraseIrOnClick()" expand="block" color="dark">
-            ERASE_IR
-          </ion-button>
-          <br/>
-          <ion-button (click)="getIrOnClick()" expand="block" color="dark">
-            GET_IR
-          </ion-button>
-          <br/>
-          <ion-button (click)="setIrOnClick()" expand="block" color="dark">
-            SET_IR
-          </ion-button>
-          <br/>
-          <ion-button (click)="getInfoOnClick()" expand="block" color="dark">
-            GET_INFO
-          </ion-button>
-          <br/>
-          <ion-button (click)="cancelIrOnClick()" expand="block" color="dark">
-            CANCEL_IR
-          </ion-button>
-          <br/>
-          <ion-button (click)="editIrOnClick()" expand="block" color="dark">
-            EDIT_IR
-          </ion-button>
-          <br/>
-          <ion-button (click)="runSceneOnClick()" expand="block" color="dark">
-            RUN_SCENE
-          </ion-button>
-          <br/>
-          <ion-button (click)="facResetOnClick()" expand="block" color="dark">
-            FAC_RESET
-          </ion-button>
-          <br/>
-          <ion-button (click)="getHeapOnClick()" expand="block" color="dark">
-            GET_HEAP
-          </ion-button>
-          <br/>
-          <ion-button (click)="resetOnClick()" expand="block" color="dark">
-            RESET
-          </ion-button>
-          <br/>
-          <ion-button (click)="bleOnOnClick()" expand="block" color="dark">
-            BLE_ON
-          </ion-button>
-          <br/>
-          <ion-button (click)="bleOffOnClick()" expand="block" color="dark">
-            BLE_OFF
-          </ion-button>
-          <br/>
-          <ion-button (click)="findMeWsOnClick()" expand="block" color="dark">
-            FIND_ME
-          </ion-button>
-        </div>
-      </div>
-
-      <!-- <h4 class="box-title">Operation (程序)</h4>
-      <div class="box-connect">
-        <ion-button (click)="onBurnFirmware()" color="danger" expand="full" [disabled]="!canBurn()">
-          <ng-container *ngIf="!isBurning">
-            <ion-icon slot="start" name="flame-outline"></ion-icon>
-            Burn FIRMWARE (烧录固件)
-          </ng-container>
-          <ng-container *ngIf="isBurning">
-            <ion-spinner name="circles"></ion-spinner>
-          </ng-container>
-        </ion-button>
-        <br />
         <ion-button (click)="onRun()" color="success" expand="full" [disabled]="!canRun()">
           <ng-container *ngIf="!isTesting">
-            <ion-icon name="play"></ion-icon>
+            <ion-icon slot="start" name="play"></ion-icon>
             RUN FCT (测试)
           </ng-container>
           <ng-container *ngIf="isTesting">
@@ -226,6 +303,47 @@
         </ion-button>
       </div> -->
 
-    </div>
+    <!-- <h4 class="box-title">Operation (程序)</h4>
+    <div class="box-connect">
+      <ion-button (click)="onBurnFirmware()" color="danger" expand="full" [disabled]="!canBurn()">
+        <ng-container *ngIf="!isBurning">
+          <ion-icon slot="start" name="flame-outline"></ion-icon>
+          Burn FIRMWARE (烧录固件)
+        </ng-container>
+        <ng-container *ngIf="isBurning">
+          <ion-spinner name="circles"></ion-spinner>
+        </ng-container>
+      </ion-button>
+      <br />
+      <ion-button (click)="onRun()" color="success" expand="full" [disabled]="!canRun()">
+        <ng-container *ngIf="!isTesting">
+          <ion-icon name="play"></ion-icon>
+          RUN FCT (测试)
+        </ng-container>
+        <ng-container *ngIf="isTesting">
+          <ion-spinner name="circles"></ion-spinner>
+        </ng-container>
+      </ion-button>
+    </div> -->
+
   </div>
+</div>
+<!-- 
+
+<ion-menu side="start" menuId="first" contentId="main">
+  <ion-header>
+    <ion-toolbar color="primary">
+      <ion-title>Start Menu</ion-title>
+    </ion-toolbar>
+  </ion-header>
+  <ion-content>
+    <ion-list>
+      <ion-item>Menu Item</ion-item>
+      <ion-item>Menu Item</ion-item>
+      <ion-item>Menu Item</ion-item>
+      <ion-item>Menu Item</ion-item>
+      <ion-item>Menu Item</ion-item>
+    </ion-list>
+  </ion-content>
+</ion-menu> -->
 </ion-content>

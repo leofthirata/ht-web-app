@@ -8,3 +8,15 @@ export enum WifiCipherType {
   WIFI_CIPHER_TYPE_AES_CMAC128 = 6 /**< the cipher type is AES-CMAC-128 */,
   WIFI_CIPHER_TYPE_UNKNOWN = 7 /**< the cipher type is unknown */,
 }
+
+export const ciph = {
+  0:'WIFI_CIPHER_TYPE_NONE',
+  1:'WIFI_CIPHER_TYPE_WEP40',
+  2:'WIFI_CIPHER_TYPE_WEP104',
+  3:'WIFI_CIPHER_TYPE_TKIP',
+  4:'WIFI_CIPHER_TYPE_CCMP',
+  5:'WIFI_CIPHER_TYPE_TKIP_CCMP',
+  6:'WIFI_CIPHER_TYPE_AES_CMAC128',
+  7:'WIFI_CIPHER_TYPE_SMS4',
+  8:'WIFI_CIPHER_TYPE_UNKNOWN',
+};

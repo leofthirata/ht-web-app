@@ -19,6 +19,39 @@ import { printPubKeyRSA, importPubKeyRSA } from '../home/utils/encrypt';
 import { getAccessToken, sync, createPlace, createEnvironment, createDevice } from '../home/services/backend/backend'
 import { LocalTestingService } from '../testing/testing';
 
+// logger
+import { download } from './utils/logger';
+
+enum State {
+  DISCONNECTED,
+  BLUETOOTH,
+  SCAN_WIFI,
+  FIND_ME,
+  CONNECT_WIFI,
+  AUTHENTICATION,
+  GET_KEY,
+  SET_SECRET,
+  REGISTER,
+  SET_TICKET,
+  READY,
+  TESTING,
+  CMD_ERASE_IR,
+  CMD_GET_IR,
+  CMD_SET_IR,
+  CMD_GET_INFO,
+  CMD_CANCEL_IR,
+  CMD_EDIT_IR,
+  CMD_RUN_SCENE,
+  CMD_FAC_RESET,
+  CMD_GET_HEAP,
+  CMD_RESET,
+  CMD_BLE_ON,
+  CMD_BLE_OFF,
+  CMD_FIND_ME,
+  FAIL,
+  PASS
+}
+
 @Component({
   selector: 'app-home',
   templateUrl: 'home.page.html',
@@ -30,6 +63,7 @@ export class HomePage {
   @ViewChild('terminal2') terminal2: ElementRef;
 
   private m_ble: BluetoothService;
+  private bleConnected: boolean;
   public deviceSelected = false;
   public backend = "Staging";
   public product = "ONE";
@@ -37,6 +71,8 @@ export class HomePage {
   public wifiPassword = "P@d0t3c2021";
   public bleMac = "7C9EBDD71678";
   public localTest: LocalTestingService;
+  private socket: WebSocketService;
+
   // public remoteTest: 
   private term = new Terminal();
   private term2 = new Terminal();
@@ -50,7 +86,6 @@ export class HomePage {
   private m_auth: AuthService;
   private m_devicePublicKey;
   private m_ip: string = '';
-  private m_state = DeviceState.GET_KEY;
   private m_secret: string;
   private m_deviceTicket: string;
   private m_deviceUuid: string;
@@ -69,6 +104,17 @@ export class HomePage {
   private m_myPrivKey;
   private m_myPrivKeyPem;
 
+  public isConnected: boolean;
+  public isAuthenticated: boolean;
+  public isTesting: boolean;
+  public stateEn = 'BLE DISCONNECTED';
+  public stateClass = 'state-disconnected';
+
+  private logger = new Uint8Array();
+  private loggerIndex = 0;
+
+  private logger2 = new Uint8Array();
+
   constructor(private nav: NavController, private alertController: AlertController) {
     navigator.serial.addEventListener('disconnect', (event) => {
       const port = event.target as SerialPort;
@@ -77,15 +123,143 @@ export class HomePage {
       if (port === this.devPort) {
         this.devConnected = false;
       }
+      
+      this.setState(State.DISCONNECTED);
+    });
+
+    this.socket = new WebSocketService();
+
+    this.socket.setState(DeviceState.GET_KEY);
+
+    this.socket.sentPacket$().subscribe((bytes) => {
+      try {
+        const str = JSON.stringify(bytes, null, 2);
+        const date = new Date();
+        const dateStr = `[${date.toLocaleTimeString()}] [WS] SEND:`;
+        this.yellow(dateStr);
+
+        const buf1 = Cast.stringToBytes(dateStr);
+        const buf2 = Cast.stringToBytes(str + '\n\r');
+        let buffer = new Uint8Array(buf1.length + buf2.length);
+        buffer.set(buf1);
+        buffer.set(buf2, buf1.length);
+        this.loggerIndex += buf1.length + buf2.length;
+
+        try {
+          this.white(str);
+          this.logTerm(buffer);
+        } catch (error) {
+          this.red(str);
+        }
+      } catch (error) {
+        this.red('Rx Error: ' + error);
+      }
+    });
+
+    this.socket.rcvPacket$().subscribe((str) => {
+      try {
+        const date = new Date();
+        const dateStr = `[${date.toLocaleTimeString()}] [WS] RCVD:`;
+        this.yellow(dateStr);
+
+        const buf1 = Cast.stringToBytes(dateStr);
+        const buf2 = Cast.stringToBytes(str + '\n\r');
+        let buffer = new Uint8Array(buf1.length + buf2.length);
+        buffer.set(buf1);
+        buffer.set(buf2, buf1.length);
+        this.loggerIndex += buf1.length + buf2.length;
+
+        try {
+          this.white(str);
+          this.logTerm(buffer);
+        } catch (error) {
+          this.red(str);
+        }
+      } catch (error) {
+        this.red('Rx Error: ' + error);
+      }
     });
   }
 
   public async deviceSelectionOnClick() {
     this.m_ble = new BluetoothService(this.bleMac);
+
+    this.m_ble.sentPacket$().subscribe((bytes) => {
+      try {
+        const str = Cast.bytesToHex(new Uint8Array(bytes));
+        const date = new Date();
+        const dateStr = `[${date.toLocaleTimeString()}] [BLE] SEND:`;
+        this.blue(dateStr);
+
+        const buf1 = Cast.stringToBytes(dateStr);
+        const buf2 = Cast.stringToBytes(str + '\n\r');
+        let buffer = new Uint8Array(buf1.length + buf2.length);
+        buffer.set(buf1);
+        buffer.set(buf2, buf1.length);
+        this.loggerIndex += buf1.length + buf2.length;
+
+        try {
+          this.white(str);
+          this.logTerm(buffer);
+        } catch (error) {
+          this.red(str);
+        }
+      } catch (error) {
+        this.red('Rx Error: ' + error);
+      }
+    });
+
+    this.m_ble.rcvPacket$().subscribe((bytes) => {
+      try {
+        const str = Cast.bytesToHex(new Uint8Array(bytes));
+        const date = new Date();
+        const dateStr = `[${date.toLocaleTimeString()}] [BLE] RCVD:`;
+        this.blue(dateStr);
+
+        const buf1 = Cast.stringToBytes(dateStr);
+        const buf2 = Cast.stringToBytes(str + '\n\r');
+        let buffer = new Uint8Array(buf1.length + buf2.length);
+        buffer.set(buf1);
+        buffer.set(buf2, buf1.length);
+        this.loggerIndex += buf1.length + buf2.length;
+
+        try {
+          this.white(str);
+          this.logTerm(buffer);
+        } catch (error) {
+          this.red(str);
+        }
+      } catch (error) {
+        this.red('Rx Error: ' + error);
+      }
+    });
+
+    this.m_ble.rcvParsed$().subscribe((bytes) => {
+      try {
+        const str = JSON.stringify(bytes, null, 2);
+        const date = new Date();
+        const dateStr = `[${date.toLocaleTimeString()}] [BLE] PARSED:`;
+        this.blue(dateStr);
+
+        const buf1 = Cast.stringToBytes(dateStr);
+        const buf2 = Cast.stringToBytes(str + '\n\r');
+        let buffer = new Uint8Array(buf1.length + buf2.length);
+        buffer.set(buf1);
+        buffer.set(buf2, buf1.length);
+        this.loggerIndex += buf1.length + buf2.length;
+
+        try {
+          this.white(str);
+          this.logTerm(buffer);
+        } catch (error) {
+          this.red(str);
+        }
+      } catch (error) {
+        this.red('Rx Error: ' + error);
+      }
+    });
+
     await this.m_ble.find();
-    await this.m_ble.connect();
-    await this.m_ble.getService();
-    await this.m_ble.getCharacteristics();
     console.log(this.wifiSsid);
     console.log(this.wifiPassword);
     console.log(this.product);
@@ -94,19 +268,34 @@ export class HomePage {
 
   //TODO: disconnect after getting IP
   public async scanWifiOnClick() {
-    console.log(this.m_ble);
+    await this.m_ble.connect();
+    await this.m_ble.getService();
+    await this.m_ble.getCharacteristics();
     await this.m_ble.scanWifi(15);
   }
 
   public async findMeOnClick() {
+    await this.m_ble.connect();
+    await this.m_ble.getService();
+    await this.m_ble.getCharacteristics();
     await this.m_ble.findMe();
   }
 
   public async connectToWifiOnClick() {
+    await this.m_ble.connect();
+    await this.m_ble.getService();
+    await this.m_ble.getCharacteristics();
     await this.m_ble.connectToWifi(this.wifiSsid, this.wifiPassword);
     this.m_ip = this.m_ble.getIp();
+    console.log(this.m_ip)
     this.m_auth = new AuthService();
     // this.nav.navigateForward('authentication', { state: this.m_ble.getIp() });
+  }
+
+  public isBleConnected() {
+    this.bleConnected = this.m_ble.isConnected();
+    console.log(this.bleConnected);
+    return this.bleConnected;
   }
 
   public isConnectedToWifi() {
@@ -124,17 +313,15 @@ export class HomePage {
       "key": this.m_myPubKeyPem
     };
 
-    const socket = new WebSocketService(this.m_state, this.term);
-    const onOpen = await socket.open(`ws://${this.m_ip}/get_key`, this.m_myPrivKey);
-    const onSend = await socket.send(request);
-    const resp = await socket.receive();
+    const onOpen = await this.socket.open(`ws://${this.m_ip}/get_key`, this.m_myPrivKey);
+    const onSend = await this.socket.send(request);
+    const resp = await this.socket.receive();
     console.log(resp);
 
     this.m_devicePublicKey = importPubKeyRSA(JSON.parse(resp).key);
 
     printPubKeyRSA(this.m_devicePublicKey);
 
-    this.m_state = DeviceState.SEND_CMD;
     this.gotKey = true;
   }
 
@@ -145,10 +332,11 @@ export class HomePage {
       'key': this.m_myPubKeyPem
     };
     
-    const socket = new WebSocketService(this.m_state, this.term);
-    const onOpen = await socket.open(`ws://${this.m_ip}/set_secret`, this.m_myPrivKey);
-    const onSend = await socket.send(secretRequest, this.m_devicePublicKey);
-    const resp = await socket.receive();
+    this.socket.setState(DeviceState.SEND_CMD);
+
+    const onOpen = await this.socket.open(`ws://${this.m_ip}/set_secret`, this.m_myPrivKey);
+    const onSend = await this.socket.send(secretRequest, this.m_devicePublicKey);
+    const resp = await this.socket.receive();
     const success = JSON.parse(resp).mg;
     if (success == 'fail') {
       throw 'SECRET_FAIL';
@@ -178,10 +366,9 @@ export class HomePage {
       'key': this.m_myPubKeyPem
     };
     
-    const socket = new WebSocketService(this.m_state, this.term);
-    const onOpen = await socket.open(`ws://${this.m_ip}/set_ticket`, this.m_myPrivKey);
-    const onSend = await socket.send(ticketRequest, this.m_devicePublicKey);
-    const resp = await socket.receive();
+    const onOpen = await this.socket.open(`ws://${this.m_ip}/set_ticket`, this.m_myPrivKey);
+    const onSend = await this.socket.send(ticketRequest, this.m_devicePublicKey);
+    const resp = await this.socket.receive();
     const success = JSON.parse(resp).mg;
     if (success == 'fail') {
       throw 'TICKET_FAIL';
@@ -192,29 +379,21 @@ export class HomePage {
   }
 
   private startTesting() {
-    this.localTest = new LocalTestingService(this.m_ip, this.m_myPubKeyPem, this.m_myPrivKey, this.m_devicePublicKey, this.m_deviceToken, this.term);
+    this.localTest = new LocalTestingService(this.m_ip, this.m_myPubKeyPem, this.m_myPrivKey, this.m_devicePublicKey, this.m_deviceToken, this.socket);
     // const local = new LocalTestingService();
     // const remote = new RemoteTestingService();
   }
 
   public isNotConnectedToWifiorIsTesting() {
-    return (this.m_ip === '' ? true : false) || this.isTesting();
+    return (this.m_ip === '' ? true : false) || this.isStateTesting();
   }
 
-  public isTesting() {
+  public isStateTesting() {
     return this.ticketSet;
   }
 
   public getInfoOnClick() {
     this.localTest.GET_INFO();
-  }
-
-  private yellow(text: string) {
-    text = text.replace(/\n/g, '\r\n');
-    const utf8 = Cast.stringToBytes(text);
-    this.term.write(Colors.yellow);
-    this.term.write(utf8);
-    this.term.write('\r\n');
   }
 
   public eraseIrOnClick() {
@@ -265,23 +444,59 @@ export class HomePage {
     this.localTest.FIND_ME();
   }
 
-  // public async localTests() {
-  //   let request: any = { 
-  //     'token': this.m_deviceToken,
-  //     'key': this.m_myPubKey,
-  //   };
-    
-  //   request.command = {"cm": 3};
-  //   const socket = new WebSocketService(DeviceState.SEND_CMD);
-  //   const onOpen = await socket.open(`ws://${this.m_ip}/ws`, this.m_myPrivKey);
-  //   const onSend = await socket.send(request, this.m_devicePublicKey);
-  //   const resp = await socket.receive();
-  //   console.log(resp);
-  //   // const success = JSON.parse(resp).mg;
-  //   // if (success == 'fail') {
-  //   //   throw 'SECRET_FAIL';
-  //   // }
-  // }
+  private setState(state: State) {
+    switch (state) {
+      case State.DISCONNECTED:
+        this.stateEn = 'BLE DISCONNECTED';
+        this.stateClass = 'state-disconnected';
+        this.isTesting = false;
+        this.isConnected = false;
+        this.isAuthenticated = false;
+        break;
+      case State.BLUETOOTH:
+        this.stateEn = 'BLE CONFIGURATION';
+        this.stateClass = 'state-bluetooth';
+        this.isTesting = false;
+        this.isConnected = true;
+        this.isAuthenticated = false;
+        break;
+      case State.AUTHENTICATION:
+        this.stateEn = 'AUTHENTICATION';
+        this.stateClass = 'state-authentication';
+        this.isTesting = false;
+        this.isConnected = true;
+        this.isAuthenticated = false;
+        break;
+      case State.READY:
+        this.stateEn = 'READY';
+        this.stateClass = 'state-ready';
+        this.isConnected = true;
+        this.isTesting = false;
+        this.isAuthenticated = false;
+        break;
+      case State.TESTING:
+        this.stateEn = 'RUNNING TEST';
+        this.stateClass = 'state-testing';
+        this.isConnected = true;
+        this.isTesting = true;
+        this.isAuthenticated = false;
+        break;
+      case State.FAIL:
+        this.stateEn = 'FAIL';
+        this.stateClass = 'state-fail';
+        this.isConnected = true;
+        this.isTesting = false;
+        this.isAuthenticated = false;
+        break;
+      case State.PASS:
+        this.stateEn = 'PASS';
+        this.stateClass = 'state-pass';
+        this.isConnected = true;
+        this.isTesting = false;
+        this.isAuthenticated = false;
+        break;
+    }
+  }
 
   public ionViewDidEnter() {
     const fitAddon = new FitAddon();
@@ -344,36 +559,52 @@ export class HomePage {
 
     if (this.devPort) {
       this.devConnected = true;
-      this.term.writeln(Colors.green + '[SUCS] Serial port connected');
+      const date = new Date();
+      const dateStr = `[${date.toLocaleTimeString()}] [SERIAL] Connected to serial port\n\r`;
+      this.green(dateStr);
+
+      const buf1 = Cast.stringToBytes(dateStr);
+      let buffer = new Uint8Array(buf1.length);
+      buffer.set(buf1);
+      this.loggerIndex += buf1.length;
     }
 
     this.readUntilClosed();
   }
 
   async readUntilClosed() {
-    let keepReading = true;
     let reader;
     let buffer: number[] = [];
+    var index = 0;
 
-      reader = this.devPort.readable.getReader();
-      try {
-        while (true) {
-          const { value, done } = await reader.read();
-          if (done) {
-            // |reader| has been canceled.
-            break;
-          } else {
-            buffer = Array.from(value);
-            const str = Cast.bytesToString(new Uint8Array(buffer));
-            this.term2.write(str);
+    reader = this.devPort.readable.getReader();
+    try {
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) {
+          // |reader| has been canceled.
+          break;
+        } else {
+          buffer = Array.from(value);
+          const str = Cast.bytesToString(new Uint8Array(buffer));
+          this.term2.write(str);
+
+          index += buffer.length;
+          // create bigger uint8array
+          if (index > this.logger2.length) {
+            const buf: Uint8Array = this.logger2;
+            this.logger2 = new Uint8Array(index);
+            this.logger2.set(buf);
+            this.logger2.set(new Uint8Array(buffer), buf.length);
           }
-          // Do something with |value|...
         }
-      } catch (error) {
-        // Handle |error|...
-      } finally {
-        reader.releaseLock();
+        // Do something with |value|...
       }
+    } catch (error) {
+      // Handle |error|...
+    } finally {
+      reader.releaseLock();
+    }
 
     await this.devPort.close();
   }
@@ -405,45 +636,71 @@ export class HomePage {
     }
   }
 
-  private async send(port: SerialPort, data: number[]): Promise<void> {
-    const writter = await port.writable.getWriter();
-
-    try {
-      await writter.write(new Uint8Array(data));
-    } finally {
-      writter.close();
+  private logTerm(buffer: Uint8Array) {
+    if (this.loggerIndex > this.logger.length) {
+      const buf: Uint8Array = this.logger;
+      this.logger = new Uint8Array(this.loggerIndex);
+      this.logger.set(buf);
+      this.logger.set(new Uint8Array(buffer), buf.length);
     }
   }
 
-  private recv(port: SerialPort): Promise<number[]> {
-    return new Promise<number[]>(async (res, rej) => {
-      const reader = await port.readable.getReader();
+  public async saveTermOnClick() {
+    await download(this.logger, 'term');
+    this.logger = new Uint8Array();
+  }
 
-      const timeout = setTimeout(() => {
-        reader.cancel();
-        reader.releaseLock();
-        rej('timeout waiting for response');
-      }, 3000);
+  public async saveTerm2OnClick() {
+    await download(this.logger2, 'term2');
+    this.logger2 = new Uint8Array();
+  }
 
-      let buffer: number[] = [];
-      
-      try {
-        const { value } = await reader.read();
-        if (value) {
-          buffer = Array.from(value);
-        }
-      } finally {
-        reader.releaseLock();
-        clearTimeout(timeout);
-      }
+  public eraseTermOnClick() {
+    this.term.clear();
+  }
 
-      if (port === this.devPort) {
-        const str = Cast.bytesToString(new Uint8Array(buffer));
-        this.term2.write(str);
-      }
+  public eraseTerm2OnClick() {
+    this.term2.clear();
+  }
 
-      res(buffer);
-    });
+  private white(text: string) {
+    text = text.replace(/\n/g, '\r\n');
+    const utf8 = Cast.stringToBytes(text);
+    this.term.write(Colors.white);
+    this.term.write(utf8);
+    this.term.write('\r\n');
+  }
+
+  private blue(text: string) {
+    text = text.replace(/\n/g, '\r\n');
+    const utf8 = Cast.stringToBytes(text);
+    this.term.write(Colors.blue);
+    this.term.write(utf8);
+    this.term.write('\r\n');
+  }
+
+  private red(text: string) {
+    text = text.replace(/\n/g, '\r\n');
+    const utf8 = Cast.stringToBytes(text);
+    this.term.write(Colors.red);
+    this.term.write(utf8);
+    this.term.write('\r\n');
+  }
+
+  private green(text: string) {
+    text = text.replace(/\n/g, '\r\n');
+    const utf8 = Cast.stringToBytes(text);
+    this.term.write(Colors.green);
+    this.term.write(utf8);
+    this.term.write('\r\n');
+  }
+
+  private yellow(text: string) {
+    text = text.replace(/\n/g, '\r\n');
+    const utf8 = Cast.stringToBytes(text);
+    this.term.write(Colors.yellow);
+    this.term.write(utf8);
+    this.term.write('\r\n');
   }
 
   private logError(error: any) {

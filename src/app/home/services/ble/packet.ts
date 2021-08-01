@@ -35,6 +35,16 @@ export class Packet {
     this.m_cmd = cmd;
   }
 
+  // private _createWifiConnCmd(ssid: string, pswd: string, bssid: string) {
+  //   let cmd = str2arr('02' + ascii2hex(ssid) + '00' + ascii2hex(pswd) + '00' + ascii2hex(bssid) + '00');
+
+  //   for(let i = 0; i < 12; i++) {
+  //     cmd[cmd.length] = 0x00;
+  //   }
+
+  //   this.m_cmd = cmd;
+  // }
+
   private _createFindMeCmd() {
     this.m_cmd = new Uint8Array([0x03, 0x00]);
   }

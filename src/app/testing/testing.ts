@@ -8,15 +8,14 @@ export class LocalTestingService {
   private devicePubKeyPem: any;
   private deviceToken: any;
   private uri: string;
-  private term: Terminal;
+  private socket: WebSocketService;
 
-  constructor(uri:string, myPubKeyPem, myPrivKey, devicePubKeyPem, deviceToken, term) {
+  constructor(uri:string, myPubKeyPem, myPrivKey, devicePubKeyPem, deviceToken, socket: WebSocketService) {
     this.myPubKeyPem = myPubKeyPem;
     this.myPrivKey = myPrivKey;
     this.devicePubKeyPem = devicePubKeyPem;
     this.deviceToken = deviceToken;
     this.uri = uri;
-    this.term = term;
 
     this.m_request = { "token": this.deviceToken, "key": this.myPubKeyPem };
   }
@@ -26,10 +25,9 @@ export class LocalTestingService {
     return new Promise(async res => {
       this.m_request.command = {"cm": 3};
 
-      const socket = new WebSocketService(DeviceState.SEND_CMD, this.term);
-      const onOpen = await socket.open(`ws://${this.uri}/ws`, this.myPrivKey);
-      const onSend = await socket.send(this.m_request, this.devicePubKeyPem);
-      const resp = await socket.receive();
+      const onOpen = await this.socket.open(`ws://${this.uri}/ws`, this.myPrivKey);
+      const onSend = await this.socket.send(this.m_request, this.devicePubKeyPem);
+      const resp = await this.socket.receive();
       const success = JSON.parse(resp).mg;
       if (success == 'fail') {
         throw 'GET_INFO FAIL';
@@ -41,10 +39,9 @@ export class LocalTestingService {
   
   public async ERASE_IR() {
     this.m_request.command = {"cm": 0, "id": 1};
-    const socket = new WebSocketService(DeviceState.SEND_CMD, this.term);
-    const onOpen = await socket.open(`ws://${this.uri}/ws`, this.myPrivKey);
-    const onSend = await socket.send(this.m_request, this.devicePubKeyPem);
-    const resp = await socket.receive();
+    const onOpen = await this.socket.open(`ws://${this.uri}/ws`, this.myPrivKey);
+    const onSend = await this.socket.send(this.m_request, this.devicePubKeyPem);
+    const resp = await this.socket.receive();
     console.log(resp);
     const success = JSON.parse(resp).mg;
     if (success == 'fail') {
@@ -54,10 +51,9 @@ export class LocalTestingService {
   
   public async GET_IR() {
     this.m_request.command = {"cm": 1};
-    const socket = new WebSocketService(DeviceState.SEND_CMD, this.term);
-    const onOpen = await socket.open(`ws://${this.uri}/ws`, this.myPrivKey);
-    const onSend = await socket.send(this.m_request, this.devicePubKeyPem);
-    const resp = await socket.receive();
+    const onOpen = await this.socket.open(`ws://${this.uri}/ws`, this.myPrivKey);
+    const onSend = await this.socket.send(this.m_request, this.devicePubKeyPem);
+    const resp = await this.socket.receive();
     console.log(resp);
     const success = JSON.parse(resp).mg;
     if (success == 'fail') {
@@ -67,10 +63,9 @@ export class LocalTestingService {
 
   public async SET_IR() {
     this.m_request.command = {"cm": 2, "id": 1, "ch": 3};
-    const socket = new WebSocketService(DeviceState.SEND_CMD, this.term);
-    const onOpen = await socket.open(`ws://${this.uri}/ws`, this.myPrivKey);
-    const onSend = await socket.send(this.m_request, this.devicePubKeyPem);
-    const resp = await socket.receive();
+    const onOpen = await this.socket.open(`ws://${this.uri}/ws`, this.myPrivKey);
+    const onSend = await this.socket.send(this.m_request, this.devicePubKeyPem);
+    const resp = await this.socket.receive();
     console.log(resp);
     const success = JSON.parse(resp).mg;
     if (success == 'fail') {
@@ -80,10 +75,9 @@ export class LocalTestingService {
 
   public async CANCEL_IR() {
     this.m_request.command = {"cm": 4};
-    const socket = new WebSocketService(DeviceState.SEND_CMD, this.term);
-    const onOpen = await socket.open(`ws://${this.uri}/ws`, this.myPrivKey);
-    const onSend = await socket.send(this.m_request, this.devicePubKeyPem);
-    const resp = await socket.receive();
+    const onOpen = await this.socket.open(`ws://${this.uri}/ws`, this.myPrivKey);
+    const onSend = await this.socket.send(this.m_request, this.devicePubKeyPem);
+    const resp = await this.socket.receive();
     console.log(resp);
     const success = JSON.parse(resp).mg;
     if (success == 'fail') {
@@ -93,10 +87,9 @@ export class LocalTestingService {
 
   public async EDIT_IR() {
     this.m_request.command = {"cm": 5, "id": 1};
-    const socket = new WebSocketService(DeviceState.SEND_CMD, this.term);
-    const onOpen = await socket.open(`ws://${this.uri}/ws`, this.myPrivKey);
-    const onSend = await socket.send(this.m_request, this.devicePubKeyPem);
-    const resp = await socket.receive();
+    const onOpen = await this.socket.open(`ws://${this.uri}/ws`, this.myPrivKey);
+    const onSend = await this.socket.send(this.m_request, this.devicePubKeyPem);
+    const resp = await this.socket.receive();
     console.log(resp);
     const success = JSON.parse(resp).mg;
     if (success == 'fail') {
@@ -106,10 +99,9 @@ export class LocalTestingService {
 
   public async RUN_SCENE() {
     this.m_request.command = {"cm": 6, "sc":[{"dy":1,"id": 1,"ch":3}]};
-    const socket = new WebSocketService(DeviceState.SEND_CMD, this.term);
-    const onOpen = await socket.open(`ws://${this.uri}/ws`, this.myPrivKey);
-    const onSend = await socket.send(this.m_request, this.devicePubKeyPem);
-    const resp = await socket.receive();
+    const onOpen = await this.socket.open(`ws://${this.uri}/ws`, this.myPrivKey);
+    const onSend = await this.socket.send(this.m_request, this.devicePubKeyPem);
+    const resp = await this.socket.receive();
     console.log(resp);
     const success = JSON.parse(resp).mg;
     if (success == 'fail') {
@@ -119,10 +111,9 @@ export class LocalTestingService {
 
   public async FAC_RESET() {
     this.m_request.command = {"cm": 11};
-    const socket = new WebSocketService(DeviceState.SEND_CMD, this.term);
-    const onOpen = await socket.open(`ws://${this.uri}/ws`, this.myPrivKey);
-    const onSend = await socket.send(this.m_request, this.devicePubKeyPem);
-    const resp = await socket.receive();
+    const onOpen = await this.socket.open(`ws://${this.uri}/ws`, this.myPrivKey);
+    const onSend = await this.socket.send(this.m_request, this.devicePubKeyPem);
+    const resp = await this.socket.receive();
     console.log(resp);
     const success = JSON.parse(resp).mg;
     if (success == 'fail') {
@@ -132,10 +123,9 @@ export class LocalTestingService {
 
   public async GET_HEAP() {
     this.m_request.command = {"cm": 13};
-    const socket = new WebSocketService(DeviceState.SEND_CMD, this.term);
-    const onOpen = await socket.open(`ws://${this.uri}/ws`, this.myPrivKey);
-    const onSend = await socket.send(this.m_request, this.devicePubKeyPem);
-    const resp = await socket.receive();
+    const onOpen = await this.socket.open(`ws://${this.uri}/ws`, this.myPrivKey);
+    const onSend = await this.socket.send(this.m_request, this.devicePubKeyPem);
+    const resp = await this.socket.receive();
     console.log(resp);
     const success = JSON.parse(resp).mg;
     if (success == 'fail') {
@@ -145,10 +135,9 @@ export class LocalTestingService {
 
   public async RESET() {
     this.m_request.command = {"cm": 14};
-    const socket = new WebSocketService(DeviceState.SEND_CMD, this.term);
-    const onOpen = await socket.open(`ws://${this.uri}/ws`, this.myPrivKey);
-    const onSend = await socket.send(this.m_request, this.devicePubKeyPem);
-    const resp = await socket.receive();
+    const onOpen = await this.socket.open(`ws://${this.uri}/ws`, this.myPrivKey);
+    const onSend = await this.socket.send(this.m_request, this.devicePubKeyPem);
+    const resp = await this.socket.receive();
     console.log(resp);
     const success = JSON.parse(resp).mg;
     if (success == 'fail') {
@@ -158,10 +147,9 @@ export class LocalTestingService {
 
   public async BLE_ON() {
     this.m_request.command = {"cm": 15};
-    const socket = new WebSocketService(DeviceState.SEND_CMD, this.term);
-    const onOpen = await socket.open(`ws://${this.uri}/ws`, this.myPrivKey);
-    const onSend = await socket.send(this.m_request, this.devicePubKeyPem);
-    const resp = await socket.receive();
+    const onOpen = await this.socket.open(`ws://${this.uri}/ws`, this.myPrivKey);
+    const onSend = await this.socket.send(this.m_request, this.devicePubKeyPem);
+    const resp = await this.socket.receive();
     console.log(resp);
     const success = JSON.parse(resp).mg;
     if (success == 'fail') {
@@ -171,10 +159,9 @@ export class LocalTestingService {
 
   public async BLE_OFF() {
     this.m_request.command = {"cm": 16};
-    const socket = new WebSocketService(DeviceState.SEND_CMD, this.term);
-    const onOpen = await socket.open(`ws://${this.uri}/ws`, this.myPrivKey);
-    const onSend = await socket.send(this.m_request, this.devicePubKeyPem);
-    const resp = await socket.receive();
+    const onOpen = await this.socket.open(`ws://${this.uri}/ws`, this.myPrivKey);
+    const onSend = await this.socket.send(this.m_request, this.devicePubKeyPem);
+    const resp = await this.socket.receive();
     console.log(resp);
     const success = JSON.parse(resp).mg;
     if (success == 'fail') {
@@ -184,10 +171,9 @@ export class LocalTestingService {
 
   public async FIND_ME() {
     this.m_request.command = {"cm": 17};
-    const socket = new WebSocketService(DeviceState.SEND_CMD, this.term);
-    const onOpen = await socket.open(`ws://${this.uri}/ws`, this.myPrivKey);
-    const onSend = await socket.send(this.m_request, this.devicePubKeyPem);
-    const resp = await socket.receive();
+    const onOpen = await this.socket.open(`ws://${this.uri}/ws`, this.myPrivKey);
+    const onSend = await this.socket.send(this.m_request, this.devicePubKeyPem);
+    const resp = await this.socket.receive();
     console.log(resp);
     const success = JSON.parse(resp).mg;
     if (success == 'fail') {

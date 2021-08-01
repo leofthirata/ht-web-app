@@ -1,5 +1,8 @@
 import { WifiModeType } from "./wifi-response-modes.enum";
 import { uint8ArrayToHexString } from "../../utils/utils";
+import { Cast } from '../../utils/cast';
+import { auth } from "./wifi-auth-modes.enum";
+import { ciph } from "./wifi-cipher-types.enum";
 
 export class PacketResponse {
   private m_mode: number;
@@ -14,14 +17,17 @@ export class PacketResponse {
   public async parse() {
     switch (this.m_mode) {
       case WifiModeType.DONE: {
+        console.log('DONE');
         return await this._createDoneResponse();
       }
 
       case WifiModeType.WIFI_SCAN: {
+        console.log('WIFI_SCAN');
         return await this._createScanResponse();
       }
 
       case WifiModeType.WIFI_CONN: {
+        console.log('WIFI_CONN');
         return await this._createConnResponse();
       }
 
@@ -31,52 +37,48 @@ export class PacketResponse {
       }
 
       default: {
-        console.log('DEFAULT');
+        console.log('INVALID BLE RESPONSE MODE');
         break;
       }
     }
   }
 
   private _createDoneResponse(): Promise<any> {
-    console.log('DONE');
     return new Promise(resolve => {
       resolve(this.m_data[1] == 0 ? 'ERR_OK': 'ERR_FAIL');
     });
   }
 
   private _createScanResponse(): Promise<any> {
-    console.log('WIFI_SCAN');
     return new Promise(resolve => {
       console.log(this.m_data);
-      const ciph = this.m_data.subarray(this.m_data.length - 1, this.m_data.length);
-      const auth = this.m_data.subarray(this.m_data.length - 2, this.m_data.length - 1);
-      const rssi = this.m_data.subarray(this.m_data.length - 3, this.m_data.length - 2);
-      const ssid = this.m_data.subarray(4, this.m_data.length - 4);
+      const ssid = Cast.bytesToString(new Uint8Array(this.m_data.subarray(4, this.m_data.length - 4)));
+      const rssi = this.m_data.subarray(this.m_data.length - 3, this.m_data.length - 2)[0];
+      const authIndex = this.m_data.subarray(this.m_data.length - 2, this.m_data.length - 1)[0];
+      const ciphIndex = this.m_data.subarray(this.m_data.length - 1, this.m_data.length)[0];
 
-      var string1 = new TextDecoder().decode(ciph);
-      console.log(string1);
-      var string2 = new TextDecoder().decode(auth);
-      console.log(string2);
-      var string3 = new TextDecoder().decode(rssi);
-      console.log(string3);
-      var string4 = new TextDecoder().decode(ssid);
-      console.log(string4);
+      // const ssid = Cast.bytesToString(new Uint8Array(this.m_data.subarray(4, this.m_data.length - 4)));
+      // const rssi = this.m_data.subarray(this.m_data.length - 8, this.m_data.length - 7)[0];
+      // const authIndex = this.m_data.subarray(this.m_data.length - 7, this.m_data.length - 6)[0];
+      // const ciphIndex = this.m_data.subarray(this.m_data.length - 6, this.m_data.length - 5)[0];
+      // const bssid = this.m_data.subarray(this.m_data.length - 5, this.m_data.length);
 
       const res = {
-        'n': this.m_data[2], //parseInt(data.substring(4, 6))
-        'ap': this.m_data[3], //parseInt(data.substring(6, 8)),
-        'ssid': new TextDecoder().decode(this.m_data.subarray(4, this.m_data.length - 4)),
-        'rssi': new TextDecoder().decode(this.m_data.subarray(this.m_data.length - 3, this.m_data.length - 2)),
-        'auth': new TextDecoder().decode(this.m_data.subarray(this.m_data.length - 2, this.m_data.length - 1)),
-        'ciph': new TextDecoder().decode(this.m_data.subarray(this.m_data.length - 1, this.m_data.length)),
+        'n': this.m_data[2], 
+        'ap': this.m_data[3], 
+        'ssid': ssid,
+        'rssi': rssi - 256,
+        'auth': auth[authIndex],
+        'ciph': ciph[ciphIndex],
+        // 'bssid': bssid,
       };
       resolve(res);
     });
-    // TODO: print rssi, authmode and cipher correctly
+
+    // TODO: print all APs correctly until n == ap
   }
 
   private _createConnResponse(): Promise<any> {
-    console.log('WIFI_CONN');
     return new Promise(resolve => {
       const res = {
         'reg': this.m_data[2] === 0x01 ? 'registered' : 'not registered', //data.substring(4,6),
@@ -89,7 +91,7 @@ export class PacketResponse {
   }
 
   private checkResponse(resp: Uint8Array) {
-    
+    // TODO for automated tests
   }
 
   private _hex2ip(hex) {
