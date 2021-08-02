@@ -69,6 +69,7 @@ export class HomePage {
   public product = "ONE";
   public wifiSsid = "PADOTEC";
   public wifiPassword = "P@d0t3c2021";
+  public wifiBssid = '';
   public bleMac = "7C9EBDD71678";
   public localTest: LocalTestingService;
   private socket: WebSocketService;
