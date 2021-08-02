@@ -3,6 +3,7 @@ import { crc8 } from "../../utils/crc8";
 import { arr2str, concatBuffers, str2ArrayBuffer, str2arr, ascii2hex } from "../../utils/utils";
 import { bleMode } from "./ble";
 import { PacketResponse } from "./response";
+import { Cast } from '../../utils/cast';
 
 export class Packet {
   private readonly m_header = new Uint8Array([0x75, 0xa5]);
@@ -25,18 +26,8 @@ export class Packet {
     this.m_cmd = new Uint8Array([0x01, ap]);
   }
 
-  private _createWifiConnCmd(ssid: string, pswd: string) {
-    let cmd = str2arr('02' + ascii2hex(ssid) + '00' + ascii2hex(pswd) + '00');
-
-    for(let i = 0; i < 12; i++) {
-      cmd[cmd.length] = 0x00;
-    }
-
-    this.m_cmd = cmd;
-  }
-
-  // private _createWifiConnCmd(ssid: string, pswd: string, bssid: string) {
-  //   let cmd = str2arr('02' + ascii2hex(ssid) + '00' + ascii2hex(pswd) + '00' + ascii2hex(bssid) + '00');
+  // private _createWifiConnCmd(ssid: string, pswd: string) {
+  //   let cmd = str2arr('02' + ascii2hex(ssid) + '00' + ascii2hex(pswd) + '00');
 
   //   for(let i = 0; i < 12; i++) {
   //     cmd[cmd.length] = 0x00;
@@ -44,6 +35,20 @@ export class Packet {
 
   //   this.m_cmd = cmd;
   // }
+
+  private _createWifiConnCmd(ssid: string, pswd: string, bssid: string) {
+    let cmd = str2arr('02' + ascii2hex(ssid) + '00' + ascii2hex(pswd) + '00' + Cast.bytesToHex(Cast.hexToBytes(bssid)) + '00');
+
+    console.log(cmd);
+
+    // for(let i = 0; i < 12; i++) {
+    //   cmd[cmd.length] = 0x00;
+    // }
+
+    console.log(cmd);
+
+    this.m_cmd = cmd;
+  }
 
   private _createFindMeCmd() {
     this.m_cmd = new Uint8Array([0x03, 0x00]);
@@ -77,7 +82,7 @@ export class Packet {
         break;
       }
       case bleMode.CONN: {
-        this._createWifiConnCmd(data.ssid, data.pswd);
+        this._createWifiConnCmd(data.ssid, data.pswd, data.bssid);
         break;
       }
       case bleMode.FIND_ME: {
@@ -93,6 +98,7 @@ export class Packet {
     var cmd_crc = new Uint8Array(this.m_cmd.byteLength + this.m_crc.byteLength);
     cmd_crc.set(this.m_cmd);
     cmd_crc.set(this.m_crc, this.m_cmd.byteLength);
+    console.log(cmd_crc);
     let pack = await encrypt(cmd_crc, this.m_key);
     this.m_IV = pack.iv;
     this.m_enc = new Uint8Array(pack.enc);

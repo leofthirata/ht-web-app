@@ -9,6 +9,12 @@
       </ion-title>
 
       <ion-buttons slot="end">
+        <ion-button (click)="showKeyPairOnClick()" expand="full" color="dark" [disabled]="!gotKey">
+          <ion-icon name="key"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+
+      <ion-buttons slot="end">
         <ion-button (click)="deviceSelectionOnClick()" expand="full" color="dark">
           <ion-icon name="bluetooth"></ion-icon>
         </ion-button>
@@ -32,7 +38,7 @@
       </ion-select>
 
       <ion-buttons slot="end" class="button-end">
-        <ion-button (click)="shareOnClick()" expand="full" color="dark" >
+        <ion-button (click)="shareOnClick()" expand="full" color="dark" [disabled]="!deviceRegistered">
           <ion-icon name="person-add"></ion-icon>
         </ion-button>
       </ion-buttons>
@@ -155,6 +161,10 @@
         <br/>
         <ion-button (click)="setTicket()" expand="block" color="dark" [disabled]="ticketSet">
           SET_TICKET
+        </ion-button>
+        <br/>
+        <ion-button (click)="findMeWsHandler()" expand="block" color="dark">
+          FIND_ME_WS
         </ion-button>
       </div>
 

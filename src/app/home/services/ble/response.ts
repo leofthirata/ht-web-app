@@ -57,11 +57,12 @@ export class PacketResponse {
       // const authIndex = this.m_data.subarray(this.m_data.length - 2, this.m_data.length - 1)[0];
       // const ciphIndex = this.m_data.subarray(this.m_data.length - 1, this.m_data.length)[0];
 
-      const ssid = Cast.bytesToString(new Uint8Array(this.m_data.subarray(4, this.m_data.length - 4)));
-      const rssi = this.m_data.subarray(this.m_data.length - 8, this.m_data.length - 7)[0];
-      const authIndex = this.m_data.subarray(this.m_data.length - 7, this.m_data.length - 6)[0];
-      const ciphIndex = this.m_data.subarray(this.m_data.length - 6, this.m_data.length - 5)[0];
-      const bssid = this.m_data.subarray(this.m_data.length - 5, this.m_data.length);
+      const ssid = Cast.bytesToString(new Uint8Array(this.m_data.subarray(4, this.m_data.length - 10)));
+      // this.m_data.subarray(this.m_data.length - 10, this.m_data.length - 9) is the 0 to sinalize end of ssid
+      const rssi = this.m_data.subarray(this.m_data.length - 9, this.m_data.length - 8)[0];
+      const authIndex = this.m_data.subarray(this.m_data.length - 8, this.m_data.length - 7)[0];
+      const ciphIndex = this.m_data.subarray(this.m_data.length - 7, this.m_data.length - 6)[0];
+      const bssid = Cast.bytesToHex(this.m_data.subarray(this.m_data.length - 6, this.m_data.length));
 
       const res = {
         'n': this.m_data[2], 

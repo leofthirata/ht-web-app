@@ -267,8 +267,9 @@ export class BluetoothService {
       const data = {
         "ap": ap,
         "ssid": null,
-        "pswd": null 
-      }
+        "pswd": null,
+        "bssid": null, 
+      };
 
       await request.setData(data);
 
@@ -288,7 +289,7 @@ export class BluetoothService {
     });
   }
 
-  public connectToWifi(ssid: string, pswd: string): Promise<boolean> {
+  public connectToWifi(ssid: string, pswd: string, bssid: string): Promise<boolean> {
     return new Promise(async resolve => {
       this.setMode(bleMode.CONN);
 
@@ -299,8 +300,9 @@ export class BluetoothService {
       const data = {
         "ap": null,
         "ssid": ssid,
-        "pswd": pswd 
-      }
+        "pswd": pswd,
+        "bssid": bssid, 
+      };
 
       await request.setData(data);
 

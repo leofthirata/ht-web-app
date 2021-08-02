@@ -11,8 +11,10 @@ export enum DeviceState {
   GET_KEY = 0x00,
   SET_SECRET = 0x01,
   SET_TICKET = 0x02,
-  SEND_CMD = 0x03
+  SEND_CMD = 0x03,
+  FIND_ME = 0x04,
 }
+
 export class WebSocketService {
   private m_ws: WebSocket;
   private m_uri: string;
@@ -57,10 +59,14 @@ export class WebSocketService {
     return new Promise(resolve => {
       console.log(this.m_state);
       switch (this.m_state) {
+        case DeviceState.FIND_ME: {
+          console.log(data);
+          this.m_ws.send(JSON.stringify(data));
+          break;
+        }
         case DeviceState.GET_KEY: {
           console.log(data);
           this.m_ws.send(JSON.stringify(data));
-          this.m_state = DeviceState.SEND_CMD;
           break;
         }
         case DeviceState.SEND_CMD: {
@@ -79,9 +85,16 @@ export class WebSocketService {
     return new Promise(resolve => {
       this.m_ws.binaryType = 'arraybuffer';
       this.m_ws.onmessage = event => {
-        const decrypted = this.decryptWebsocketJSON(new Uint8Array(event.data));
-        this.rcvPacketSubject$.next(decrypted);
-        resolve(decrypted);
+        if (this.m_state == DeviceState.FIND_ME) {
+          const resp = event.data.toString();
+          this.rcvPacketSubject$.next(resp);
+          console.log(resp);
+          resolve(resp);
+        } else {
+          const decrypted = this.decryptWebsocketJSON(new Uint8Array(event.data));
+          this.rcvPacketSubject$.next(decrypted);
+          resolve(decrypted);
+        }
       }
     });
   }

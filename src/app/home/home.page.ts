@@ -69,7 +69,7 @@ export class HomePage {
   public product = "ONE";
   public wifiSsid = "PADOTEC";
   public wifiPassword = "P@d0t3c2021";
-  public wifiBssid = '';
+  public wifiBssid = '0263DA3A342A';
   public bleMac = "7C9EBDD71678";
   public localTest: LocalTestingService;
   private socket: WebSocketService;
@@ -286,7 +286,7 @@ export class HomePage {
     await this.m_ble.connect();
     await this.m_ble.getService();
     await this.m_ble.getCharacteristics();
-    await this.m_ble.connectToWifi(this.wifiSsid, this.wifiPassword);
+    await this.m_ble.connectToWifi(this.wifiSsid, this.wifiPassword, this.wifiBssid);
     this.m_ip = this.m_ble.getIp();
     console.log(this.m_ip)
     this.m_auth = new AuthService();
@@ -324,6 +324,8 @@ export class HomePage {
     printPubKeyRSA(this.m_devicePublicKey);
 
     this.gotKey = true;
+
+    this.socket.setState(DeviceState.SEND_CMD);
   }
 
   public async setSecret() {
@@ -377,6 +379,24 @@ export class HomePage {
     this.ticketSet = true;
 
     this.startTesting();
+  }
+
+  public async findMeWsHandler() {
+    let request = { 
+      'findme': 'on',
+    };
+    
+    this.socket.setState(DeviceState.FIND_ME);
+
+    const onOpen = await this.socket.open(`ws://${this.m_ip}/findme`, this.m_myPrivKey);
+    const onSend = await this.socket.send(request);
+    const resp = await this.socket.receive();
+    const success = JSON.parse(resp).mg;
+    if (success !== 'ok') {
+      throw 'FINDME_FAIL';
+    }
+
+    this.socket.setState(DeviceState.SEND_CMD);
   }
 
   private startTesting() {
@@ -531,6 +551,12 @@ export class HomePage {
           type: 'text',
           value: this.wifiPassword,
           placeholder: 'Enter password'
+        },
+        {
+          name: 'bssid',
+          type: 'text',
+          value: this.wifiBssid,
+          placeholder: 'Enter bssid (ex.: 3eecda8d192e)'
         }
       ],
       buttons: [
@@ -553,6 +579,16 @@ export class HomePage {
     });
 
     await alert.present();
+  }
+
+  public showKeyPairOnClick() {
+    const date = new Date();
+    const dateStr = `[${date.toLocaleTimeString()}] [KEYS]:\n\r`;
+    this.white(dateStr);
+    this.white(this.m_myPubKeyPem);
+    this.white(this.m_myPrivKeyPem);
+    this.white('DEVICE_KEY:\n\r');
+    this.white(this.m_devicePublicKey);
   }
 
   public async onConnectDevice() {

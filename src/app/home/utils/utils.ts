@@ -1,5 +1,4 @@
 export function str2arr(str: string): Uint8Array {
-  console.log(str);
   let arr = new Uint8Array(str.length/2);
 
   for(let i = 0; i < str.length/2; i++) {
