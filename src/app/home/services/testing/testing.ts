@@ -1,7 +1,7 @@
-import { DeviceState, WebSocketService } from "../home/services/websocket/ws";
+import { DeviceState, WebSocketService } from "../websocket/ws";
 import { Terminal } from "xterm";
 
-export class LocalTestingService {
+export class OneLocalTestingService {
   private m_request: any;
   private myPubKeyPem: any;
   private myPrivKey: any;
@@ -179,5 +179,117 @@ export class LocalTestingService {
     if (success == 'fail') {
       throw 'FIND_ME FAIL';
     }
+  }
+}
+
+export class oneStressTest {
+  private m_request: any;
+  private myPubKeyPem: any;
+  private myPrivKey: any;
+  private devicePubKeyPem: any;
+  private deviceToken: any;
+  private uri: string;
+  private socket: WebSocketService;
+
+  constructor(uri:string, myPubKeyPem, myPrivKey, devicePubKeyPem, deviceToken, socket: WebSocketService) {
+    this.myPubKeyPem = myPubKeyPem;
+    this.myPrivKey = myPrivKey;
+    this.devicePubKeyPem = devicePubKeyPem;
+    this.deviceToken = deviceToken;
+    this.uri = uri;
+
+    this.m_request = { "token": this.deviceToken, "key": this.myPubKeyPem };
+  }
+
+  public eraseIr(device, device2) {
+    this.m_request.command = {"cm": 1};
+    const onOpen = await this.socket.open(`ws://${this.uri}/ws`, this.myPrivKey);
+    const onSend = await this.socket.send(this.m_request, this.devicePubKeyPem);
+    const resp = await this.socket.receive();
+    console.log(resp);
+    const success = JSON.parse(resp).mg;
+  }
+
+  public getIr(device, device2) {
+
+  }
+
+  public setIr(device, device2) {
+    this.m_request.command = {"cm": 2, "id": 1, "ch": 3};
+
+    for(let i = 0; i < 150; i++) {
+      const onOpen = await this.socket.open(`ws://${this.uri}/ws`, this.myPrivKey);
+      const onSend = await this.socket.send(this.m_request, this.devicePubKeyPem);
+      const resp = await this.socket.receive();
+      console.log(resp);
+      const success = JSON.parse(resp).mg;
+      if (success == 'fail') {
+        throw 'SET_IR FAIL';
+      }
+    }
+  }
+
+  public getInfo(device, device2) {
+
+  }
+
+  public cancelIr(device, device2) {
+
+  }
+
+  public editIr(device, device2) {
+
+  }
+
+  public runScene(device, device2) {
+
+  }
+}
+
+public async SET_IR() {
+  this.m_request.command = {"cm": 2, "id": 1, "ch": 3};
+  const onOpen = await this.socket.open(`ws://${this.uri}/ws`, this.myPrivKey);
+  const onSend = await this.socket.send(this.m_request, this.devicePubKeyPem);
+  const resp = await this.socket.receive();
+  console.log(resp);
+  const success = JSON.parse(resp).mg;
+  if (success == 'fail') {
+    throw 'SET_IR FAIL';
+  }
+}
+
+public async CANCEL_IR() {
+  this.m_request.command = {"cm": 4};
+  const onOpen = await this.socket.open(`ws://${this.uri}/ws`, this.myPrivKey);
+  const onSend = await this.socket.send(this.m_request, this.devicePubKeyPem);
+  const resp = await this.socket.receive();
+  console.log(resp);
+  const success = JSON.parse(resp).mg;
+  if (success == 'fail') {
+    throw 'CANCEL_IR FAIL';
+  }
+}
+
+public async EDIT_IR() {
+  this.m_request.command = {"cm": 5, "id": 1};
+  const onOpen = await this.socket.open(`ws://${this.uri}/ws`, this.myPrivKey);
+  const onSend = await this.socket.send(this.m_request, this.devicePubKeyPem);
+  const resp = await this.socket.receive();
+  console.log(resp);
+  const success = JSON.parse(resp).mg;
+  if (success == 'fail') {
+    throw 'EDIT_IR FAIL';
+  }
+}
+
+public async RUN_SCENE() {
+  this.m_request.command = {"cm": 6, "sc":[{"dy":1,"id": 1,"ch":3}]};
+  const onOpen = await this.socket.open(`ws://${this.uri}/ws`, this.myPrivKey);
+  const onSend = await this.socket.send(this.m_request, this.devicePubKeyPem);
+  const resp = await this.socket.receive();
+  console.log(resp);
+  const success = JSON.parse(resp).mg;
+  if (success == 'fail') {
+    throw 'RUN_SCENE FAIL';
   }
 }

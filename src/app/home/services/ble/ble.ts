@@ -150,13 +150,13 @@ export class BluetoothService {
             resolve(true);
           }
         }
-        // else if (this.mode == bleMode.FIND_ME) {
-        //   if (this.m_rslt == 'ERR_OK') {
-        //     resolve(true);
-        //   } else {
-        //     resolve(false);
-        //   }
-        // }
+        else if (this.mode == bleMode.FIND_ME) {
+          // if (this.m_rslt == 'ERR_OK') {
+            resolve(true);
+          // } else {
+            // resolve(false);
+          // }
+        }
       });
     });
   }

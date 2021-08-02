@@ -17,10 +17,11 @@ import { uint8ArrayToHexString } from '../home/utils/utils';
 import * as forge from "node-forge";
 import { printPubKeyRSA, importPubKeyRSA } from '../home/utils/encrypt';
 import { getAccessToken, sync, createPlace, createEnvironment, createDevice } from '../home/services/backend/backend'
-import { LocalTestingService } from '../testing/testing';
 
 // logger
 import { download } from './utils/logger';
+import { DeviceService } from './services/device/device';
+import { stressTest } from './services/testing/testing';
 
 enum State {
   DISCONNECTED,
@@ -61,352 +62,153 @@ enum State {
 export class HomePage {
   @ViewChild('terminal1') terminal: ElementRef;
   @ViewChild('terminal2') terminal2: ElementRef;
+  @ViewChild('terminal3') terminal3: ElementRef;
+  @ViewChild('terminal4') terminal4: ElementRef;
 
-  private m_ble: BluetoothService;
-  private bleConnected: boolean;
+  private device: DeviceService;
+  private device2: DeviceService;
   public deviceSelected = false;
+  public deviceSelected2 = false;
   public backend = "Staging";
   public product = "ONE";
   public wifiSsid = "PADOTEC";
   public wifiPassword = "P@d0t3c2021";
   public wifiBssid = '0263DA3A342A';
-  public bleMac = "7C9EBDD71678";
-  public localTest: LocalTestingService;
-  private socket: WebSocketService;
-
-  // public remoteTest: 
-  private term = new Terminal();
-  private term2 = new Terminal();
-
-  private devPort!: SerialPort;
-  private devConnected = false;
 
   // public isTesting = false;
+  private term = new Terminal();
+  private term2 = new Terminal();
+  private term3 = new Terminal();
+  private term4 = new Terminal();
 
   // authentication
-  private m_auth: AuthService;
-  private m_devicePublicKey;
-  private m_ip: string = '';
-  private m_secret: string;
-  private m_deviceTicket: string;
-  private m_deviceUuid: string;
-  private m_userTicket: string;
-  private m_userUuid: string;
   public gotKey = false;
   public secretSet = false;
   public ticketSet = false;
   public deviceRegistered = false;
-  private readonly refreshToken = 'eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICI2NTZkZTY4Yi1mMGVjLTQzOTEtODk4Yi0xMjliNWRhYWExYjkifQ.eyJpYXQiOjE2Mjc0OTE2NjEsImp0aSI6ImI1ZTNkYTgxLWIzMDUtNGE1Zi04M2RiLWFkMWY4NzEwNGZiZCIsImlzcyI6Imh0dHBzOi8vYXV0aC5oYXVzZW5uLmNvbS5ici9hdXRoL3JlYWxtcy9oYXVzZW5uIiwiYXVkIjoiaHR0cHM6Ly9hdXRoLmhhdXNlbm4uY29tLmJyL2F1dGgvcmVhbG1zL2hhdXNlbm4iLCJzdWIiOiJjOGY2NzkxMy0zNGJjLTRmNDQtYTNjZC00OTEzNjY1NzBkMjYiLCJ0eXAiOiJPZmZsaW5lIiwiYXpwIjoiaGF1c2Vubi1jbGllbnQtYXBwIiwic2Vzc2lvbl9zdGF0ZSI6ImQ4Y2YzNjk0LTE2ZDgtNDUyOS1iYmQ3LWVkZTRlMTFiNzgxNiIsInNjb3BlIjoib3BlbmlkIG9mZmxpbmVfYWNjZXNzIGVtYWlsIHByb2ZpbGUifQ.evxZeBQZQl0YIbhTM8WYjiGu1hchGDGKLkNV8NmZ31g';
+  public isDevice = false;
+  public gotKey2 = false;
+  public secretSet2 = false;
+  public ticketSet2 = false;
+  public deviceRegistered2 = false;
+  public isDevice2 = false;
+  public twoDevices = false;
 
-  // testing
-  private m_deviceToken;
-  private m_myPubKey; 
-  private m_myPubKeyPem; 
-  private m_myPrivKey;
-  private m_myPrivKeyPem;
+  private dev: DeviceService;
+  public chosenDevice = 'source';
 
   public isConnected: boolean;
   public isAuthenticated: boolean;
   public isTesting: boolean;
-  public stateEn = 'BLE DISCONNECTED';
+  public stateEn = 'SOURCE';
   public stateClass = 'state-disconnected';
 
-  private logger = new Uint8Array();
-  private loggerIndex = 0;
-
-  private logger2 = new Uint8Array();
+  private stress: stressTest;
 
   constructor(private nav: NavController, private alertController: AlertController) {
-    navigator.serial.addEventListener('disconnect', (event) => {
-      const port = event.target as SerialPort;
-      console.log('Port disconnected', port);
+    this.device = new DeviceService(this.term, this.term2);
+    this.device2 = new DeviceService(this.term3, this.term4);
+    this.dev = this.device;
+  }
 
-      if (port === this.devPort) {
-        this.devConnected = false;
-      }
-      
-      this.setState(State.DISCONNECTED);
-    });
+  public addNewDeviceOnClick() {
+    this.twoDevices = true;
+  }
 
-    this.socket = new WebSocketService();
+  public chooseSourceOnClick() {
+    this.dev = this.device;
+    this.stateEn = 'SOURCE';
+  }
 
-    this.socket.setState(DeviceState.GET_KEY);
-
-    this.socket.sentPacket$().subscribe((bytes) => {
-      try {
-        const str = JSON.stringify(bytes, null, 2);
-        const date = new Date();
-        const dateStr = `[${date.toLocaleTimeString()}] [WS] SEND:`;
-        this.yellow(dateStr);
-
-        const buf1 = Cast.stringToBytes(dateStr);
-        const buf2 = Cast.stringToBytes(str + '\n\r');
-        let buffer = new Uint8Array(buf1.length + buf2.length);
-        buffer.set(buf1);
-        buffer.set(buf2, buf1.length);
-        this.loggerIndex += buf1.length + buf2.length;
-
-        try {
-          this.white(str);
-          this.logTerm(buffer);
-        } catch (error) {
-          this.red(str);
-        }
-      } catch (error) {
-        this.red('Rx Error: ' + error);
-      }
-    });
-
-    this.socket.rcvPacket$().subscribe((str) => {
-      try {
-        const date = new Date();
-        const dateStr = `[${date.toLocaleTimeString()}] [WS] RCVD:`;
-        this.yellow(dateStr);
-
-        const buf1 = Cast.stringToBytes(dateStr);
-        const buf2 = Cast.stringToBytes(str + '\n\r');
-        let buffer = new Uint8Array(buf1.length + buf2.length);
-        buffer.set(buf1);
-        buffer.set(buf2, buf1.length);
-        this.loggerIndex += buf1.length + buf2.length;
-
-        try {
-          this.white(str);
-          this.logTerm(buffer);
-        } catch (error) {
-          this.red(str);
-        }
-      } catch (error) {
-        this.red('Rx Error: ' + error);
-      }
-    });
+  public chooseTargetOnClick() {
+    this.dev = this.device2;
+    this.stateEn = 'TARGET';
   }
 
   public async deviceSelectionOnClick() {
-    this.m_ble = new BluetoothService(this.bleMac);
-
-    this.m_ble.sentPacket$().subscribe((bytes) => {
-      try {
-        const str = Cast.bytesToHex(new Uint8Array(bytes));
-        const date = new Date();
-        const dateStr = `[${date.toLocaleTimeString()}] [BLE] SEND:`;
-        this.blue(dateStr);
-
-        const buf1 = Cast.stringToBytes(dateStr);
-        const buf2 = Cast.stringToBytes(str + '\n\r');
-        let buffer = new Uint8Array(buf1.length + buf2.length);
-        buffer.set(buf1);
-        buffer.set(buf2, buf1.length);
-        this.loggerIndex += buf1.length + buf2.length;
-
-        try {
-          this.white(str);
-          this.logTerm(buffer);
-        } catch (error) {
-          this.red(str);
-        }
-      } catch (error) {
-        this.red('Rx Error: ' + error);
-      }
-    });
-
-    this.m_ble.rcvPacket$().subscribe((bytes) => {
-      try {
-        const str = Cast.bytesToHex(new Uint8Array(bytes));
-        const date = new Date();
-        const dateStr = `[${date.toLocaleTimeString()}] [BLE] RCVD:`;
-        this.blue(dateStr);
-
-        const buf1 = Cast.stringToBytes(dateStr);
-        const buf2 = Cast.stringToBytes(str + '\n\r');
-        let buffer = new Uint8Array(buf1.length + buf2.length);
-        buffer.set(buf1);
-        buffer.set(buf2, buf1.length);
-        this.loggerIndex += buf1.length + buf2.length;
-
-        try {
-          this.white(str);
-          this.logTerm(buffer);
-        } catch (error) {
-          this.red(str);
-        }
-      } catch (error) {
-        this.red('Rx Error: ' + error);
-      }
-    });
-
-    this.m_ble.rcvParsed$().subscribe((bytes) => {
-      try {
-        const str = JSON.stringify(bytes, null, 2);
-        const date = new Date();
-        const dateStr = `[${date.toLocaleTimeString()}] [BLE] PARSED:`;
-        this.blue(dateStr);
-
-        const buf1 = Cast.stringToBytes(dateStr);
-        const buf2 = Cast.stringToBytes(str + '\n\r');
-        let buffer = new Uint8Array(buf1.length + buf2.length);
-        buffer.set(buf1);
-        buffer.set(buf2, buf1.length);
-        this.loggerIndex += buf1.length + buf2.length;
-
-        try {
-          this.white(str);
-          this.logTerm(buffer);
-        } catch (error) {
-          this.red(str);
-        }
-      } catch (error) {
-        this.red('Rx Error: ' + error);
-      }
-    });
-
-    await this.m_ble.find();
-    console.log(this.wifiSsid);
-    console.log(this.wifiPassword);
-    console.log(this.product);
-    this.deviceSelected = true;
+    this.dev.deviceSelectionOnClick();
   }
 
-  //TODO: disconnect after getting IP
+  public isDeviceSelected() {
+    return this.dev.deviceSelected;
+  }
+
   public async scanWifiOnClick() {
-    await this.m_ble.connect();
-    await this.m_ble.getService();
-    await this.m_ble.getCharacteristics();
-    await this.m_ble.scanWifi(15);
+    this.dev.scanWifiOnClick();
   }
 
   public async findMeOnClick() {
-    await this.m_ble.connect();
-    await this.m_ble.getService();
-    await this.m_ble.getCharacteristics();
-    await this.m_ble.findMe();
+    this.dev.findMeOnClick();
   }
 
   public async connectToWifiOnClick() {
-    await this.m_ble.connect();
-    await this.m_ble.getService();
-    await this.m_ble.getCharacteristics();
-    await this.m_ble.connectToWifi(this.wifiSsid, this.wifiPassword, this.wifiBssid);
-    this.m_ip = this.m_ble.getIp();
-    console.log(this.m_ip)
-    this.m_auth = new AuthService();
-    // this.nav.navigateForward('authentication', { state: this.m_ble.getIp() });
+    this.dev.connectToWifiOnClick();
   }
 
   public isBleConnected() {
-    this.bleConnected = this.m_ble.isConnected();
-    console.log(this.bleConnected);
-    return this.bleConnected;
+    return this.dev.isBleConnected();
   }
 
   public isConnectedToWifi() {
-    return this.m_ip !== '' ? true : false;
+    return this.dev.isConnectedToWifi();
   }
 
   public async getKey() {
-    this.gotKey = true;
-    this.m_myPubKey = this.m_auth.getPubKey();
-    this.m_myPubKeyPem = forge.pki.publicKeyToPem(this.m_auth.getPubKey());
-    this.m_myPrivKeyPem = forge.pki.privateKeyToPem(this.m_auth.getPrivKey());
-    this.m_myPrivKey = this.m_auth.getPrivKey();
-
-    const request = {
-      "key": this.m_myPubKeyPem
-    };
-
-    const onOpen = await this.socket.open(`ws://${this.m_ip}/get_key`, this.m_myPrivKey);
-    const onSend = await this.socket.send(request);
-    const resp = await this.socket.receive();
-    console.log(resp);
-
-    this.m_devicePublicKey = importPubKeyRSA(JSON.parse(resp).key);
-
-    printPubKeyRSA(this.m_devicePublicKey);
-
-    this.gotKey = true;
-
-    this.socket.setState(DeviceState.SEND_CMD);
+    this.gotKey = await this.dev.getKey();
   }
 
   public async setSecret() {
-    this.m_secret = uint8ArrayToHexString(window.crypto.getRandomValues(new Uint8Array(16)));
-    let secretRequest = { 
-      'secret': this.m_secret,
-      'key': this.m_myPubKeyPem
-    };
-    
-    this.socket.setState(DeviceState.SEND_CMD);
-
-    const onOpen = await this.socket.open(`ws://${this.m_ip}/set_secret`, this.m_myPrivKey);
-    const onSend = await this.socket.send(secretRequest, this.m_devicePublicKey);
-    const resp = await this.socket.receive();
-    const success = JSON.parse(resp).mg;
-    if (success == 'fail') {
-      throw 'SECRET_FAIL';
-    }
-    this.secretSet = true;
+    this.secretSet = await this.dev.setSecret();
   }
 
   public async registerDevice() {
-    // const refreshToken = "eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICIwZDU4YmIzYy1hNzZjLTQwYzEtYjA4ZS01MjJkOGQwMmE1ZjUifQ.eyJqdGkiOiJiZmI4ZTA1MC0zMGE0LTQyMmItOTc5Ni0xMzEzMzQ3YjRjMTUiLCJleHAiOjAsIm5iZiI6MCwiaWF0IjoxNjI1NzQ4MDkwLCJpc3MiOiJodHRwczovL3N0YWdlLnBhZG90ZWMuY29tLmJyL2F1dGgvcmVhbG1zL2hhdXNlbm4iLCJhdWQiOiJodHRwczovL3N0YWdlLnBhZG90ZWMuY29tLmJyL2F1dGgvcmVhbG1zL2hhdXNlbm4iLCJzdWIiOiJkZTFjMmIyMy1hNGM0LTRiYzQtYjQ2Ni0zNTM4OTVmNTgxOTAiLCJ0eXAiOiJPZmZsaW5lIiwiYXpwIjoiaGF1c2Vubi1jbGllbnQtYXBwIiwiYXV0aF90aW1lIjowLCJzZXNzaW9uX3N0YXRlIjoiMTM5MzAyZjgtZDBhZC00ZjFjLWJlOWQtOTRlYjdkMGNhNTJmIiwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbIm9mZmxpbmVfYWNjZXNzIiwidW1hX2F1dGhvcml6YXRpb24iXX0sInJlc291cmNlX2FjY2VzcyI6eyJhY2NvdW50Ijp7InJvbGVzIjpbIm1hbmFnZS1hY2NvdW50IiwibWFuYWdlLWFjY291bnQtbGlua3MiLCJ2aWV3LXByb2ZpbGUiXX19LCJzY29wZSI6Im9wZW5pZCBvZmZsaW5lX2FjY2VzcyBlbWFpbCBwcm9maWxlIn0.TqvywFzLXqEYZHCi1w4EAwFNQPfGPyfA14IJ5Bu_bac";
-    const accessToken = await getAccessToken(this.refreshToken);
-    const user = await sync(accessToken);
-    const place = await createPlace(accessToken, 'Local1', 'Address1');
-    const env = await createEnvironment(accessToken, place, 'Environment1');
-    const dev = await createDevice(this.m_secret, accessToken, env, 'Device1', this.m_ip, '123123', '321321', 'PADOTEC', 'one', forge.pki.publicKeyToPem(this.m_devicePublicKey));
-    this.m_userTicket = user[0];
-    this.m_userUuid = user[1];
-    this.m_deviceTicket = dev[0];
-    this.m_deviceUuid = dev[1];
-    this.m_deviceToken = dev[2];
-    this.deviceRegistered = true;
+    this.deviceRegistered = await this.dev.registerDevice();
   }
 
   public async setTicket() {
-    let ticketRequest = { 
-      'ticket': this.m_userTicket,
-      'uuid': this.m_userUuid,
-      'key': this.m_myPubKeyPem
-    };
-    
-    const onOpen = await this.socket.open(`ws://${this.m_ip}/set_ticket`, this.m_myPrivKey);
-    const onSend = await this.socket.send(ticketRequest, this.m_devicePublicKey);
-    const resp = await this.socket.receive();
-    const success = JSON.parse(resp).mg;
-    if (success == 'fail') {
-      throw 'TICKET_FAIL';
-    }
-    this.ticketSet = true;
-
-    this.startTesting();
+    this.ticketSet = await this.dev.setTicket();
   }
 
   public async findMeWsHandler() {
-    let request = { 
-      'findme': 'on',
-    };
-    
-    this.socket.setState(DeviceState.FIND_ME);
-
-    const onOpen = await this.socket.open(`ws://${this.m_ip}/findme`, this.m_myPrivKey);
-    const onSend = await this.socket.send(request);
-    const resp = await this.socket.receive();
-    const success = JSON.parse(resp).mg;
-    if (success !== 'ok') {
-      throw 'FINDME_FAIL';
-    }
-
-    this.socket.setState(DeviceState.SEND_CMD);
+    this.dev.findMeWsHandler();
   }
 
   private startTesting() {
-    this.localTest = new LocalTestingService(this.m_ip, this.m_myPubKeyPem, this.m_myPrivKey, this.m_devicePublicKey, this.m_deviceToken, this.socket);
+    // this.localTest = new LocalTestingService(this.m_ip, this.m_myPubKeyPem, this.m_myPrivKey, this.m_devicePublicKey, this.m_deviceToken, this.socket);
     // const local = new LocalTestingService();
     // const remote = new RemoteTestingService();
   }
 
+  public stressEraseIrOnClick() {
+    this.stress.eraseIr(this.device, this.device2);
+  }
+
+  public stressGetIrOnClick() {
+    this.stress.getIr(this.device, this.device2);
+  }
+
+  public stressSetIrOnClick() {
+    this.stress.setIr(this.device, this.device2);
+  }
+
+  public stressGetInfoOnClick() {
+    this.stress.getInfo(this.device, this.device2);
+  }
+
+  public stressCancelIrOnClick() {
+    this.stress.cancelIr(this.device, this.device2);
+  }
+
+  public stressEditIrOnClick() {
+    this.stress.editIr(this.device, this.device2);
+  }
+
+  public stressrunSceneOnClick() {
+    this.stress.runScene(this.device, this.device2);
+  }
+
   public isNotConnectedToWifiorIsTesting() {
-    return (this.m_ip === '' ? true : false) || this.isStateTesting();
+    return this.dev.isNotConnectedToWifiorIsTesting();
   }
 
   public isStateTesting() {
@@ -414,109 +216,55 @@ export class HomePage {
   }
 
   public getInfoOnClick() {
-    this.localTest.GET_INFO();
+    this.dev.getInfoOnClick();
   }
 
   public eraseIrOnClick() {
-    this.localTest.ERASE_IR();
+    this.dev.eraseIrOnClick();
   }
 
   public getIrOnClick() {
-    this.localTest.GET_IR();
+    this.dev.getIrOnClick();
   }
 
   public setIrOnClick() {
-    this.localTest.SET_IR();
+    this.dev.setIrOnClick();
   }
 
   public cancelIrOnClick() {
-    this.localTest.CANCEL_IR();
+    this.dev.cancelIrOnClick();
   }
 
   public editIrOnClick() {
-    this.localTest.EDIT_IR();
+    this.dev.editIrOnClick();
   }
 
   public runSceneOnClick() {
-    this.localTest.RUN_SCENE();
+    this.dev.runSceneOnClick();
   }
 
   public facResetOnClick() {
-    this.localTest.FAC_RESET();
+    this.dev.facResetOnClick();
   }
 
   public getHeapOnClick() {
-    this.localTest.GET_HEAP();
+    this.dev.getHeapOnClick();
   }
 
   public resetOnClick() {
-    this.localTest.RESET();
+    this.dev.resetOnClick();
   }
 
   public bleOnOnClick() {
-    this.localTest.BLE_ON();
+    this.dev.bleOnOnClick();
   }
 
   public bleOffOnClick() {
-    this.localTest.BLE_OFF();
+    this.dev.bleOffOnClick();
   }
 
   public findMeWsOnClick() {
-    this.localTest.FIND_ME();
-  }
-
-  private setState(state: State) {
-    switch (state) {
-      case State.DISCONNECTED:
-        this.stateEn = 'BLE DISCONNECTED';
-        this.stateClass = 'state-disconnected';
-        this.isTesting = false;
-        this.isConnected = false;
-        this.isAuthenticated = false;
-        break;
-      case State.BLUETOOTH:
-        this.stateEn = 'BLE CONFIGURATION';
-        this.stateClass = 'state-bluetooth';
-        this.isTesting = false;
-        this.isConnected = true;
-        this.isAuthenticated = false;
-        break;
-      case State.AUTHENTICATION:
-        this.stateEn = 'AUTHENTICATION';
-        this.stateClass = 'state-authentication';
-        this.isTesting = false;
-        this.isConnected = true;
-        this.isAuthenticated = false;
-        break;
-      case State.READY:
-        this.stateEn = 'READY';
-        this.stateClass = 'state-ready';
-        this.isConnected = true;
-        this.isTesting = false;
-        this.isAuthenticated = false;
-        break;
-      case State.TESTING:
-        this.stateEn = 'RUNNING TEST';
-        this.stateClass = 'state-testing';
-        this.isConnected = true;
-        this.isTesting = true;
-        this.isAuthenticated = false;
-        break;
-      case State.FAIL:
-        this.stateEn = 'FAIL';
-        this.stateClass = 'state-fail';
-        this.isConnected = true;
-        this.isTesting = false;
-        this.isAuthenticated = false;
-        break;
-      case State.PASS:
-        this.stateEn = 'PASS';
-        this.stateClass = 'state-pass';
-        this.isConnected = true;
-        this.isTesting = false;
-        this.isAuthenticated = false;
-        break;
-    }
+    this.dev.findMeWsOnClick();
   }
 
   public ionViewDidEnter() {
@@ -530,9 +278,21 @@ export class HomePage {
     this.term2.open(this.terminal2.nativeElement);
     fitAddon2.fit();
 
+    const fitAddon3 = new FitAddon();
+    this.term3.loadAddon(fitAddon3);
+    this.term3.open(this.terminal3.nativeElement);
+    fitAddon3.fit();
+
+    const fitAddon4 = new FitAddon();
+    this.term4.loadAddon(fitAddon4);
+    this.term4.open(this.terminal4.nativeElement);
+    fitAddon4.fit();
+
     window.onresize = () => {
       fitAddon.fit();
       fitAddon2.fit();
+      fitAddon3.fit();
+      fitAddon4.fit();
     };
   }
 
@@ -556,7 +316,7 @@ export class HomePage {
           name: 'bssid',
           type: 'text',
           value: this.wifiBssid,
-          placeholder: 'Enter bssid (ex.: 3eecda8d192e)'
+          placeholder: 'Enter bssid (ex.: 0263DA3A342A)'
         }
       ],
       buttons: [
@@ -582,175 +342,30 @@ export class HomePage {
   }
 
   public showKeyPairOnClick() {
-    const date = new Date();
-    const dateStr = `[${date.toLocaleTimeString()}] [KEYS]:\n\r`;
-    this.white(dateStr);
-    this.white(this.m_myPubKeyPem);
-    this.white(this.m_myPrivKeyPem);
-    this.white('DEVICE_KEY:\n\r');
-    this.white(this.m_devicePublicKey);
+    this.dev.showKeyPairOnClick();
   }
 
   public async onConnectDevice() {
-    this.devPort = await this.open(24592, 1027);
-
-    if (this.devPort) {
-      this.devConnected = true;
-      const date = new Date();
-      const dateStr = `[${date.toLocaleTimeString()}] [SERIAL] Connected to serial port\n\r`;
-      this.green(dateStr);
-
-      const buf1 = Cast.stringToBytes(dateStr);
-      let buffer = new Uint8Array(buf1.length);
-      buffer.set(buf1);
-      this.loggerIndex += buf1.length;
-    }
-
-    this.readUntilClosed();
-  }
-
-  async readUntilClosed() {
-    let reader;
-    let buffer: number[] = [];
-    var index = 0;
-
-    reader = this.devPort.readable.getReader();
-    try {
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) {
-          // |reader| has been canceled.
-          break;
-        } else {
-          buffer = Array.from(value);
-          const str = Cast.bytesToString(new Uint8Array(buffer));
-          this.term2.write(str);
-
-          index += buffer.length;
-          // create bigger uint8array
-          if (index > this.logger2.length) {
-            const buf: Uint8Array = this.logger2;
-            this.logger2 = new Uint8Array(index);
-            this.logger2.set(buf);
-            this.logger2.set(new Uint8Array(buffer), buf.length);
-          }
-        }
-        // Do something with |value|...
-      }
-    } catch (error) {
-      // Handle |error|...
-    } finally {
-      reader.releaseLock();
-    }
-
-    await this.devPort.close();
+    this.dev.onConnectDevice();
   }
 
   public async onDisconnectDevice() {
-    await this.close(this.devPort);
-    this.devConnected = false;
-  }
-
-  private async open(pid: number, vid: number): Promise<SerialPort> {
-    try {
-      const port = await navigator.serial.requestPort({
-        filters: [{ usbProductId: pid, usbVendorId: vid }],
-      });
-
-      await port.open({ baudRate: 115200, bufferSize: 4096, flowControl: 'none' });
-
-      return port;
-    } catch (error) {
-      this.logError(error);
-      return null;
-    }
-  }
-
-  private async close(port: SerialPort): Promise<void> {
-    if (port) {
-      await port.close();
-      port = null;
-    }
-  }
-
-  private logTerm(buffer: Uint8Array) {
-    if (this.loggerIndex > this.logger.length) {
-      const buf: Uint8Array = this.logger;
-      this.logger = new Uint8Array(this.loggerIndex);
-      this.logger.set(buf);
-      this.logger.set(new Uint8Array(buffer), buf.length);
-    }
+    this.dev.onDisconnectDevice();
   }
 
   public async saveTermOnClick() {
-    await download(this.logger, 'term');
-    this.logger = new Uint8Array();
+    this.dev.saveTermOnClick();
   }
 
   public async saveTerm2OnClick() {
-    await download(this.logger2, 'term2');
-    this.logger2 = new Uint8Array();
+    this.dev.saveTerm2OnClick();
   }
 
   public eraseTermOnClick() {
-    this.term.clear();
+    this.dev.eraseTermOnClick();
   }
 
   public eraseTerm2OnClick() {
-    this.term2.clear();
-  }
-
-  private white(text: string) {
-    text = text.replace(/\n/g, '\r\n');
-    const utf8 = Cast.stringToBytes(text);
-    this.term.write(Colors.white);
-    this.term.write(utf8);
-    this.term.write('\r\n');
-  }
-
-  private blue(text: string) {
-    text = text.replace(/\n/g, '\r\n');
-    const utf8 = Cast.stringToBytes(text);
-    this.term.write(Colors.blue);
-    this.term.write(utf8);
-    this.term.write('\r\n');
-  }
-
-  private red(text: string) {
-    text = text.replace(/\n/g, '\r\n');
-    const utf8 = Cast.stringToBytes(text);
-    this.term.write(Colors.red);
-    this.term.write(utf8);
-    this.term.write('\r\n');
-  }
-
-  private green(text: string) {
-    text = text.replace(/\n/g, '\r\n');
-    const utf8 = Cast.stringToBytes(text);
-    this.term.write(Colors.green);
-    this.term.write(utf8);
-    this.term.write('\r\n');
-  }
-
-  private yellow(text: string) {
-    text = text.replace(/\n/g, '\r\n');
-    const utf8 = Cast.stringToBytes(text);
-    this.term.write(Colors.yellow);
-    this.term.write(utf8);
-    this.term.write('\r\n');
-  }
-
-  private logError(error: any) {
-    let text: string;
-
-    if (typeof error === 'string') {
-      text = error;
-    } else if (error?.message) {
-      text = error.message;
-    } else {
-      text = 'Unknown error';
-    }
-
-    this.term.writeln(Colors.red + '[ERROR] ' + text);
+    this.dev.eraseTerm2OnClick();
   }
 }

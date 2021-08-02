@@ -38,8 +38,26 @@
       </ion-select>
 
       <ion-buttons slot="end" class="button-end">
+        <ion-button (click)="chooseSourceOnClick()" expand="full" color="dark">
+          SOURCE
+        </ion-button>
+      </ion-buttons>
+
+      <ion-buttons slot="end" class="button-end">
+        <ion-button (click)="chooseTargetOnClick()" expand="full" color="dark">
+          TARGET
+        </ion-button>
+      </ion-buttons>
+
+      <ion-buttons slot="end" class="button-end">
         <ion-button (click)="shareOnClick()" expand="full" color="dark" [disabled]="!deviceRegistered">
           <ion-icon name="person-add"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+
+      <ion-buttons slot="end" class="button-end">
+        <ion-button (click)="addNewDeviceOnClick()" expand="full" color="dark" [disabled]="twoDevices">
+          <ion-icon name="add-plus"></ion-icon>
         </ion-button>
       </ion-buttons>
   </ion-toolbar>
@@ -49,7 +67,9 @@
 <div class="wrapper">
   <div class="main">
     <ion-item>
-      <ion-label><h1>Test Log</h1></ion-label>
+      <ion-label>
+        <h1>Test Log</h1>
+      </ion-label>
 
       <ion-buttons slot="end">
         <ion-button (click)="saveTermOnClick()" expand="block" color="dark">
@@ -83,8 +103,46 @@
     <div #terminal2 id="terminal2" class="term"></div>
   </div>
 
+  <div class="main" [hidden]="!twoDevices">
+    <ion-item>
+      <ion-label>
+        <h1>Test Log</h1>
+      </ion-label>
+
+      <ion-buttons slot="end">
+        <ion-button (click)="saveTermOnClick()" expand="block" color="dark">
+          <ion-icon name="save"></ion-icon>
+          <!-- Save log -->
+        </ion-button>
+
+        <ion-button (click)="eraseTermOnClick()" expand="block" color="dark">
+          <ion-icon name="trash"></ion-icon>
+          <!-- Save log -->
+        </ion-button>
+      </ion-buttons>
+    </ion-item>
+
+    <div #terminal3 id="terminal3" class="term"></div>
+    <ion-item>
+      <ion-label><h1>Device Log</h1></ion-label>
+
+      <ion-buttons slot="end">
+        <ion-button (click)="saveTerm2OnClick()" expand="block" color="dark">
+          <ion-icon name="save"></ion-icon>
+          <!-- Save log -->
+        </ion-button>
+
+        <ion-button (click)="eraseTerm2OnClick()" expand="block" color="dark">
+          <ion-icon name="trash"></ion-icon>
+          <!-- Save log -->
+        </ion-button>
+      </ion-buttons>
+    </ion-item>
+    <div #terminal4 id="terminal4" class="term"></div>
+  </div>
+
   <div class="menu">
-    <h4 class="box-title">Test Status</h4>
+    <h4 class="box-title">Device</h4>
     <div class="box-connect ion-text-center">
       <h2 [ngClass]="stateClass">{{stateEn}}</h2>
     </div>
@@ -133,15 +191,15 @@
           CONNECT DEVICE
         </ion-button>
         <br/> -->
-        <ion-button (click)="scanWifiOnClick()" expand="full" color="dark" [disabled]="!deviceSelected">
+        <ion-button (click)="scanWifiOnClick()" expand="full" color="dark" [disabled]="!isDeviceSelected()">
           SCAN WIFI
         </ion-button>
         <br/>
-        <ion-button (click)="findMeOnClick()" expand="full" color="dark" [disabled]="!deviceSelected">
+        <ion-button (click)="findMeOnClick()" expand="full" color="dark" [disabled]="!isDeviceSelected()">
           FIND ME
         </ion-button>
         <br/>
-        <ion-button (click)="wifiConfigAndConnectOnClick()" expand="full" color="dark" [disabled]="!deviceSelected">
+        <ion-button (click)="wifiConfigAndConnectOnClick()" expand="full" color="dark" [disabled]="!isDeviceSelected()">
           CONNECT TO WIFI
         </ion-button>
       </div>
