@@ -127,9 +127,11 @@ export class DeviceService {
 
     this.socket.sentPacket$().subscribe((bytes) => {
       try {
+        const socket = bytes.socket;
+        delete bytes.socket;
         const str = JSON.stringify(bytes, null, 2);
         const date = new Date();
-        const dateStr = `[${date.toLocaleTimeString()}] [WS] SEND:`;
+        const dateStr = `[${date.toLocaleTimeString()}] [WS] SEND: ${socket}`;
         this.yellow(dateStr);
 
         const buf1 = Cast.stringToBytes(dateStr);
@@ -150,10 +152,12 @@ export class DeviceService {
       }
     });
 
-    this.socket.rcvPacket$().subscribe((str) => {
+    this.socket.rcvPacket$().subscribe((obj) => {
       try {
+        const socket = obj.socket;
+        const str = obj.str;
         const date = new Date();
-        const dateStr = `[${date.toLocaleTimeString()}] [WS] RCVD:`;
+        const dateStr = `[${date.toLocaleTimeString()}] [WS] RCVD: ${socket}`;
         this.yellow(dateStr);
 
         const buf1 = Cast.stringToBytes(dateStr);
@@ -310,8 +314,8 @@ export class DeviceService {
     };
 
     const onOpen = await this.socket.open(`ws://${this.m_ip}/get_key`, this.m_myPrivKey);
-    const onSend = await this.socket.send(request);
-    const resp = await this.socket.receive();
+    const socket = await this.socket.send(request);
+    const resp = await this.socket.receive(socket);
     console.log(resp);
 
     this.m_devicePublicKey = importPubKeyRSA(JSON.parse(resp).key);
@@ -320,7 +324,11 @@ export class DeviceService {
 
     this.socket.setState(DeviceState.SEND_CMD);
 
-    return this.m_devicePublicKey !== undefined ? true : false;
+    if (this.m_devicePublicKey !== undefined) {
+      this.gotKey = true;
+    } else {
+      this.gotKey = false;
+    }
   }
 
   public async setSecret() {
@@ -333,14 +341,18 @@ export class DeviceService {
     this.socket.setState(DeviceState.SEND_CMD);
 
     const onOpen = await this.socket.open(`ws://${this.m_ip}/set_secret`, this.m_myPrivKey);
-    const onSend = await this.socket.send(secretRequest, this.m_devicePublicKey);
-    const resp = await this.socket.receive();
+    const socket = await this.socket.send(secretRequest, this.m_devicePublicKey);
+    const resp = await this.socket.receive(socket);
     const success = JSON.parse(resp).mg;
     if (success == 'fail') {
       throw 'SECRET_FAIL';
     }
 
-    return success === 'success' ? true : false;
+    if (success === 'success') {
+      this.secretSet = true;
+     } else {
+      this.secretSet = false;
+     }
   }
 
   public async registerDevice() {
@@ -356,7 +368,11 @@ export class DeviceService {
     this.m_deviceUuid = dev[1];
     this.m_deviceToken = dev[2];
 
-    return dev !== undefined ? true : false;
+    if (dev !== undefined) {
+      this.deviceRegistered = true;
+    } else {
+      this.deviceRegistered = false;
+    }
   }
 
   public async setTicket() {
@@ -367,15 +383,19 @@ export class DeviceService {
     };
     
     const onOpen = await this.socket.open(`ws://${this.m_ip}/set_ticket`, this.m_myPrivKey);
-    const onSend = await this.socket.send(ticketRequest, this.m_devicePublicKey);
-    const resp = await this.socket.receive();
+    const socket = await this.socket.send(ticketRequest, this.m_devicePublicKey);
+    const resp = await this.socket.receive(socket);
     const success = JSON.parse(resp).mg;
     if (success == 'fail') {
       throw 'TICKET_FAIL';
     }
 
     // this.startTesting();
-    return success === 'success' ? true : false;
+    if (success === 'success') {
+      this.ticketSet = true;
+     } else {
+      this.ticketSet = false;
+     }
   }
 
   public async findMeWsHandler() {
@@ -386,8 +406,8 @@ export class DeviceService {
     this.socket.setState(DeviceState.FIND_ME);
 
     const onOpen = await this.socket.open(`ws://${this.m_ip}/findme`, this.m_myPrivKey);
-    const onSend = await this.socket.send(request);
-    const resp = await this.socket.receive();
+    const socket = await this.socket.send(request);
+    const resp = await this.socket.receive(socket);
     const success = JSON.parse(resp).mg;
     if (success !== 'ok') {
       throw 'FINDME_FAIL';
@@ -400,6 +420,22 @@ export class DeviceService {
     this.manualLocalTest = new OneLocalTestingService(this.m_ip, this.m_myPubKeyPem, this.m_myPrivKey, this.m_devicePublicKey, this.m_deviceToken, this.socket);
     // const local = new LocalTestingService();
     // const remote = new RemoteTestingService();
+  }
+
+  public hasKey() {
+    return this.gotKey;
+  }
+  
+  public isSecretSet() {
+    return this.secretSet;
+  }
+
+  public isTicketSet() {
+    return this.ticketSet;
+  }
+
+  public isDeviceRegistered() {
+    return this.deviceRegistered;
   }
 
   public isNotConnectedToWifiorIsTesting() {
@@ -687,5 +723,37 @@ export class DeviceService {
     }
 
     this.term.writeln(Colors.red + '[ERROR] ' + text);
+  }
+
+  public getMyPubKeyPem() {
+    return this.m_myPubKeyPem;
+  }
+
+  public getMyPrivKey() {
+    return this.m_myPrivKey;
+  }
+
+  public getDevPubKeyPem() {
+    return this.m_devicePublicKey;
+  }
+
+  public getToken() {
+    return this.m_deviceToken;
+  }
+
+  public getIp() {
+    return this.m_ip;
+  }
+
+  public getLogger() {
+    return this.logger;
+  }
+
+  public getLoggerIndex() {
+    return this.loggerIndex;
+  }
+
+  public getSocket() {
+    return this.socket;
   }
 }

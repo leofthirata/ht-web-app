@@ -21,7 +21,7 @@ import { getAccessToken, sync, createPlace, createEnvironment, createDevice } fr
 // logger
 import { download } from './utils/logger';
 import { DeviceService } from './services/device/device';
-import { stressTest } from './services/testing/testing';
+import { oneLocalStress } from './services/testing/local-stress';
 
 enum State {
   DISCONNECTED,
@@ -103,7 +103,8 @@ export class HomePage {
   public stateEn = 'SOURCE';
   public stateClass = 'state-disconnected';
 
-  private stress: stressTest;
+  private stress: oneLocalStress;
+  public localStress = false;
 
   constructor(private nav: NavController, private alertController: AlertController) {
     this.device = new DeviceService(this.term, this.term2);
@@ -154,19 +155,35 @@ export class HomePage {
   }
 
   public async getKey() {
-    this.gotKey = await this.dev.getKey();
+    await this.dev.getKey();
   }
 
   public async setSecret() {
-    this.secretSet = await this.dev.setSecret();
+    await this.dev.setSecret();
   }
 
   public async registerDevice() {
-    this.deviceRegistered = await this.dev.registerDevice();
+    await this.dev.registerDevice();
   }
 
   public async setTicket() {
-    this.ticketSet = await this.dev.setTicket();
+    await this.dev.setTicket();
+  }
+
+  public async hasKey() {
+    return this.dev.hasKey();
+  }
+
+  public async isSecretSet() {
+    return this.dev.isSecretSet();
+  }
+
+  public async isDeviceRegistered() {
+    return this.dev.isDeviceRegistered();
+  }
+
+  public async isTicketSet() {
+    return this.dev.isTicketSet();
   }
 
   public async findMeWsHandler() {
@@ -179,32 +196,41 @@ export class HomePage {
     // const remote = new RemoteTestingService();
   }
 
+  public localStressTestOnClick() {
+    this.localStress = true;
+    this.stress = new oneLocalStress(this.device, this.term, this.device2, this.term3);
+  }
+
   public stressEraseIrOnClick() {
-    this.stress.eraseIr(this.device, this.device2);
+    this.stress.eraseIr();
   }
 
   public stressGetIrOnClick() {
-    this.stress.getIr(this.device, this.device2);
+    this.stress.getIr();
   }
 
   public stressSetIrOnClick() {
-    this.stress.setIr(this.device, this.device2);
+    this.stress.setIr();
   }
 
   public stressGetInfoOnClick() {
-    this.stress.getInfo(this.device, this.device2);
+    this.stress.getInfo();
   }
 
   public stressCancelIrOnClick() {
-    this.stress.cancelIr(this.device, this.device2);
+    this.stress.cancelIr();
   }
 
   public stressEditIrOnClick() {
-    this.stress.editIr(this.device, this.device2);
+    this.stress.editIr();
   }
 
   public stressrunSceneOnClick() {
-    this.stress.runScene(this.device, this.device2);
+    this.stress.runScene();
+  }
+
+  public stopStressTestOnClick() {
+    this.stress.stopTest();
   }
 
   public isNotConnectedToWifiorIsTesting() {
@@ -354,18 +380,34 @@ export class HomePage {
   }
 
   public async saveTermOnClick() {
-    this.dev.saveTermOnClick();
+    this.device.saveTermOnClick();
   }
 
   public async saveTerm2OnClick() {
-    this.dev.saveTerm2OnClick();
+    this.device.saveTerm2OnClick();
+  }
+
+  public async saveTerm3OnClick() {
+    this.device2.saveTermOnClick();
+  }
+
+  public async saveTerm4OnClick() {
+    this.device2.saveTerm2OnClick();
   }
 
   public eraseTermOnClick() {
-    this.dev.eraseTermOnClick();
+    this.device.eraseTermOnClick();
   }
 
   public eraseTerm2OnClick() {
-    this.dev.eraseTerm2OnClick();
+    this.device.eraseTerm2OnClick();
+  }
+
+  public eraseTerm3OnClick() {
+    this.device2.eraseTermOnClick();
+  }
+
+  public eraseTerm4OnClick() {
+    this.device2.eraseTerm2OnClick();
   }
 }

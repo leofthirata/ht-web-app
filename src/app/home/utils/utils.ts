@@ -95,3 +95,7 @@ export function uint8ArrayToHexString(val: Uint8Array): string {
   );
   return rslt.toUpperCase();
 }
+
+export function timeout_ms(time_ms) {
+  return new Promise(resolve => setTimeout(resolve, time_ms));
+}

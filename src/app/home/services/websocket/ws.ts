@@ -4,6 +4,7 @@ import { hex2ascii, str2Uint8arr } from "../../utils/utils";
 import * as Colors from '../../utils/color';
 import { Cast } from '../../utils/cast';
 import { Observable, Subject } from 'rxjs';
+import { uint8ArrayToHexString } from '../../utils/utils';
 
 declare const Buffer;
 
@@ -24,8 +25,8 @@ export class WebSocketService {
   private m_privKey;
   private m_devicePublicKey;
 
-  private sentPacketSubject$ = new Subject<Object>();
-  private rcvPacketSubject$ = new Subject<string>();
+  private sentPacketSubject$ = new Subject<any>();
+  private rcvPacketSubject$ = new Subject<any>();
 
   constructor() {}
 
@@ -50,11 +51,14 @@ export class WebSocketService {
       });
   }
 
-  public send(data: Object, devicePublicKey?): Promise<boolean> {
+  public send(data, devicePublicKey?): Promise<string> {
     if (devicePublicKey) {
       this.m_devicePublicKey = devicePublicKey;
     }
-    this.sentPacketSubject$.next(data);
+    const socket = uint8ArrayToHexString(window.crypto.getRandomValues(new Uint8Array(16)));
+    const obsData = data;
+    obsData.socket = socket;
+    this.sentPacketSubject$.next(obsData);
 
     return new Promise(resolve => {
       console.log(this.m_state);
@@ -77,22 +81,28 @@ export class WebSocketService {
           break;
         }
       }
-      resolve(true); 
+      resolve(socket); 
     });
   }
 
-  public receive(): Promise<string> {
+  public receive(socket: string): Promise<string> {
     return new Promise(resolve => {
       this.m_ws.binaryType = 'arraybuffer';
       this.m_ws.onmessage = event => {
         if (this.m_state == DeviceState.FIND_ME) {
           const resp = event.data.toString();
-          this.rcvPacketSubject$.next(resp);
+          const obsResp = resp;
+          obsResp.socket = socket;
+          this.rcvPacketSubject$.next(obsResp);
           console.log(resp);
           resolve(resp);
         } else {
           const decrypted = this.decryptWebsocketJSON(new Uint8Array(event.data));
-          this.rcvPacketSubject$.next(decrypted);
+          const obsResp = {
+            'str': decrypted,
+            'socket': socket,
+          };
+          this.rcvPacketSubject$.next(obsResp);
           resolve(decrypted);
         }
       }
@@ -129,11 +139,11 @@ export class WebSocketService {
     return buffer;
   }
 
-  public sentPacket$(): Observable<Object> {
+  public sentPacket$(): Observable<any> {
     return this.sentPacketSubject$.asObservable();
   }
 
-  public rcvPacket$(): Observable<string> {
+  public rcvPacket$(): Observable<any> {
     return this.rcvPacketSubject$.asObservable();
   }
 
