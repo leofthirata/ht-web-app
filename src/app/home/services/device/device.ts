@@ -16,7 +16,7 @@ import { uint8ArrayToHexString } from '../../utils/utils';
 import * as forge from "node-forge";
 import { printPubKeyRSA, importPubKeyRSA } from '../../utils/encrypt';
 import { getAccessToken, sync, createPlace, createEnvironment, createDevice } from '../../services/backend/backend'
-import { OneLocalTestingService } from '../testing/testing';
+import { OneLocalTestingService } from '../testing/manual';
 
 // logger
 import { download } from '../../utils/logger';
@@ -50,6 +50,13 @@ enum State {
   FAIL,
   PASS
 }
+
+enum Operation {
+  BLE,
+  AUTH,
+  MAN_TEST,
+  AUTO_TEST
+};
 
 export class DeviceService {
   public m_ble: BluetoothService;
@@ -105,6 +112,8 @@ export class DeviceService {
   private loggerIndex = 0;
 
   private logger2 = new Uint8Array();
+
+  private operation = Operation.BLE;
 
   constructor(term, term2) {
     this.term = term;
@@ -180,6 +189,8 @@ export class DeviceService {
   }
 
   public async deviceSelectionOnClick() {
+    this.deviceSelected = false;
+
     this.m_ble = new BluetoothService(this.bleMac);
 
     this.m_ble.sentPacket$().subscribe((bytes) => {
@@ -290,6 +301,7 @@ export class DeviceService {
     console.log(this.m_ip)
     this.m_auth = new AuthService();
     await this.m_ble.disconnect();
+    this.operation = Operation.AUTH;
     // this.nav.navigateForward('authentication', { state: this.m_ble.getIp() });
   }
 
@@ -362,11 +374,15 @@ export class DeviceService {
     const place = await createPlace(accessToken, 'Local1', 'Address1');
     const env = await createEnvironment(accessToken, place, 'Environment1');
     const dev = await createDevice(this.m_secret, accessToken, env, 'Device1', this.m_ip, '123123', '321321', 'PADOTEC', 'one', forge.pki.publicKeyToPem(this.m_devicePublicKey));
-    this.m_userTicket = user[0];
-    this.m_userUuid = user[1];
+    this.m_userTicket = user[1];
+    this.m_userUuid = user[0];
     this.m_deviceTicket = dev[0];
     this.m_deviceUuid = dev[1];
     this.m_deviceToken = dev[2];
+
+    console.log(this.m_deviceTicket);
+    console.log(this.m_deviceUuid);
+    console.log(this.m_deviceToken);
 
     if (dev !== undefined) {
       this.deviceRegistered = true;
@@ -393,6 +409,8 @@ export class DeviceService {
     // this.startTesting();
     if (success === 'success') {
       this.ticketSet = true;
+      this.operation = Operation.MAN_TEST;
+      this.enableTesting();
      } else {
       this.ticketSet = false;
      }
@@ -416,7 +434,7 @@ export class DeviceService {
     this.socket.setState(DeviceState.SEND_CMD);
   }
 
-  private startTesting() {
+  public enableTesting() {
     this.manualLocalTest = new OneLocalTestingService(this.m_ip, this.m_myPubKeyPem, this.m_myPrivKey, this.m_devicePublicKey, this.m_deviceToken, this.socket);
     // const local = new LocalTestingService();
     // const remote = new RemoteTestingService();
@@ -723,6 +741,10 @@ export class DeviceService {
     }
 
     this.term.writeln(Colors.red + '[ERROR] ' + text);
+  }
+
+  public getOperation() {
+    return this.operation;
   }
 
   public getMyPubKeyPem() {

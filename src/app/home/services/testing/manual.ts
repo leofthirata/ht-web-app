@@ -15,6 +15,7 @@ export class OneLocalTestingService {
     this.devicePubKeyPem = devicePubKeyPem;
     this.deviceToken = deviceToken;
     this.uri = uri;
+    this.socket = socket;
 
     this.m_request = { "token": this.deviceToken, "key": this.myPubKeyPem };
   }

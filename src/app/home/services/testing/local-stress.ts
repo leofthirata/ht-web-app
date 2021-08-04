@@ -40,6 +40,9 @@ export class oneLocalStress {
     this.sTerm = sTerminal;
     this.tTerm = tTerminal;
 
+    this.sDev = source;
+    this.tDev = target;
+
     this.sMyPubKeyPem = source.getMyPubKeyPem();
     this.sMyPrivKey = source.getMyPrivKey();
     this.sDevPubKeyPem = source.getDevPubKeyPem();
@@ -60,15 +63,13 @@ export class oneLocalStress {
     this.tRequest = { "token": this.tToken, "key": this.tMyPubKeyPem };
   }
 
-  public async eraseIr() {
-    this.prepare();
-
+  public async sEraseIr() {
     for(let i = 0; i < 148; i++) {
       try {
-        this.tRequest.command = {"cm": 0, "id": 1};
-        await this.tSocket.open(`ws://${this.tUri}/ws`, this.tMyPrivKey);
-        const socket = await this.tSocket.send(this.tRequest, this.tDevPubKeyPem);
-        const resp = await this.tSocket.receive(socket);
+        this.sRequest.command = {"cm": 0, "id": 1};
+        await this.sSocket.open(`ws://${this.tUri}/ws`, this.sMyPrivKey);
+        const socket = await this.sSocket.send(this.sRequest, this.sDevPubKeyPem);
+        const resp = await this.sSocket.receive(socket);
         const pResp = JSON.parse(resp).mg;
 
         this.check(pResp.cm !== this.sRequest.command.cm, 'Invalid "cm": ' + pResp.cm);
@@ -78,13 +79,44 @@ export class oneLocalStress {
         this.slogErrorAndAbort('eraseIr', 'ERASE_IR', err);
       }
       if (this.stopTesting) {
+        this.stopTesting = false;
         break;
       }
     }
   }
 
+  public async tEraseIr() {
+    for(let i = 0; i < 148; i++) {
+      try {
+        this.tRequest.command = {"cm": 0, "id": 1};
+        await this.tSocket.open(`ws://${this.tUri}/ws`, this.tMyPrivKey);
+        const socket = await this.tSocket.send(this.tRequest, this.tDevPubKeyPem);
+        const resp = await this.tSocket.receive(socket);
+        const pResp = JSON.parse(resp).mg;
+
+        this.check(pResp.cm !== this.tRequest.command.cm, 'Invalid "cm": ' + pResp.cm);
+        this.check(pResp.id !== this.tRequest.command.id, 'Invalid "id": ' + pResp.id);
+        this.check(pResp.mg !== 'success', 'Invalid "mg": ' + pResp.mg);
+      } catch (err) {
+        this.tlogErrorAndAbort('eraseIr', 'ERASE_IR', err);
+      }
+      if (this.stopTesting) {
+        this.stopTesting = false;
+        break;
+      }
+    }
+  }
+
+  public async eraseIr() {
+    await this.prepare();
+    this.sEraseIr();
+    if (this.tDev.isTicketSet()) {
+      this.tEraseIr();
+    }
+  }
+
   public async getIr() {
-    this.prepare();
+    await this.prepare();
 
     for(let i = 0; i < 148; i++) {
       try {
@@ -119,14 +151,13 @@ export class oneLocalStress {
         this.slogErrorAndAbort('getIr', 'SET_IR', err);
       }
       if (this.stopTesting) {
+        this.stopTesting = false;
         break;
       }
     }
   }
 
-  public async setIr() {
-    this.prepare();
-
+  public async sSetIr() {
     for(let i = 0; i < 100; i++) {
       try {
         this.sRequest.command = {"cm": 2, "id": 1, "ch": 3};
@@ -142,7 +173,15 @@ export class oneLocalStress {
       } catch (err) {
         this.slogErrorAndAbort('setIr', 'SET_IR', err);
       }
+      if (this.stopTesting) {
+        this.stopTesting = false;
+        break;
+      }
+    }
+  }
 
+  public async tSetIr() {
+    for(let i = 0; i < 100; i++) {
       try {
         this.tRequest.command = {"cm": 2, "id": 1, "ch": 3};
         await this.tSocket.open(`ws://${this.tUri}/ws`, this.tMyPrivKey);
@@ -158,14 +197,21 @@ export class oneLocalStress {
         this.tlogErrorAndAbort('setIr', 'SET_IR', err);
       }
       if (this.stopTesting) {
+        this.stopTesting = false;
         break;
       }
     }
   }
 
-  public async getInfo() {
-    this.prepare();
+  public async setIr() {
+    await this.prepare();
+    this.sSetIr();
+    if (this.tDev.isTicketSet()) {
+      this.tSetIr();
+    }
+  }
 
+  public async sGetInfo() {
     for(let i = 0; i < 100; i++) {
       try {
         this.sRequest.command = {"cm": 3};
@@ -181,7 +227,15 @@ export class oneLocalStress {
       } catch (err) {
         this.slogErrorAndAbort('getInfo', 'GET_INFO', err);
       }
+      if (this.stopTesting) {
+        this.stopTesting = false;
+        break;
+      }
+    }
+  }
 
+  public async tGetInfo() {
+    for(let i = 0; i < 100; i++) {
       try {
         this.tRequest.command = {"cm": 3};
         await this.tSocket.open(`ws://${this.tUri}/ws`, this.tMyPrivKey);
@@ -197,14 +251,21 @@ export class oneLocalStress {
         this.tlogErrorAndAbort('getInfo', 'GET_INFO', err);
       }
       if (this.stopTesting) {
+        this.stopTesting = false;
         break;
       }
     }
   }
 
-  public async cancelIr() {
-    this.prepare();
+  public async getInfo() {
+    await this.prepare();
+    this.sGetInfo();
+    if (this.tDev.isTicketSet()) {
+      this.tGetInfo();
+    }
+  }
 
+  public async tCancelIr() {
     for(let i = 0; i < 100; i++) {
       try {
         this.tRequest.command = {"cm": 1};
@@ -233,7 +294,15 @@ export class oneLocalStress {
       } catch (err) {
         this.tlogErrorAndAbort('cancelIr', 'CANCEL_IR', err);
       }
+      if (this.stopTesting) {
+        this.stopTesting = false;
+        break;
+      }
+    }
+  }
 
+  public async sCancelIr() {
+    for(let i = 0; i < 100; i++) {
       try {
         this.sRequest.command = {"cm": 1};
         await this.sSocket.open(`ws://${this.sUri}/ws`, this.sMyPrivKey);
@@ -262,13 +331,22 @@ export class oneLocalStress {
         this.slogErrorAndAbort('cancelIr', 'CANCEL_IR', err);
       }
       if (this.stopTesting) {
+        this.stopTesting = false;
         break;
       }
     }
   }
 
+  public async cancelIr() {
+    await this.prepare();
+    this.sCancelIr();
+    if (this.tDev.isTicketSet()) {
+      this.tCancelIr();
+    }
+  }
+
   public async editIr() {
-    this.prepare();
+    await this.prepare();
 
     for(let i = 0; i < 100; i++) {
       try {
@@ -299,18 +377,17 @@ export class oneLocalStress {
         this.slogErrorAndAbort('editIr', 'SET_IR', err);
       }
       if (this.stopTesting) {
+        this.stopTesting = false;
         break;
       }
     }
   }
 
-  public async runScene() {
-    this.prepare();
-
+  public async sRunScene() {
     for(let i = 0; i < 150; i++) {
       try {
         this.sRequest.command = {"cm":6,"sc":[{"dy":0,"id": 1,"ch":3}]};
-        await this.sSocket.open(`ws://${this.tUri}/ws`, this.sMyPrivKey);
+        await this.sSocket.open(`ws://${this.sUri}/ws`, this.sMyPrivKey);
         const socket = await this.sSocket.send(this.sRequest, this.sDevPubKeyPem);
         const resp = await this.sSocket.receive(socket);
         const pResp = JSON.parse(resp).mg;
@@ -320,7 +397,15 @@ export class oneLocalStress {
       } catch (err) {
         this.slogErrorAndAbort('runScene', 'RUN_SCENE', err);
       }
+      if (this.stopTesting) {
+        this.stopTesting = false;
+        break;
+      }
+    }
+  }
 
+  public async tRunScene() {
+    for(let i = 0; i < 150; i++) {
       try {
         this.tRequest.command = {"cm":6,"sc":[{"dy":0,"id": 1,"ch":3}]};
         await this.tSocket.open(`ws://${this.tUri}/ws`, this.tMyPrivKey);
@@ -331,19 +416,32 @@ export class oneLocalStress {
         this.check(pResp.cm !== this.tRequest.command.cm, 'Invalid "cm": ' + pResp.cm);
         this.check(pResp.mg !== 'success', 'Invalid "mg": ' + pResp.mg);
       } catch (err) {
-        this.slogErrorAndAbort('runScene', 'RUN_SCENE', err);
+        this.tlogErrorAndAbort('runScene', 'RUN_SCENE', err);
       }
       if (this.stopTesting) {
+        this.stopTesting = false;
         break;
       }
     }
   }
 
-  public stopTest() {
-    this.stopTesting = true;
+  public async runScene() {
+    await this.prepare();
+    this.sRunScene();
+    if (this.tDev.isTicketSet()) {
+      this.tRunScene();
+    }
   }
 
-  private async eraseAllIr() {
+  public stopTest() {
+    this.stopTesting = true;
+    const date = new Date();
+    const err = `[${date.toLocaleTimeString()}] [LS] (stopTest) Local stress test stopped by user\n\r.`;
+    this.sError$.next(err);
+    this.tError$.next(err);
+  }
+
+  private async sEraseAllIr() {
     try {
       this.sRequest.command = {"cm": 0, "id": 0};
       await this.sSocket.open(`ws://${this.sUri}/ws`, this.sMyPrivKey);
@@ -357,7 +455,9 @@ export class oneLocalStress {
     } catch (err) {
       this.slogErrorAndAbort('eraseAllIr', 'ERASE_IR_ALL', err);
     }
+  }
 
+  private async tEraseAllIr() {
     try {
       this.tRequest.command = {"cm": 0, "id": 0};
       await this.tSocket.open(`ws://${this.tUri}/ws`, this.tMyPrivKey);
@@ -370,6 +470,13 @@ export class oneLocalStress {
       this.check(pResp.mg !== 'success', 'Invalid "mg": ' + pResp.mg);
     } catch (err) {
       this.tlogErrorAndAbort('eraseAllIr', 'ERASE_IR_ALL', err);
+    }
+  }
+
+  private async eraseAllIr() {
+    await this.sEraseAllIr();
+    if (this.tDev.isTicketSet()) {
+      await this.tEraseAllIr();
     }
   }
 
@@ -416,9 +523,9 @@ export class oneLocalStress {
   private async prepare(editIr = false) {
     await this.eraseAllIr();
     await this.sSaveIr(1); 
-    if (editIr) {
+    if (this.tDev.isTicketSet()) {
       await this.tSaveIr(1);  
-    } 
+    }
   }
 
 
@@ -431,16 +538,12 @@ export class oneLocalStress {
     const date = new Date();
     const err = `[${date.toLocaleTimeString()}] [LS] (${api}) ${test}: FAIL. ${mg}\n\r.`;
     this.sError$.next(err);
-
-    process.exit(1)
   }
 
   private tlogErrorAndAbort(api, test, mg) {
     const date = new Date();
     const err = `[${date.toLocaleTimeString()}] [LS] (${api}) ${test}: FAIL. ${mg}\n\r.`;
     this.tError$.next(err);
-
-    process.exit(1)
   }
   
   public sTestFail$(): Observable<string> {

@@ -22,36 +22,13 @@ import { getAccessToken, sync, createPlace, createEnvironment, createDevice } fr
 import { download } from './utils/logger';
 import { DeviceService } from './services/device/device';
 import { oneLocalStress } from './services/testing/local-stress';
+import { oneLocal } from './services/testing/local';
 
-enum State {
-  DISCONNECTED,
-  BLUETOOTH,
-  SCAN_WIFI,
-  FIND_ME,
-  CONNECT_WIFI,
-  AUTHENTICATION,
-  GET_KEY,
-  SET_SECRET,
-  REGISTER,
-  SET_TICKET,
-  READY,
-  TESTING,
-  CMD_ERASE_IR,
-  CMD_GET_IR,
-  CMD_SET_IR,
-  CMD_GET_INFO,
-  CMD_CANCEL_IR,
-  CMD_EDIT_IR,
-  CMD_RUN_SCENE,
-  CMD_FAC_RESET,
-  CMD_GET_HEAP,
-  CMD_RESET,
-  CMD_BLE_ON,
-  CMD_BLE_OFF,
-  CMD_FIND_ME,
-  FAIL,
-  PASS
-}
+enum Operation {
+  BLE,
+  AUTH,
+  MAN_TEST,
+};
 
 @Component({
   selector: 'app-home',
@@ -69,7 +46,7 @@ export class HomePage {
   private device2: DeviceService;
   public deviceSelected = false;
   public deviceSelected2 = false;
-  public backend = "Staging";
+  public backend = "Production";
   public product = "ONE";
   public wifiSsid = "PADOTEC";
   public wifiPassword = "P@d0t3c2021";
@@ -87,11 +64,15 @@ export class HomePage {
   public ticketSet = false;
   public deviceRegistered = false;
   public isDevice = false;
+  public deviceDone = false;
+
   public gotKey2 = false;
   public secretSet2 = false;
   public ticketSet2 = false;
   public deviceRegistered2 = false;
   public isDevice2 = false;
+  public device2Done = false;
+  
   public twoDevices = false;
 
   private dev: DeviceService;
@@ -103,8 +84,15 @@ export class HomePage {
   public stateEn = 'SOURCE';
   public stateClass = 'state-disconnected';
 
+  private local: oneLocal;
+  public localTest = false;
   private stress: oneLocalStress;
   public localStress = false;
+
+  public showBle = true;
+  public showAuth = false;
+  public showManTests = false;
+  public showAutoTests = false;
 
   constructor(private nav: NavController, private alertController: AlertController) {
     this.device = new DeviceService(this.term, this.term2);
@@ -130,20 +118,51 @@ export class HomePage {
     this.dev.deviceSelectionOnClick();
   }
 
+  public isDeviceDone() {
+    return this.device.isTicketSet();
+  }
+
+  public isDevice2Done() {
+    return this.device2.isTicketSet();
+  }
+
   public isDeviceSelected() {
     return this.dev.deviceSelected;
   }
 
-  public async scanWifiOnClick() {
+  public scanWifiOnClick() {
     this.dev.scanWifiOnClick();
   }
 
-  public async findMeOnClick() {
+  public findMeOnClick() {
     this.dev.findMeOnClick();
   }
 
-  public async connectToWifiOnClick() {
+  public connectToWifiOnClick() {
     this.dev.connectToWifiOnClick();
+  }
+
+  public updateOperation() {
+    switch (this.dev.getOperation()) {
+      case Operation.BLE: {
+        this.showBle = true;
+        this.showAuth = false;
+        this.showManTests = false;
+        break;
+      }
+      case Operation.AUTH: {
+        this.showBle = false;
+        this.showAuth = true;
+        this.showManTests = false;
+        break;
+      }
+      case Operation.MAN_TEST: {
+        this.showBle = false;
+        this.showAuth = false;
+        this.showManTests = true;
+        break;
+      }
+    }
   }
 
   public isBleConnected() {
@@ -170,30 +189,42 @@ export class HomePage {
     await this.dev.setTicket();
   }
 
-  public async hasKey() {
+  public hasKey() {
     return this.dev.hasKey();
   }
 
-  public async isSecretSet() {
+  public isSecretSet() {
     return this.dev.isSecretSet();
   }
 
-  public async isDeviceRegistered() {
+  public isDeviceRegistered() {
     return this.dev.isDeviceRegistered();
   }
 
-  public async isTicketSet() {
-    return this.dev.isTicketSet();
+  public isTicketSet() {
+    const ok = this.dev.isTicketSet();
+    if (ok) {
+      this.enableTesting();
+    }
+    return ok;
   }
 
   public async findMeWsHandler() {
     this.dev.findMeWsHandler();
   }
 
-  private startTesting() {
+  private enableTesting() {
+    this.dev.enableTesting();
     // this.localTest = new LocalTestingService(this.m_ip, this.m_myPubKeyPem, this.m_myPrivKey, this.m_devicePublicKey, this.m_deviceToken, this.socket);
     // const local = new LocalTestingService();
     // const remote = new RemoteTestingService();
+  }
+
+  public async localTestOnClick() {
+    this.localTest = true;
+    this.local = new oneLocal(this.device, this.term, this.device2, this.term3);
+    await this.local.start();
+    this.localTest = false;
   }
 
   public localStressTestOnClick() {

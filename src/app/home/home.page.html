@@ -72,6 +72,10 @@
       </ion-label>
 
       <ion-buttons slot="end">
+        <ion-button expand="block" color="dark">
+          <ion-icon name="information-circle"></ion-icon>
+        </ion-button>
+        
         <ion-button (click)="saveTermOnClick()" expand="block" color="dark">
           <ion-icon name="save"></ion-icon>
           <!-- Save log -->
@@ -89,6 +93,10 @@
       <ion-label><h1>Source Device Log</h1></ion-label>
 
       <ion-buttons slot="end">
+        <ion-button expand="block" color="dark">
+          <ion-icon name="information-circle"></ion-icon>
+        </ion-button>
+
         <ion-button (click)="saveTerm2OnClick()" expand="block" color="dark">
           <ion-icon name="save"></ion-icon>
           <!-- Save log -->
@@ -110,6 +118,10 @@
       </ion-label>
 
       <ion-buttons slot="end">
+        <ion-button expand="block" color="dark">
+          <ion-icon name="information-circle"></ion-icon>
+        </ion-button>
+        
         <ion-button (click)="saveTerm3OnClick()" expand="block" color="dark">
           <ion-icon name="save"></ion-icon>
           <!-- Save log -->
@@ -122,11 +134,15 @@
       </ion-buttons>
     </ion-item>
 
-    <div #terminal3 id="terminal3" class="term"></div>
+    <div #terminal3 id="terminal3" class="term2"></div>
     <ion-item>
       <ion-label><h1>Target Device Log</h1></ion-label>
 
       <ion-buttons slot="end">
+        <ion-button expand="block" color="dark">
+          <ion-icon name="information-circle"></ion-icon>
+        </ion-button>
+
         <ion-button (click)="saveTerm4OnClick()" expand="block" color="dark">
           <ion-icon name="save"></ion-icon>
           <!-- Save log -->
@@ -138,7 +154,7 @@
         </ion-button>
       </ion-buttons>
     </ion-item>
-    <div #terminal4 id="terminal4" class="term"></div>
+    <div #terminal4 id="terminal4" class="term2"></div>
   </div>
 
   <div class="menu">
@@ -176,13 +192,16 @@
       <h2 [ngClass]="stateClass">{{stateEn}}</h2>
     </div> -->
     
-    <h4 class="box-title" [hidden]="isConnectedToWifi()">
+    <h4 class="box-title">
       Operation 
     </h4>
     <div class="box-connect">
       <div [hidden]="isConnectedToWifi()">
         <ion-button (click)="scanWifiOnClick()" expand="full" color="dark" [disabled]="!isDeviceSelected()">
           SCAN WIFI
+        </ion-button>
+        <ion-button (click)="scanWifiOnClick()" expand="full" color="dark" [disabled]="!isDeviceSelected()">
+          <ion-icon name="cog"></ion-icon>
         </ion-button>
         <br/>
         <ion-button (click)="findMeOnClick()" expand="full" color="dark" [disabled]="!isDeviceSelected()">
@@ -195,19 +214,19 @@
       </div>
 
       <div [hidden]="isNotConnectedToWifiorIsTesting()">
-        <ion-button (click)="getKey()" expand="block" color="dark" [disabled]="!hasKey()">
+        <ion-button (click)="getKey()" expand="block" color="dark" [disabled]="hasKey()">
           GET_KEY
         </ion-button>
         <br/>
-        <ion-button (click)="setSecret()" expand="block" color="dark" [disabled]="!isSecretSet()">
+        <ion-button (click)="setSecret()" expand="block" color="dark" [disabled]="isSecretSet()">
           SET_SECRET
         </ion-button>
         <br/>
-        <ion-button (click)="registerDevice()" expand="block" color="dark" [disabled]="!isDeviceRegistered()">
+        <ion-button (click)="registerDevice()" expand="block" color="dark" [disabled]="isDeviceRegistered()">
           REGISTER_DEVICE
         </ion-button>
         <br/>
-        <ion-button (click)="setTicket()" expand="block" color="dark" [disabled]="!isTicketSet()">
+        <ion-button (click)="setTicket()" expand="block" color="dark" [disabled]="isTicketSet()">
           SET_TICKET
         </ion-button>
         <br/>
@@ -223,71 +242,46 @@
         </ng-container>
       </ion-button> -->
 
-      <div class="middle" [hidden]="!isStateTesting()">
-        <ion-row>
+      <div [hidden]="!isTicketSet()">
         <ion-button (click)="eraseIrOnClick()" expand="block" color="dark">
           ERASE_IR
         </ion-button>
         <ion-button (click)="getIrOnClick()" expand="block" color="dark">
           GET_IR
         </ion-button>
-        </ion-row>
-        <br/>
-        <ion-row>
         <ion-button (click)="setIrOnClick()" expand="block" color="dark">
           SET_IR
         </ion-button>
-        <br/>
         <ion-button (click)="getInfoOnClick()" expand="block" color="dark">
           GET_INFO
         </ion-button>
-        </ion-row>
-        <br/>
-        <ion-row>
         <ion-button (click)="cancelIrOnClick()" expand="block" color="dark">
           CANCEL_IR
         </ion-button>
-        <br/>
         <ion-button (click)="editIrOnClick()" expand="block" color="dark">
           EDIT_IR
         </ion-button>
-        </ion-row>
-        <br/>
-        <ion-row>
         <ion-button (click)="runSceneOnClick()" expand="block" color="dark">
           RUN_SCENE
         </ion-button>
-        <br/>
         <ion-button (click)="facResetOnClick()" expand="block" color="dark">
           FAC_RESET
         </ion-button> 
-        </ion-row>
-        <br/>
-        <ion-row>
         <ion-button (click)="getHeapOnClick()" expand="block" color="dark">
           GET_HEAP
         </ion-button>
-        <br/>
         <ion-button (click)="resetOnClick()" expand="block" color="dark">
           RESET
         </ion-button>
-        </ion-row>
-        <br/>
-        <ion-row>
         <ion-button (click)="bleOnOnClick()" expand="block" color="dark">
           BLE_ON
         </ion-button>
-        <br/>
         <ion-button (click)="bleOffOnClick()" expand="block" color="dark">
           BLE_OFF
         </ion-button>
-        </ion-row>
-        <br/>
-        <ion-row>
         <ion-button (click)="findMeWsOnClick()" expand="block" color="dark">
           FIND_ME
         </ion-button>
-        </ion-row>
       </div>
     </div>
 
@@ -295,7 +289,7 @@
     <h4 class="box-title" [hidden]="!localStress">Stress tests</h4>
     <div class="box-connect ion-text-center">
       <div [hidden]="localStress">
-        <ion-button (click)="onRun()" color="success" expand="full">
+        <ion-button (click)="localTestOnClick()" color="success" expand="full" [disabled]="!isTicketSet()">
           <ng-container *ngIf="!isTesting">
             <ion-icon name="play"></ion-icon>
             LOCAL TESTS
@@ -306,7 +300,7 @@
         </ion-button>
         <br/>
 
-        <ion-button (click)="localStressTestOnClick()" color="success" expand="full">
+        <ion-button (click)="localStressTestOnClick()" color="success" expand="full" [disabled]="!isTicketSet()">
           <ng-container *ngIf="!isTesting">
             <ion-icon name="play"></ion-icon>
             LOCAL STRESS TESTS
@@ -317,7 +311,7 @@
         </ion-button>
         <br/>
 
-        <ion-button (click)="onRun()" color="success" expand="full">
+        <ion-button (click)="onRun()" color="success" expand="full" [disabled]="!isTicketSet()">
           <ng-container *ngIf="!isTesting">
             <ion-icon name="play"></ion-icon>
             REMOTE TESTS
@@ -328,7 +322,7 @@
         </ion-button>
         <br/>
 
-        <ion-button (click)="onRun()" color="success" expand="full">
+        <ion-button (click)="onRun()" color="success" expand="full" [disabled]="!isTicketSet()">
           <ng-container *ngIf="!isTesting">
             <ion-icon name="play"></ion-icon>
             REMOTE STRESS TESTS
@@ -339,7 +333,7 @@
         </ion-button>
         <br/>
 
-        <ion-button (click)="onRun()" color="danger" expand="full">
+        <ion-button (click)="onRun()" color="danger" expand="full" [disabled]="!isTicketSet()">
           <ng-container *ngIf="!isTesting">
             <ion-icon name="play"></ion-icon>
             STOP
@@ -410,7 +404,7 @@
             <ion-spinner name="circles"></ion-spinner>
           </ng-container>
         </ion-button>
-        <ion-button (click)="onRun()" color="danger" expand="full">
+        <ion-button (click)="stopStressTestOnClick()" color="danger" expand="full">
           <ng-container *ngIf="!isTesting">
             <ion-icon name="play"></ion-icon>
             STOP
