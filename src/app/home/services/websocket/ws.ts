@@ -28,6 +28,9 @@ export class WebSocketService {
   private sentPacketSubject$ = new Subject<any>();
   private rcvPacketSubject$ = new Subject<any>();
 
+  private sentRemotePacketSubject$ = new Subject<any>();
+  private rcvRemotePacketSubject$ = new Subject<any>();
+
   constructor() {}
 
   public open(uri: string, privKey?): Promise<boolean> {
@@ -55,7 +58,7 @@ export class WebSocketService {
     if (devicePublicKey) {
       this.m_devicePublicKey = devicePublicKey;
     }
-    const socket = uint8ArrayToHexString(window.crypto.getRandomValues(new Uint8Array(16)));
+    const socket = uint8ArrayToHexString(window.crypto.getRandomValues(new Uint8Array(8)));
     const obsData = data;
     obsData.socket = socket;
     this.sentPacketSubject$.next(obsData);
@@ -138,6 +141,28 @@ export class WebSocketService {
 
     return buffer;
   }
+
+  public remoteRequest(uri: string, request: any): Promise<any> {
+    return new Promise(async resolve => {
+      this.m_uri = uri;
+      await this.open(this.m_uri);
+      this.m_ws.send(JSON.stringify(request));
+
+      const socket = uint8ArrayToHexString(window.crypto.getRandomValues(new Uint8Array(8)));
+      const obsData = request;
+      obsData.socket = socket;
+      this.sentRemotePacketSubject$.next(obsData);
+  
+      this.m_ws.binaryType = 'arraybuffer';
+      this.m_ws.onmessage = event => {
+        const resp = event.data.toString();
+        const obsResp = resp;
+        obsResp.socket = socket;
+        this.rcvPacketSubject$.next(obsResp);
+        resolve(resp);
+      }
+    })
+  } 
 
   public sentPacket$(): Observable<any> {
     return this.sentPacketSubject$.asObservable();

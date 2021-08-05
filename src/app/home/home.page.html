@@ -68,11 +68,11 @@
   <div class="main">
     <ion-item>
       <ion-label>
-        <h1>Source Log</h1>
+        <h1>Source Test Log</h1>
       </ion-label>
 
       <ion-buttons slot="end">
-        <ion-button expand="block" color="dark">
+        <ion-button (click)="showUserInfo()" expand="block" color="dark">
           <ion-icon name="information-circle"></ion-icon>
         </ion-button>
         
@@ -88,7 +88,7 @@
       </ion-buttons>
     </ion-item>
 
-    <!-- <div #terminal1 id="terminal1" class="term"></div> -->
+    <div #terminal1 id="terminal1" class="term"></div>
     <ion-item>
       <ion-label><h1>Source Device Log</h1></ion-label>
 
@@ -108,17 +108,17 @@
         </ion-button>
       </ion-buttons>
     </ion-item>
-    <!-- <div #terminal2 id="terminal2" class="term"></div> -->
+    <div #terminal2 id="terminal2" class="term"></div>
   </div>
 
   <div class="main">
     <ion-item>
       <ion-label>
-        <h1>Target Log</h1>
+        <h1>Target Test Log</h1>
       </ion-label>
 
       <ion-buttons slot="end">
-        <ion-button expand="block" color="dark">
+        <ion-button (click)="showUser2Info()" expand="block" color="dark">
           <ion-icon name="information-circle"></ion-icon>
         </ion-button>
         
@@ -134,12 +134,12 @@
       </ion-buttons>
     </ion-item>
 
-    <!-- <div #terminal3 id="terminal3" class="term2"></div> -->
+    <div #terminal3 id="terminal3" class="term2"></div>
     <ion-item>
       <ion-label><h1>Target Device Log</h1></ion-label>
 
       <ion-buttons slot="end">
-        <ion-button (click)="showDeviceInfo" expand="block" color="dark">
+        <ion-button (click)="showDevice2Info()" expand="block" color="dark">
           <ion-icon name="information-circle"></ion-icon>
         </ion-button>
 
@@ -154,7 +154,7 @@
         </ion-button>
       </ion-buttons>
     </ion-item>
-    <!-- <div #terminal4 id="terminal4" class="term2"></div> -->
+    <div #terminal4 id="terminal4" class="term2"></div>
   </div>
 
   <div class="menu">
@@ -192,19 +192,20 @@
       <h2 [ngClass]="stateClass">{{stateEn}}</h2>
     </div> -->
     
-    <h4 class="box-title">
+    <h4 class="box-title" [hidden]="isTesting">
       Operation 
+    </h4>
+    <h4 class="box-title" [hidden]="!isTestingAndLocal">
+      Local Websocket
+    </h4>
+    <h4 class="box-title" [hidden]="!isTestingAndRemote">
+      Remote Websocket
     </h4>
     <div class="box-connect">
       <div [hidden]="isConnectedToWifi()">
-          <ion-row>
-          <ion-button class="op-button" (click)="scanWifiOnClick()" expand="full" color="dark" [disabled]="!isDeviceSelected()">
-            SCAN WIFI
-          </ion-button>
-          <ion-button class="cog" (click)="scanWifiOnClick()" expand="full" color="dark" fill="clear">
-            <ion-icon name="cog"></ion-icon>
-          </ion-button>
-        </ion-row>
+        <ion-button (click)="scanWifiOnClick()" expand="full" color="dark" [disabled]="!isDeviceSelected()">
+          SCAN WIFI
+        </ion-button>
         <br/>
         <ion-button (click)="findMeOnClick()" expand="full" color="dark" [disabled]="!isDeviceSelected()">
           FIND ME
@@ -245,45 +246,131 @@
       </ion-button> -->
 
       <div [hidden]="!isTicketSet()">
-        <ion-button (click)="eraseIrOnClick()" expand="block" color="dark">
-          ERASE_IR
-        </ion-button>
-        <ion-button (click)="getIrOnClick()" expand="block" color="dark">
-          GET_IR
-        </ion-button>
-        <ion-button (click)="setIrOnClick()" expand="block" color="dark">
-          SET_IR
-        </ion-button>
-        <ion-button (click)="getInfoOnClick()" expand="block" color="dark">
-          GET_INFO
-        </ion-button>
-        <ion-button (click)="cancelIrOnClick()" expand="block" color="dark">
-          CANCEL_IR
-        </ion-button>
-        <ion-button (click)="editIrOnClick()" expand="block" color="dark">
-          EDIT_IR
-        </ion-button>
-        <ion-button (click)="runSceneOnClick()" expand="block" color="dark">
-          RUN_SCENE
-        </ion-button>
-        <ion-button (click)="facResetOnClick()" expand="block" color="dark">
-          FAC_RESET
-        </ion-button> 
-        <ion-button (click)="getHeapOnClick()" expand="block" color="dark">
-          GET_HEAP
-        </ion-button>
-        <ion-button (click)="resetOnClick()" expand="block" color="dark">
-          RESET
-        </ion-button>
-        <ion-button (click)="bleOnOnClick()" expand="block" color="dark">
-          BLE_ON
-        </ion-button>
-        <ion-button (click)="bleOffOnClick()" expand="block" color="dark">
-          BLE_OFF
-        </ion-button>
-        <ion-button (click)="findMeWsOnClick()" expand="block" color="dark">
-          FIND_ME
-        </ion-button>
+        <ion-row>
+          <ion-button class="choose-button" (click)="setLocalOnClick()" expand="block" color="dark">
+            LOCAL
+          </ion-button>
+          <ion-button class="choose-button" (click)="setRemoteOnClick()" expand="block" color="dark">
+            REMOTE
+          </ion-button>
+        </ion-row>
+
+        <ion-row>
+          <ion-button class="op-button" (click)="eraseIrOnClick()" expand="block" color="dark">
+            ERASE_IR
+          </ion-button>
+          <ion-button class="cog" (click)="scanWifiOnClick()" expand="full" color="dark" fill="clear">
+            <ion-icon name="cog"></ion-icon>
+          </ion-button>
+        </ion-row>
+
+        <ion-row>
+          <ion-button class="op-button" (click)="getIrOnClick()" expand="block" color="dark">
+            GET_IR
+          </ion-button>
+          <ion-button class="cog" (click)="scanWifiOnClick()" expand="full" color="dark" fill="clear">
+            <ion-icon name="cog"></ion-icon>
+          </ion-button>
+        </ion-row>
+
+        <ion-row>
+          <ion-button class="op-button" (click)="setIrOnClick()" expand="block" color="dark">
+            SET_IR
+          </ion-button>
+          <ion-button class="cog" (click)="scanWifiOnClick()" expand="full" color="dark" fill="clear">
+            <ion-icon name="cog"></ion-icon>
+          </ion-button>
+        </ion-row>
+
+        <ion-row>
+          <ion-button class="op-button" (click)="getInfoOnClick()" expand="block" color="dark">
+            GET_INFO
+          </ion-button>
+          <ion-button class="cog" (click)="scanWifiOnClick()" expand="full" color="dark" fill="clear">
+            <ion-icon name="cog"></ion-icon>
+          </ion-button>
+        </ion-row>
+
+        <ion-row>
+          <ion-button class="op-button" (click)="cancelIrOnClick()" expand="block" color="dark">
+            CANCEL_IR
+          </ion-button>
+          <ion-button class="cog" (click)="scanWifiOnClick()" expand="full" color="dark" fill="clear">
+            <ion-icon name="cog"></ion-icon>
+          </ion-button>
+        </ion-row>
+
+        <ion-row>
+          <ion-button class="op-button" (click)="editIrOnClick()" expand="block" color="dark">
+            EDIT_IR
+          </ion-button>
+          <ion-button class="cog" (click)="scanWifiOnClick()" expand="full" color="dark" fill="clear">
+            <ion-icon name="cog"></ion-icon>
+          </ion-button>
+        </ion-row>
+
+        <ion-row>
+          <ion-button class="op-button" (click)="runSceneOnClick()" expand="block" color="dark">
+            RUN_SCENE
+          </ion-button>
+          <ion-button class="cog" (click)="scanWifiOnClick()" expand="full" color="dark" fill="clear">
+            <ion-icon name="cog"></ion-icon>
+          </ion-button>
+        </ion-row>
+
+        <ion-row>
+          <ion-button class="op-button" (click)="facResetOnClick()" expand="block" color="dark">
+            FAC_RESET
+          </ion-button> 
+          <ion-button class="cog" (click)="scanWifiOnClick()" expand="full" color="dark" fill="clear">
+            <ion-icon name="cog"></ion-icon>
+          </ion-button>
+        </ion-row>
+
+        <ion-row>
+          <ion-button class="op-button" (click)="getHeapOnClick()" expand="block" color="dark">
+            GET_HEAP
+          </ion-button>
+          <ion-button class="cog" (click)="scanWifiOnClick()" expand="full" color="dark" fill="clear">
+            <ion-icon name="cog"></ion-icon>
+          </ion-button>
+        </ion-row>
+
+        <ion-row>
+          <ion-button class="op-button" (click)="resetOnClick()" expand="block" color="dark">
+            RESET
+          </ion-button>
+          <ion-button class="cog" (click)="scanWifiOnClick()" expand="full" color="dark" fill="clear">
+            <ion-icon name="cog"></ion-icon>
+          </ion-button>
+        </ion-row>
+        
+        <ion-row>
+          <ion-button class="op-button" (click)="bleOnOnClick()" expand="block" color="dark">
+            BLE_ON
+          </ion-button>
+          <ion-button class="cog" (click)="scanWifiOnClick()" expand="full" color="dark" fill="clear">
+            <ion-icon name="cog"></ion-icon>
+          </ion-button>
+        </ion-row>
+        
+        <ion-row>
+          <ion-button class="op-button" (click)="bleOffOnClick()" expand="block" color="dark">
+            BLE_OFF
+          </ion-button>
+          <ion-button class="cog" (click)="scanWifiOnClick()" expand="full" color="dark" fill="clear">
+            <ion-icon name="cog"></ion-icon>
+          </ion-button>
+        </ion-row>
+      
+        <ion-row>
+          <ion-button class="op-button" (click)="findMeWsOnClick()" expand="block" color="dark">
+            FIND_ME
+          </ion-button>
+          <ion-button class="cog" (click)="scanWifiOnClick()" expand="full" color="dark" fill="clear">
+            <ion-icon name="cog"></ion-icon>
+          </ion-button>
+        </ion-row>
       </div>
     </div>
 

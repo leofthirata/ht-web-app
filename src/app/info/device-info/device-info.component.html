@@ -1,13 +1,19 @@
 <ion-content>
   <ion-list>
-    <ion-item (click)="wifiSetting()">
-      Wifi
+    <ion-item>
+      {{ip}}   
     </ion-item>
-    <ion-item (click)="eventFromPopover()()">
-      Information 2
+    <ion-item>
+      {{uuid}}   
     </ion-item>
-    <ion-item (click)="logout()">
-      Logout
+    <ion-item>
+      {{ticket}}   
+    </ion-item>
+    <ion-item class="ion-text-wrap">
+      {{key}} 
+    </ion-item>
+    <ion-item (click)="dismiss()">
+      Close
     </ion-item>
   </ion-list>
 </ion-content>

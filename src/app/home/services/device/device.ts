@@ -16,7 +16,8 @@ import { uint8ArrayToHexString } from '../../utils/utils';
 import * as forge from "node-forge";
 import { printPubKeyRSA, importPubKeyRSA } from '../../utils/encrypt';
 import { getAccessToken, sync, createPlace, createEnvironment, createDevice } from '../../services/backend/backend'
-import { OneLocalTestingService } from '../testing/manual';
+import { OneLocalTestingService } from '../testing/manual-local';
+import { OneRemoteTestingService } from '../testing/manual-remote';
 
 // logger
 import { download } from '../../utils/logger';
@@ -69,8 +70,10 @@ export class DeviceService {
   public wifiBssid = '0263DA3A342A';
   public bleMac = "7C9EBDD71678";
   public manualLocalTest: OneLocalTestingService;
+  public manualRemoteTest: OneRemoteTestingService;
+  private local = true;
   public socket: WebSocketService;
-
+  private remoteRequest: Object;
   // public remoteTest: 
   private term: Terminal;
   private term2: Terminal;
@@ -389,12 +392,21 @@ export class DeviceService {
     } else {
       this.deviceRegistered = false;
     }
+
+    this.remoteRequest = {
+      'payload': {
+        'macToken': this.m_deviceToken,
+      },
+      'sender': this.m_userUuid,
+      'recipient': this.m_deviceUuid,
+      'messageId': uint8ArrayToHexString(window.crypto.getRandomValues(new Uint8Array(8))),
+    };
   }
 
   public async setTicket() {
     let ticketRequest = { 
-      'ticket': this.m_userTicket,
-      'uuid': this.m_userUuid,
+      'ticket': this.m_deviceTicket,
+      'uuid': this.m_deviceUuid,
       'key': this.m_myPubKeyPem
     };
     
@@ -436,8 +448,16 @@ export class DeviceService {
 
   public enableTesting() {
     this.manualLocalTest = new OneLocalTestingService(this.m_ip, this.m_myPubKeyPem, this.m_myPrivKey, this.m_devicePublicKey, this.m_deviceToken, this.socket);
-    // const local = new LocalTestingService();
+    this.manualRemoteTest = new OneRemoteTestingService(this.m_userTicket, this.remoteRequest, this.socket);
     // const remote = new RemoteTestingService();
+  }
+
+  public chooseLocalTest() {
+    this.local = true;
+  }
+
+  public chooseRemoteTest() {
+    this.local = false;
   }
 
   public hasKey() {
@@ -465,55 +485,107 @@ export class DeviceService {
   }
 
   public getInfoOnClick() {
-    this.manualLocalTest.GET_INFO();
+    if (this.local) {
+      this.manualLocalTest.GET_INFO();
+    } else {
+      this.manualRemoteTest.GET_INFO();
+    }
   }
 
   public eraseIrOnClick() {
-    this.manualLocalTest.ERASE_IR();
+    if (this.local) {
+      this.manualLocalTest.ERASE_IR();
+    } else {
+      this.manualRemoteTest.ERASE_IR();
+    }
   }
 
   public getIrOnClick() {
-    this.manualLocalTest.GET_IR();
+    if (this.local) {
+      this.manualLocalTest.GET_IR();
+    } else {
+      this.manualRemoteTest.GET_IR();
+    }
   }
 
   public setIrOnClick() {
-    this.manualLocalTest.SET_IR();
+    if (this.local) {
+      this.manualLocalTest.SET_IR();
+    } else {
+      this.manualRemoteTest.SET_IR();
+    }
   }
 
   public cancelIrOnClick() {
-    this.manualLocalTest.CANCEL_IR();
+    if (this.local) {
+      this.manualLocalTest.CANCEL_IR();
+    } else {
+      this.manualRemoteTest.CANCEL_IR();
+    }
   }
 
   public editIrOnClick() {
-    this.manualLocalTest.EDIT_IR();
+    if (this.local) {
+      this.manualLocalTest.EDIT_IR();
+    } else {
+      this.manualRemoteTest.EDIT_IR();
+    }
   }
 
   public runSceneOnClick() {
-    this.manualLocalTest.RUN_SCENE();
+    if (this.local) {
+      this.manualLocalTest.RUN_SCENE();
+    } else {
+      this.manualRemoteTest.RUN_SCENE();
+    }
   }
 
   public facResetOnClick() {
-    this.manualLocalTest.FAC_RESET();
+    if (this.local) {
+      this.manualLocalTest.FAC_RESET();
+    } else {
+      this.manualRemoteTest.FAC_RESET();
+    }
   }
 
   public getHeapOnClick() {
-    this.manualLocalTest.GET_HEAP();
+    if (this.local) {
+      this.manualLocalTest.GET_HEAP();
+    } else {
+      this.manualRemoteTest.GET_HEAP();
+    }
   }
 
   public resetOnClick() {
-    this.manualLocalTest.RESET();
+    if (this.local) {
+      this.manualLocalTest.RESET();
+    } else {
+      this.manualRemoteTest.RESET();
+    }
   }
 
   public bleOnOnClick() {
-    this.manualLocalTest.BLE_ON();
+    if (this.local) {
+      this.manualLocalTest.BLE_ON();
+    } else {
+      this.manualRemoteTest.BLE_ON();
+    }
   }
 
   public bleOffOnClick() {
-    this.manualLocalTest.BLE_OFF();
+    if (this.local) {
+      this.manualLocalTest.BLE_OFF();
+    } else {
+      this.manualRemoteTest.BLE_OFF();
+    }
   }
 
   public findMeWsOnClick() {
-    this.manualLocalTest.FIND_ME();
+    if (this.local) {
+      this.manualLocalTest.FIND_ME();
+    } else {
+      this.manualRemoteTest.FIND_ME();
+    }
   }
 
   private setState(state: State) {
@@ -747,8 +819,26 @@ export class DeviceService {
     return this.operation;
   }
 
+  public getTicket() {
+    return this.m_deviceTicket;
+  }
+
+  public getUuid() {
+    return this.m_deviceUuid;
+  }
+
   public getMyPubKeyPem() {
-    return this.m_myPubKeyPem;
+    if (this.m_myPubKey) {
+      return this.m_myPubKeyPem;
+    }
+    return '';
+  }
+
+  public getMyPrivKeyPem() {
+    if (this.m_myPrivKey) {
+      return this.m_myPrivKeyPem;
+    }
+    return '';
   }
 
   public getMyPrivKey() {
@@ -756,7 +846,10 @@ export class DeviceService {
   }
 
   public getDevPubKeyPem() {
-    return this.m_devicePublicKey;
+    if (this.m_devicePublicKey) {
+      return forge.pki.publicKeyToPem(this.m_devicePublicKey);
+    }
+    return '';
   }
 
   public getToken() {

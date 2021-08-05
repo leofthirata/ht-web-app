@@ -8,6 +8,7 @@ import { PopoverController } from '@ionic/angular';
 
 import { BluetoothService } from './services/ble/ble';
 import { DeviceInfoComponent } from '../info/device-info/device-info.component';
+import { UserInfoComponent } from '../info/user-info/user-info.component';
 
 import { Terminal } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
@@ -25,8 +26,8 @@ import { getAccessToken, sync, createPlace, createEnvironment, createDevice } fr
 // logger
 import { download } from './utils/logger';
 import { DeviceService } from './services/device/device';
-import { oneLocalStress } from './services/testing/local-stress';
-import { oneLocal } from './services/testing/local';
+import { oneLocalStress } from './services/testing/auto-local-stress';
+import { oneLocal } from './services/testing/auto-local';
 
 enum Operation {
   BLE,
@@ -47,6 +48,8 @@ export class HomePage {
   @ViewChild('terminal4') terminal4: ElementRef;
 
   private device: DeviceService;
+  public devTicket: string;
+
   private device2: DeviceService;
   public deviceSelected = false;
   public deviceSelected2 = false;
@@ -88,6 +91,8 @@ export class HomePage {
   public stateEn = 'SOURCE';
   public stateClass = 'state-disconnected';
 
+  public isTestingAndLocal = false;
+  public isTestingAndRemote = false;
   private local: oneLocal;
   public localTest = false;
   private stress: oneLocalStress;
@@ -209,6 +214,9 @@ export class HomePage {
     const ok = this.dev.isTicketSet();
     if (ok) {
       this.enableTesting();
+      this.isTesting = true;
+    } else {
+      this.isTesting = false;
     }
     return ok;
   }
@@ -349,12 +357,12 @@ export class HomePage {
     this.term4.open(this.terminal4.nativeElement);
     fitAddon4.fit();
 
-    window.onresize = () => {
-      fitAddon.fit();
-      fitAddon2.fit();
-      fitAddon3.fit();
-      fitAddon4.fit();
-    };
+    // window.onresize = () => {
+    //   fitAddon.fit();
+    //   fitAddon2.fit();
+    //   fitAddon3.fit();
+    //   fitAddon4.fit();
+    // };
   }
 
   async wifiConfigAndConnectOnClick() {
@@ -402,6 +410,18 @@ export class HomePage {
     await alert.present();
   }
 
+  public setLocalOnClick() {
+    this.isTestingAndLocal = true;
+    this.isTestingAndRemote = false;
+    this.dev.chooseLocalTest();
+  }
+
+  public setRemoteOnClick() {
+    this.isTestingAndLocal = false;
+    this.isTestingAndRemote = true;
+    this.dev.chooseRemoteTest();
+  }
+
   public showKeyPairOnClick() {
     this.dev.showKeyPairOnClick();
   }
@@ -446,14 +466,94 @@ export class HomePage {
     this.device2.eraseTerm2OnClick();
   }
 
-  async showDeviceInfo(ev: any) {
-    const siteInfo = { id: 1, name: 'oioi' };
+  public async showDeviceInfo(ev: any) {
+    const devInfo = { 
+      ip: this.device.getIp(), 
+      uuid: this.device.getUuid(), 
+      ticket: this.device.getTicket(), 
+      key: this.device.getDevPubKeyPem(),
+    };
+
     const popover = await this.popoverController.create({
       component: DeviceInfoComponent,
       event: ev,
       cssClass: 'popover_setting',
       componentProps: {
-        site: siteInfo
+        device: devInfo
+      },
+      translucent: true
+    });
+
+    popover.onDidDismiss().then((result) => {
+      console.log(result.data);
+    });
+
+    return await popover.present();
+    /** Sync event from popover component */
+  }
+
+  public async showDevice2Info(ev: any) {
+    const devInfo = { 
+      ip: this.device2.getIp(), 
+      uuid: this.device2.getUuid(), 
+      ticket: this.device2.getTicket(), 
+      key: this.device2.getDevPubKeyPem(),
+    };
+
+    const popover = await this.popoverController.create({
+      component: DeviceInfoComponent,
+      event: ev,
+      cssClass: 'popover_setting',
+      componentProps: {
+        device: devInfo
+      },
+      translucent: true
+    });
+
+    popover.onDidDismiss().then((result) => {
+      console.log(result.data);
+    });
+
+    return await popover.present();
+    /** Sync event from popover component */
+  }
+
+  public async showUserInfo(ev: any) {
+    const userInfo = { 
+      pubKey: this.device.getMyPubKeyPem(),
+      privKey: this.device.getMyPrivKeyPem(),
+    };
+
+    const popover = await this.popoverController.create({
+      component: UserInfoComponent,
+      event: ev,
+      cssClass: 'popover_setting',
+      componentProps: {
+        user: userInfo
+      },
+      translucent: true
+    });
+
+    popover.onDidDismiss().then((result) => {
+      console.log(result.data);
+    });
+
+    return await popover.present();
+    /** Sync event from popover component */
+  }
+
+  public async showUser2Info(ev: any) {
+    const userInfo = { 
+      pubKey: this.device2.getMyPubKeyPem(),
+      privKey: this.device2.getMyPrivKeyPem(),
+    };
+
+    const popover = await this.popoverController.create({
+      component: UserInfoComponent,
+      event: ev,
+      cssClass: 'popover_setting',
+      componentProps: {
+        user: userInfo
       },
       translucent: true
     });

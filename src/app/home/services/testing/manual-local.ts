@@ -21,7 +21,7 @@ export class OneLocalTestingService {
   }
 
    // TESTS
-  public GET_INFO(): Promise<string> {
+  public async GET_INFO(): Promise<string> {
     return new Promise(async res => {
       this.m_request.command = {"cm": 3};
 

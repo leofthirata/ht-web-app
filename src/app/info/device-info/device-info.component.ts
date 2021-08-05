@@ -7,28 +7,31 @@ import { PopoverController, } from '@ionic/angular';
   styleUrls: ['./device-info.component.scss'],
 })
 export class DeviceInfoComponent implements OnInit {
-  site;
+  device;
+
+  public ip;
+  public uuid;
+  public ticket;
+  public key;
 
   constructor(
     private popoverController: PopoverController) { }
 
   ngOnInit() {
-    // this.siteInfo = this.navParams.get('site');
-    console.log(this.site);
+    console.log(this.device);
+    this.uuid = this.device.uuid;
+    this.ticket = this.device.ticket;
+    this.ip = this.device.ip;
+    this.key = this.device.key;
   }
 
-  wifiSetting() {
+  dismiss() {
     // code for setting wifi option in apps
     this.popoverController.dismiss();
   }
 
-  logout() {
-    // code for logout
-    this.popoverController.dismiss();
-  }
-
   eventFromPopover() {
-    this.popoverController.dismiss('oioioi');
+    this.popoverController.dismiss();
   }
 }
 

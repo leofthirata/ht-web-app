@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { PopoverController, } from '@ionic/angular';
 
 @Component({
   selector: 'app-user-info',
@@ -6,9 +7,25 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./user-info.component.scss'],
 })
 export class UserInfoComponent implements OnInit {
+  user;
 
-  constructor() { }
+  public pubKey;
+  public privKey;
 
-  ngOnInit() {}
+  constructor(
+    private popoverController: PopoverController) { }
 
+  ngOnInit() {
+    this.pubKey = this.user.pubKey;
+    this.privKey = this.user.privKey;
+  }
+
+  dismiss() {
+    // code for setting wifi option in apps
+    this.popoverController.dismiss();
+  }
+
+  eventFromPopover() {
+    this.popoverController.dismiss();
+  }
 }
