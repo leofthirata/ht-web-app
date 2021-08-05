@@ -56,8 +56,8 @@
       </ion-buttons>
 
       <ion-buttons slot="end" class="button-end">
-        <ion-button (click)="addNewDeviceOnClick()" expand="full" color="dark" [disabled]="twoDevices">
-          <ion-icon name="add-plus"></ion-icon>
+        <ion-button (click)="reportBugOnClick()" expand="full" color="dark">
+          <ion-icon name="bug"></ion-icon>
         </ion-button>
       </ion-buttons>
   </ion-toolbar>
@@ -88,12 +88,12 @@
       </ion-buttons>
     </ion-item>
 
-    <div #terminal1 id="terminal1" class="term"></div>
+    <!-- <div #terminal1 id="terminal1" class="term"></div> -->
     <ion-item>
       <ion-label><h1>Source Device Log</h1></ion-label>
 
       <ion-buttons slot="end">
-        <ion-button expand="block" color="dark">
+        <ion-button (click)="showDeviceInfo()" expand="block" color="dark">
           <ion-icon name="information-circle"></ion-icon>
         </ion-button>
 
@@ -108,7 +108,7 @@
         </ion-button>
       </ion-buttons>
     </ion-item>
-    <div #terminal2 id="terminal2" class="term"></div>
+    <!-- <div #terminal2 id="terminal2" class="term"></div> -->
   </div>
 
   <div class="main">
@@ -134,12 +134,12 @@
       </ion-buttons>
     </ion-item>
 
-    <div #terminal3 id="terminal3" class="term2"></div>
+    <!-- <div #terminal3 id="terminal3" class="term2"></div> -->
     <ion-item>
       <ion-label><h1>Target Device Log</h1></ion-label>
 
       <ion-buttons slot="end">
-        <ion-button expand="block" color="dark">
+        <ion-button (click)="showDeviceInfo" expand="block" color="dark">
           <ion-icon name="information-circle"></ion-icon>
         </ion-button>
 
@@ -154,7 +154,7 @@
         </ion-button>
       </ion-buttons>
     </ion-item>
-    <div #terminal4 id="terminal4" class="term2"></div>
+    <!-- <div #terminal4 id="terminal4" class="term2"></div> -->
   </div>
 
   <div class="menu">
@@ -197,12 +197,14 @@
     </h4>
     <div class="box-connect">
       <div [hidden]="isConnectedToWifi()">
-        <ion-button (click)="scanWifiOnClick()" expand="full" color="dark" [disabled]="!isDeviceSelected()">
-          SCAN WIFI
-        </ion-button>
-        <ion-button (click)="scanWifiOnClick()" expand="full" color="dark" [disabled]="!isDeviceSelected()">
-          <ion-icon name="cog"></ion-icon>
-        </ion-button>
+          <ion-row>
+          <ion-button class="op-button" (click)="scanWifiOnClick()" expand="full" color="dark" [disabled]="!isDeviceSelected()">
+            SCAN WIFI
+          </ion-button>
+          <ion-button class="cog" (click)="scanWifiOnClick()" expand="full" color="dark" fill="clear">
+            <ion-icon name="cog"></ion-icon>
+          </ion-button>
+        </ion-row>
         <br/>
         <ion-button (click)="findMeOnClick()" expand="full" color="dark" [disabled]="!isDeviceSelected()">
           FIND ME

@@ -3,8 +3,12 @@
 
 // home
 import { Component, ElementRef, ViewChild } from '@angular/core';
-import { BluetoothService } from './services/ble/ble';
 import { NavController, AlertController } from '@ionic/angular';
+import { PopoverController } from '@ionic/angular';
+
+import { BluetoothService } from './services/ble/ble';
+import { DeviceInfoComponent } from '../info/device-info/device-info.component';
+
 import { Terminal } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
 import { Cast } from './utils/cast';
@@ -94,7 +98,7 @@ export class HomePage {
   public showManTests = false;
   public showAutoTests = false;
 
-  constructor(private nav: NavController, private alertController: AlertController) {
+  constructor(private nav: NavController, private alertController: AlertController, private popoverController: PopoverController) {
     this.device = new DeviceService(this.term, this.term2);
     this.device2 = new DeviceService(this.term3, this.term4);
     this.dev = this.device;
@@ -440,5 +444,29 @@ export class HomePage {
 
   public eraseTerm4OnClick() {
     this.device2.eraseTerm2OnClick();
+  }
+
+  async showDeviceInfo(ev: any) {
+    const siteInfo = { id: 1, name: 'oioi' };
+    const popover = await this.popoverController.create({
+      component: DeviceInfoComponent,
+      event: ev,
+      cssClass: 'popover_setting',
+      componentProps: {
+        site: siteInfo
+      },
+      translucent: true
+    });
+
+    popover.onDidDismiss().then((result) => {
+      console.log(result.data);
+    });
+
+    return await popover.present();
+    /** Sync event from popover component */
+  }
+
+  public reportBugOnClick() {
+    window.open('https://gitlab.padotec.com.br/groups/hausenn/-/boards', '_blank');
   }
 }
