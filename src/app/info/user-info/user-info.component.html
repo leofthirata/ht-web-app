@@ -1,10 +1,14 @@
 <ion-content>
   <ion-list>
-    <ion-item class="ion-text-wrap">
-      {{pubKey}} 
+    <ion-item>
+      <ion-textarea auto-grow="true" [disabled]="true">
+        {{pubKey}} 
+      </ion-textarea>
     </ion-item>
-    <ion-item class="ion-text-wrap">
-      {{privKey}} 
+    <ion-item>
+      <ion-textarea auto-grow="true" [disabled]="true">
+        {{privKey}} 
+      </ion-textarea>
     </ion-item>
     <ion-item (click)="dismiss()">
       Close
