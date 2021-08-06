@@ -50,6 +50,8 @@ export class HomePage {
   private device: DeviceService;
   public devTicket: string;
 
+  public teste = "In particular, the i2cdetect program will probe all the addresses on a bus, and report whether any devices are present. Enter the following command in the command line. The -y flag will disable interactive mode so that you do not have to wait for confirmation. The 1 indicates that we are scanning for I2C devices on I2C bus 1 (e.g. i2c-1).";
+  
   private device2: DeviceService;
   public deviceSelected = false;
   public deviceSelected2 = false;
@@ -401,6 +403,7 @@ export class HomePage {
           handler: ans => {
             this.wifiSsid = ans.ssid;
             this.wifiPassword = ans.pswd;
+            this.wifiBssid = ans.bssid;
             this.connectToWifiOnClick()          
           }
         }
@@ -568,5 +571,43 @@ export class HomePage {
 
   public reportBugOnClick() {
     window.open('https://gitlab.padotec.com.br/groups/hausenn/-/boards', '_blank');
+  }
+
+  async editEraseIr() {
+    const alert = await this.alertController.create({
+      header: 'ERASE_IR',
+      inputs: [
+        {
+          name: 'cmd',
+          type: 'text',
+          placeholder: '1'
+        },
+        {
+          name: 'id',
+          type: 'text',
+          placeholder: 'Enter password'
+        },
+      ],
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel',
+          cssClass: 'secondary',
+          handler: () => {
+            console.log('Confirm Cancel');
+          }
+        }, {
+          text: 'Ok',
+          handler: ans => {
+            this.wifiSsid = ans.ssid;
+            this.wifiPassword = ans.pswd;
+            this.wifiBssid = ans.bssid;
+            this.connectToWifiOnClick()          
+          }
+        }
+      ]
+    });
+
+    await alert.present();
   }
 }

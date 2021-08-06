@@ -25,13 +25,15 @@ export class OneLocalTestingService {
     return new Promise(async res => {
       this.m_request.command = {"cm": 3};
 
-      const onOpen = await this.socket.open(`ws://${this.uri}/ws`, this.myPrivKey);
-      const socket = await this.socket.send(this.m_request, this.devicePubKeyPem);
-      const resp = await this.socket.receive(socket);
-      const success = JSON.parse(resp).mg;
-      if (success == 'fail') {
-        throw 'GET_INFO FAIL';
-      }
+      // const onOpen = await this.socket.open(`ws://${this.uri}/ws`, this.myPrivKey);
+      // const socket = await this.socket.send(this.m_request, this.devicePubKeyPem);
+      // const resp = await this.socket.receive(socket);
+      // const success = JSON.parse(resp).mg;
+      // if (success == 'fail') {
+      //   throw 'GET_INFO FAIL';
+      // }
+
+      const resp = await this.socket.localRequest(`ws://${this.uri}/ws`, this.m_request, this.myPrivKey, this.devicePubKeyPem);
   
       res(resp);
     });

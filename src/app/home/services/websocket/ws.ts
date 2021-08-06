@@ -112,6 +112,72 @@ export class WebSocketService {
     });
   }
 
+  public localRequest(uri: string, request: any, privKey?, devicePublicKey?): Promise<string> {
+    return new Promise(async resolve => {
+      this.m_uri = uri;
+      await this.open(this.m_uri);
+
+      if (devicePublicKey) {
+        this.m_devicePublicKey = devicePublicKey;
+      }
+
+      this.send2(request);
+
+      const socket = uint8ArrayToHexString(window.crypto.getRandomValues(new Uint8Array(8)));
+      const obsData = request;
+      obsData.socket = socket;
+      this.sentPacketSubject$.next(obsData);
+
+      this.m_ws.binaryType = 'arraybuffer';
+      this.m_ws.onmessage = event => {
+        const resp = this.receive2(event.data, socket);
+        resolve(resp);
+      }
+    })
+  }
+  
+  private send2(request) {
+    console.log(this.m_state);
+    switch (this.m_state) {
+      case DeviceState.FIND_ME: {
+        console.log(request);
+        this.m_ws.send(JSON.stringify(request));
+        break;
+      }
+      case DeviceState.GET_KEY: {
+        console.log(request);
+        this.m_ws.send(JSON.stringify(request));
+        break;
+      }
+      case DeviceState.SEND_CMD: {
+        this.m_ws.send(this._encryptWebsocketJSON(JSON.stringify(request)));
+        break;
+      }
+      default: {
+        break;
+      }
+    }
+  }
+
+  private receive2(data, socket): string {
+    if (this.m_state == DeviceState.FIND_ME) {
+      const resp = data.toString();
+      const obsResp = resp;
+      obsResp.socket = socket;
+      this.rcvPacketSubject$.next(obsResp);
+      console.log(resp);
+      return resp;
+    } else {
+      const decrypted = this.decryptWebsocketJSON(new Uint8Array(data));
+      const obsResp = {
+        'str': decrypted,
+        'socket': socket,
+      };
+      this.rcvPacketSubject$.next(obsResp);
+      return decrypted;
+    }
+  }
+
   private _encryptWebsocketJSON(data: string): Uint8Array {
     const blocks = Math.ceil(data.length / 117);
     const buffer = new Uint8Array(blocks * 128);
@@ -142,7 +208,7 @@ export class WebSocketService {
     return buffer;
   }
 
-  public remoteRequest(uri: string, request: any): Promise<any> {
+  public remoteRequest(uri: string, request: any): Promise<string> {
     return new Promise(async resolve => {
       this.m_uri = uri;
       await this.open(this.m_uri);
@@ -158,7 +224,7 @@ export class WebSocketService {
         const resp = event.data.toString();
         const obsResp = resp;
         obsResp.socket = socket;
-        this.rcvPacketSubject$.next(obsResp);
+        this.rcvRemotePacketSubject$.next(obsResp);
         resolve(resp);
       }
     })
@@ -170,6 +236,14 @@ export class WebSocketService {
 
   public rcvPacket$(): Observable<any> {
     return this.rcvPacketSubject$.asObservable();
+  }
+
+  public sentRemotePacket$(): Observable<any> {
+    return this.sentRemotePacketSubject$.asObservable();
+  }
+
+  public rcvRemotePacket$(): Observable<any> {
+    return this.rcvRemotePacketSubject$.asObservable();
   }
 
   public setState(state: DeviceState) {

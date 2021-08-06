@@ -37,13 +37,34 @@ export class Packet {
   // }
 
   private _createWifiConnCmd(ssid: string, pswd: string, bssid: string) {
-    let cmd = str2arr('02' + ascii2hex(ssid) + '00' + ascii2hex(pswd) + '00' + Cast.bytesToHex(Cast.hexToBytes(bssid)) + '00');
+    // let cmd = str2arr('02' + ascii2hex(ssid) + '00' + ascii2hex(pswd) + '00' + Cast.bytesToHex(Cast.hexToBytes(bssid)) + '00');
 
-    console.log(cmd);
+    // console.log(cmd);
 
     // for(let i = 0; i < 12; i++) {
     //   cmd[cmd.length] = 0x00;
     // }
+    const ssidHex = Cast.stringToBytes(ssid);
+    const pswdHex = Cast.stringToBytes(pswd);
+    const bssidHex = Cast.hexToBytes(bssid);
+    let index = 0;
+
+    const len = 1 + ssidHex.length + 1 + pswdHex.length + 1 + bssidHex.length + 1;
+    const cmd = new Uint8Array(len);
+    cmd.set([0x02]);
+    index++;
+    cmd.set(ssidHex, index);
+    index += ssidHex.length;
+    cmd.set([0x00], index);
+    index++;
+    cmd.set(pswdHex, index);
+    index += pswdHex.length;
+    cmd.set([0x00], index);
+    index++;
+    cmd.set(bssidHex, index);
+    index += bssidHex.length;
+    cmd.set([0x00], index);
+    index++;
 
     console.log(cmd);
 

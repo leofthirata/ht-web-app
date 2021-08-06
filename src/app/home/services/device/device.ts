@@ -137,13 +137,40 @@ export class DeviceService {
 
     this.socket.setState(DeviceState.GET_KEY);
 
+    this.socket.sentRemotePacket$().subscribe((bytes) => {
+      try {
+        const socket = bytes.socket;
+        delete bytes.socket;
+        const str = JSON.stringify(bytes, null, 2);
+        const date = new Date();
+        const dateStr = `[${date.toLocaleTimeString()}] [WS REMOTE] SEND: ${socket}`;
+        this.yellow(dateStr);
+
+        const buf1 = Cast.stringToBytes(dateStr);
+        const buf2 = Cast.stringToBytes(str + '\n\r');
+        let buffer = new Uint8Array(buf1.length + buf2.length);
+        buffer.set(buf1);
+        buffer.set(buf2, buf1.length);
+        this.loggerIndex += buf1.length + buf2.length;
+
+        try {
+          this.white(str);
+          this.logTerm(buffer);
+        } catch (error) {
+          this.red(str);
+        }
+      } catch (error) {
+        this.red('Rx Error: ' + error);
+      }
+    })
+
     this.socket.sentPacket$().subscribe((bytes) => {
       try {
         const socket = bytes.socket;
         delete bytes.socket;
         const str = JSON.stringify(bytes, null, 2);
         const date = new Date();
-        const dateStr = `[${date.toLocaleTimeString()}] [WS] SEND: ${socket}`;
+        const dateStr = `[${date.toLocaleTimeString()}] [WS LOCAL] SEND: ${socket}`;
         this.yellow(dateStr);
 
         const buf1 = Cast.stringToBytes(dateStr);
