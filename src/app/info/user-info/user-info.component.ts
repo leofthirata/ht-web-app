@@ -11,11 +11,13 @@ export class UserInfoComponent implements OnInit {
 
   public pubKey;
   public privKey;
+  public ticket
 
   constructor(
     private popoverController: PopoverController) { }
 
   ngOnInit() {
+    this.ticket = this.user.ticket;
     this.pubKey = this.user.pubKey;
     this.privKey = this.user.privKey;
   }

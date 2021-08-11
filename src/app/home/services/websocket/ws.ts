@@ -115,11 +115,11 @@ export class WebSocketService {
   public localRequest(uri: string, request: any, privKey?, devicePublicKey?): Promise<string> {
     return new Promise(async resolve => {
       this.m_uri = uri;
+
       await this.open(this.m_uri);
 
-      if (devicePublicKey) {
-        this.m_devicePublicKey = devicePublicKey;
-      }
+      this.m_devicePublicKey = devicePublicKey;
+      this.m_privKey = privKey;
 
       this.send2(request);
 
@@ -131,6 +131,7 @@ export class WebSocketService {
       this.m_ws.binaryType = 'arraybuffer';
       this.m_ws.onmessage = event => {
         const resp = this.receive2(event.data, socket);
+        console.log(resp);
         resolve(resp);
       }
     })
@@ -160,6 +161,8 @@ export class WebSocketService {
   }
 
   private receive2(data, socket): string {
+    console.log(data);
+
     if (this.m_state == DeviceState.FIND_ME) {
       const resp = data.toString();
       const obsResp = resp;
@@ -174,6 +177,7 @@ export class WebSocketService {
         'socket': socket,
       };
       this.rcvPacketSubject$.next(obsResp);
+      console.log(obsResp);
       return decrypted;
     }
   }
@@ -212,19 +216,19 @@ export class WebSocketService {
     return new Promise(async resolve => {
       this.m_uri = uri;
       await this.open(this.m_uri);
+
+      request.messageId = Math.ceil(Math.random()*1000 + 1);
+
       this.m_ws.send(JSON.stringify(request));
 
-      const socket = uint8ArrayToHexString(window.crypto.getRandomValues(new Uint8Array(8)));
       const obsData = request;
-      obsData.socket = socket;
       this.sentRemotePacketSubject$.next(obsData);
   
       this.m_ws.binaryType = 'arraybuffer';
       this.m_ws.onmessage = event => {
-        const resp = event.data.toString();
-        const obsResp = resp;
-        obsResp.socket = socket;
-        this.rcvRemotePacketSubject$.next(obsResp);
+        const resp = event.data
+        console.log(resp);
+        this.rcvRemotePacketSubject$.next(resp);
         resolve(resp);
       }
     })

@@ -472,8 +472,8 @@ export class HomePage {
   public async showDeviceInfo(ev: any) {
     const devInfo = { 
       ip: this.device.getIp(), 
-      uuid: this.device.getUuid(), 
-      ticket: this.device.getTicket(), 
+      uuid: this.device.getDevUuid(), 
+      ticket: this.device.getDevTicket(), 
       key: this.device.getDevPubKeyPem(),
     };
 
@@ -498,8 +498,8 @@ export class HomePage {
   public async showDevice2Info(ev: any) {
     const devInfo = { 
       ip: this.device2.getIp(), 
-      uuid: this.device2.getUuid(), 
-      ticket: this.device2.getTicket(), 
+      uuid: this.device2.getDevUuid(), 
+      ticket: this.device2.getDevTicket(), 
       key: this.device2.getDevPubKeyPem(),
     };
 
@@ -523,6 +523,7 @@ export class HomePage {
 
   public async showUserInfo(ev: any) {
     const userInfo = { 
+      ticket: this.device.getUserTicket(),
       pubKey: this.device.getMyPubKeyPem(),
       privKey: this.device.getMyPrivKeyPem(),
     };

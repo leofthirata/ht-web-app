@@ -8,6 +8,7 @@ import { Terminal } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
 import { Cast } from '../../utils/cast';
 import * as Colors from '../../utils/color';
+import { Observable, Subject } from 'rxjs';
 
 // authentication
 import { AuthService } from '../../services/auth/auth';
@@ -116,6 +117,9 @@ export class DeviceService {
 
   private logger2 = new Uint8Array();
 
+  private loggerSubject$ = new Subject<any>();
+  private loggerIndexSubject$ = new Subject<number>();
+
   private operation = Operation.BLE;
 
   constructor(term, term2) {
@@ -139,11 +143,9 @@ export class DeviceService {
 
     this.socket.sentRemotePacket$().subscribe((bytes) => {
       try {
-        const socket = bytes.socket;
-        delete bytes.socket;
         const str = JSON.stringify(bytes, null, 2);
         const date = new Date();
-        const dateStr = `[${date.toLocaleTimeString()}] [WS REMOTE] SEND: ${socket}`;
+        const dateStr = `[${date.toLocaleTimeString()}] [WS REMOTE] SEND: ID ${bytes.messageId}`;
         this.yellow(dateStr);
 
         const buf1 = Cast.stringToBytes(dateStr);
@@ -164,13 +166,39 @@ export class DeviceService {
       }
     })
 
+    this.socket.rcvRemotePacket$().subscribe((resp) => {
+      try {
+        resp = JSON.parse(resp);
+        const str = JSON.stringify(resp, null, 2);
+        const date = new Date();
+        const dateStr = `[${date.toLocaleTimeString()}] [WS REMOTE] RCVD: ID ${resp.messageId}`;
+        this.yellow(dateStr);
+
+        const buf1 = Cast.stringToBytes(dateStr);
+        const buf2 = Cast.stringToBytes(str + '\n\r');
+        let buffer = new Uint8Array(buf1.length + buf2.length);
+        buffer.set(buf1);
+        buffer.set(buf2, buf1.length);
+        this.loggerIndex += buf1.length + buf2.length;
+
+        try {
+          this.white(str);
+          this.logTerm(buffer);
+        } catch (error) {
+          this.red(str);
+        }
+      } catch (error) {
+        this.red('Rx Error: ' + error);
+      }
+    });
+
     this.socket.sentPacket$().subscribe((bytes) => {
       try {
         const socket = bytes.socket;
         delete bytes.socket;
         const str = JSON.stringify(bytes, null, 2);
         const date = new Date();
-        const dateStr = `[${date.toLocaleTimeString()}] [WS LOCAL] SEND: ${socket}`;
+        const dateStr = `[${date.toLocaleTimeString()}] [WS LOCAL] SEND: SOCKET ${socket}`;
         this.yellow(dateStr);
 
         const buf1 = Cast.stringToBytes(dateStr);
@@ -196,7 +224,7 @@ export class DeviceService {
         const socket = obj.socket;
         const str = obj.str;
         const date = new Date();
-        const dateStr = `[${date.toLocaleTimeString()}] [WS] RCVD: ${socket}`;
+        const dateStr = `[${date.toLocaleTimeString()}] [WS LOCAL] RCVD: SOCKET ${socket}`;
         this.yellow(dateStr);
 
         const buf1 = Cast.stringToBytes(dateStr);
@@ -219,9 +247,7 @@ export class DeviceService {
   }
 
   public async deviceSelectionOnClick() {
-    this.deviceSelected = false;
-
-    this.m_ble = new BluetoothService(this.bleMac);
+    this.start();
 
     this.m_ble.sentPacket$().subscribe((bytes) => {
       try {
@@ -336,9 +362,7 @@ export class DeviceService {
   }
 
   public isBleConnected() {
-    this.bleConnected = this.m_ble.isConnected();
-    console.log(this.bleConnected);
-    return this.bleConnected;
+    return this.m_ble.isConnected();
   }
 
   public isConnectedToWifi() {
@@ -382,15 +406,10 @@ export class DeviceService {
     
     this.socket.setState(DeviceState.SEND_CMD);
 
-    const onOpen = await this.socket.open(`ws://${this.m_ip}/set_secret`, this.m_myPrivKey);
-    const socket = await this.socket.send(secretRequest, this.m_devicePublicKey);
-    const resp = await this.socket.receive(socket);
-    const success = JSON.parse(resp).mg;
-    if (success == 'fail') {
-      throw 'SECRET_FAIL';
-    }
+    const resp = await this.socket.localRequest(`ws://${this.m_ip}/set_secret`, secretRequest, this.m_myPrivKey, this.m_devicePublicKey);
+    const msg = JSON.parse(resp).mg;
 
-    if (success === 'success') {
+    if (msg === 'success') {
       this.secretSet = true;
      } else {
       this.secretSet = false;
@@ -426,7 +445,6 @@ export class DeviceService {
       },
       'sender': this.m_userUuid,
       'recipient': this.m_deviceUuid,
-      'messageId': uint8ArrayToHexString(window.crypto.getRandomValues(new Uint8Array(8))),
     };
   }
 
@@ -437,16 +455,11 @@ export class DeviceService {
       'key': this.m_myPubKeyPem
     };
     
-    const onOpen = await this.socket.open(`ws://${this.m_ip}/set_ticket`, this.m_myPrivKey);
-    const socket = await this.socket.send(ticketRequest, this.m_devicePublicKey);
-    const resp = await this.socket.receive(socket);
-    const success = JSON.parse(resp).mg;
-    if (success == 'fail') {
-      throw 'TICKET_FAIL';
-    }
+    const resp = await this.socket.localRequest(`ws://${this.m_ip}/set_ticket`, ticketRequest, this.m_myPrivKey, this.m_devicePublicKey);
+    const msg = JSON.parse(resp).mg;
 
     // this.startTesting();
-    if (success === 'success') {
+    if (msg === 'success') {
       this.ticketSet = true;
       this.operation = Operation.MAN_TEST;
       this.enableTesting();
@@ -462,13 +475,7 @@ export class DeviceService {
     
     this.socket.setState(DeviceState.FIND_ME);
 
-    const onOpen = await this.socket.open(`ws://${this.m_ip}/findme`, this.m_myPrivKey);
-    const socket = await this.socket.send(request);
-    const resp = await this.socket.receive(socket);
-    const success = JSON.parse(resp).mg;
-    if (success !== 'ok') {
-      throw 'FINDME_FAIL';
-    }
+    this.socket.localRequest(`ws://${this.m_ip}/findme`, request, this.m_myPrivKey, this.m_devicePublicKey);
 
     this.socket.setState(DeviceState.SEND_CMD);
   }
@@ -846,11 +853,15 @@ export class DeviceService {
     return this.operation;
   }
 
-  public getTicket() {
+  public getDevTicket() {
     return this.m_deviceTicket;
   }
 
-  public getUuid() {
+  public getUserUuid() {
+    return this.m_userUuid;
+  }
+
+  public getDevUuid() {
     return this.m_deviceUuid;
   }
 
@@ -863,7 +874,7 @@ export class DeviceService {
 
   public getMyPrivKeyPem() {
     if (this.m_myPrivKey) {
-      return this.m_myPrivKeyPem;
+      return this.m_myPrivKey;
     }
     return '';
   }
@@ -874,7 +885,7 @@ export class DeviceService {
 
   public getDevPubKeyPem() {
     if (this.m_devicePublicKey) {
-      return forge.pki.publicKeyToPem(this.m_devicePublicKey);
+      return this.m_devicePublicKey;
     }
     return '';
   }
@@ -891,11 +902,66 @@ export class DeviceService {
     return this.logger;
   }
 
+  public updateLogger(newLogger) {
+    this.loggerIndex = newLogger.length;
+    this.logger = new Uint8Array(this.loggerIndex);
+    this.logger.set(newLogger);
+  }
+
   public getLoggerIndex() {
     return this.loggerIndex;
   }
 
   public getSocket() {
     return this.socket;
+  }
+
+  public getUserTicket() {
+    return this.m_userTicket;
+  }
+
+  private start() {
+    this.deviceSelected = false;
+    this.m_ble = new BluetoothService(this.bleMac);
+    this.m_ip = '';
+    this.m_auth = null;
+    this.manualLocalTest = null;
+    this.manualRemoteTest = null;
+    this.local = true;
+    this.remoteRequest = null;
+  
+    this.m_devicePublicKey = null;
+    this.m_secret = null;
+    this.m_deviceTicket = null;
+    this.m_deviceUuid = null;
+    this.m_userTicket = null;
+    this.m_userUuid = null;
+    this.gotKey = false;
+    this.secretSet = false;
+    this.ticketSet = false;
+    this.deviceRegistered = false;
+  
+    // testing
+    this.m_deviceToken = null;
+    this.m_myPubKey = null; 
+    this.m_myPubKeyPem = null; 
+    this.m_myPrivKey = null;
+    this.m_myPrivKeyPem = null;
+  
+    this.isConnected = false;
+    this.isAuthenticated = false;
+    this.isTesting = false;
+    this.stateEn = 'BLE DISCONNECTED';
+    this.stateClass = 'state-disconnected';
+  
+    this.operation = Operation.BLE;
+  }
+
+  public logger$(): Observable<any> {
+    return this.loggerSubject$.asObservable();
+  }
+
+  public loggerIndex$(): Observable<number> {
+    return this.loggerIndexSubject$.asObservable();
   }
 }

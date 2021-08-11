@@ -32,6 +32,7 @@ export class oneLocalStress {
   private tSocket;
 
   private stopTesting = false;
+  private error = false;
 
   private sError$ = new Subject<string>();
   private tError$ = new Subject<string>();
@@ -67,10 +68,8 @@ export class oneLocalStress {
     for(let i = 0; i < 148; i++) {
       try {
         this.sRequest.command = {"cm": 0, "id": 1};
-        await this.sSocket.open(`ws://${this.tUri}/ws`, this.sMyPrivKey);
-        const socket = await this.sSocket.send(this.sRequest, this.sDevPubKeyPem);
-        const resp = await this.sSocket.receive(socket);
-        const pResp = JSON.parse(resp).mg;
+        const resp = await this.sSocket.localRequest(`ws://${this.sUri}/ws`, this.sRequest, this.sMyPrivKey, this.sDevPubKeyPem);
+        const pResp = JSON.parse(resp);
 
         this.check(pResp.cm !== this.sRequest.command.cm, 'Invalid "cm": ' + pResp.cm);
         this.check(pResp.id !== this.sRequest.command.id, 'Invalid "id": ' + pResp.id);
@@ -89,10 +88,8 @@ export class oneLocalStress {
     for(let i = 0; i < 148; i++) {
       try {
         this.tRequest.command = {"cm": 0, "id": 1};
-        await this.tSocket.open(`ws://${this.tUri}/ws`, this.tMyPrivKey);
-        const socket = await this.tSocket.send(this.tRequest, this.tDevPubKeyPem);
-        const resp = await this.tSocket.receive(socket);
-        const pResp = JSON.parse(resp).mg;
+        const resp = await this.tSocket.localRequest(`ws://${this.tUri}/ws`, this.tRequest, this.tMyPrivKey, this.tDevPubKeyPem);
+        const pResp = JSON.parse(resp);
 
         this.check(pResp.cm !== this.tRequest.command.cm, 'Invalid "cm": ' + pResp.cm);
         this.check(pResp.id !== this.tRequest.command.id, 'Invalid "id": ' + pResp.id);
@@ -121,10 +118,8 @@ export class oneLocalStress {
     for(let i = 0; i < 148; i++) {
       try {
         this.tRequest.command = {"cm": 1};
-        await this.tSocket.open(`ws://${this.tUri}/ws`, this.tMyPrivKey);
-        const socket = await this.tSocket.send(this.tRequest, this.tDevPubKeyPem);
-        this.tSocket.receive(socket).then(resp => {
-          const pResp = JSON.parse(resp).mg;
+        this.tSocket.localRequest(`ws://${this.tUri}/ws`, this.tRequest, this.tMyPrivKey, this.tDevPubKeyPem).then(resp => {
+          const pResp = JSON.parse(resp);
 
           this.check(pResp.cm !== this.tRequest.command.cm, 'Invalid "cm": ' + pResp.cm);
           this.check(pResp.id !== i+1, 'Invalid "id": ' + pResp.id);
@@ -138,10 +133,8 @@ export class oneLocalStress {
 
       try {
         this.sRequest.command = {"cm": 2, "id": 1, "ch": 3};
-        await this.sSocket.open(`ws://${this.sUri}/ws`, this.sMyPrivKey);
-        const socket = await this.sSocket.send(this.sRequest, this.sDevPubKeyPem);
-        const resp = await this.sSocket.receive(socket);
-        const pResp = JSON.parse(resp).mg;
+        const resp = await this.sSocket.localRequest(`ws://${this.sUri}/ws`, this.sRequest, this.sMyPrivKey, this.sDevPubKeyPem);
+        const pResp = JSON.parse(resp);
 
         this.check(pResp.cm !== this.sRequest.command.cm, 'Invalid "cm": ' + pResp.cm);
         this.check(pResp.id !== this.sRequest.command.id, 'Invalid "id": ' + pResp.id);
@@ -161,10 +154,8 @@ export class oneLocalStress {
     for(let i = 0; i < 100; i++) {
       try {
         this.sRequest.command = {"cm": 2, "id": 1, "ch": 3};
-        await this.sSocket.open(`ws://${this.sUri}/ws`, this.sMyPrivKey);
-        const socket = await this.sSocket.send(this.sRequest, this.sDevPubKeyPem);
-        const resp = await this.sSocket.receive(socket);
-        const pResp = JSON.parse(resp).mg;
+        const resp = await this.sSocket.localRequest(`ws://${this.sUri}/ws`, this.sRequest, this.sMyPrivKey, this.sDevPubKeyPem);
+        const pResp = JSON.parse(resp);
 
         this.check(pResp.cm !== this.sRequest.command.cm, 'Invalid "cm": ' + pResp.cm);
         this.check(pResp.id !== this.sRequest.command.id, 'Invalid "id": ' + pResp.id);
@@ -184,10 +175,8 @@ export class oneLocalStress {
     for(let i = 0; i < 100; i++) {
       try {
         this.tRequest.command = {"cm": 2, "id": 1, "ch": 3};
-        await this.tSocket.open(`ws://${this.tUri}/ws`, this.tMyPrivKey);
-        const socket = await this.tSocket.send(this.tRequest, this.tDevPubKeyPem);
-        const resp = await this.tSocket.receive(socket);
-        const pResp = JSON.parse(resp).mg;
+        const resp = await this.tSocket.localRequest(`ws://${this.tUri}/ws`, this.tRequest, this.tMyPrivKey, this.tDevPubKeyPem);
+        const pResp = JSON.parse(resp);
 
         this.check(pResp.cm !== this.tRequest.command.cm, 'Invalid "cm": ' + pResp.cm);
         this.check(pResp.id !== this.tRequest.command.id, 'Invalid "id": ' + pResp.id);
@@ -205,6 +194,7 @@ export class oneLocalStress {
 
   public async setIr() {
     await this.prepare();
+    await timeout_ms(500);
     this.sSetIr();
     if (this.tDev.isTicketSet()) {
       this.tSetIr();
@@ -215,10 +205,8 @@ export class oneLocalStress {
     for(let i = 0; i < 100; i++) {
       try {
         this.sRequest.command = {"cm": 3};
-        await this.sSocket.open(`ws://${this.sUri}/ws`, this.sMyPrivKey);
-        const socket = await this.sSocket.send(this.sRequest, this.sDevPubKeyPem);
-        const resp = await this.sSocket.receive(socket);
-        const pResp = JSON.parse(resp).mg;
+        const resp = await this.sSocket.localRequest(`ws://${this.sUri}/ws`, this.sRequest, this.sMyPrivKey, this.sDevPubKeyPem);
+        const pResp = JSON.parse(resp);
 
         // this.check(pResp.cm !== this.sRequest.command.cm, 'Invalid "cm": ' + pResp.cm);
         // this.check(pResp.id !== this.sRequest.command.id, 'Invalid "id": ' + pResp.id);
@@ -238,10 +226,8 @@ export class oneLocalStress {
     for(let i = 0; i < 100; i++) {
       try {
         this.tRequest.command = {"cm": 3};
-        await this.tSocket.open(`ws://${this.tUri}/ws`, this.tMyPrivKey);
-        const socket = await this.tSocket.send(this.tRequest, this.tDevPubKeyPem);
-        const resp = await this.tSocket.receive(socket);
-        const pResp = JSON.parse(resp).mg;
+        const resp = await this.tSocket.localRequest(`ws://${this.tUri}/ws`, this.tRequest, this.tMyPrivKey, this.tDevPubKeyPem);
+        const pResp = JSON.parse(resp);
 
         // this.check(pResp.cm !== this.sRequest.command.cm, 'Invalid "cm": ' + pResp.cm);
         // this.check(pResp.id !== this.sRequest.command.id, 'Invalid "id": ' + pResp.id);
@@ -259,6 +245,7 @@ export class oneLocalStress {
 
   public async getInfo() {
     await this.prepare();
+    await timeout_ms(500);
     this.sGetInfo();
     if (this.tDev.isTicketSet()) {
       this.tGetInfo();
@@ -269,10 +256,8 @@ export class oneLocalStress {
     for(let i = 0; i < 100; i++) {
       try {
         this.tRequest.command = {"cm": 1};
-        await this.tSocket.open(`ws://${this.tUri}/ws`, this.tMyPrivKey);
-        const socket = await this.tSocket.send(this.tRequest, this.tDevPubKeyPem);
-        this.tSocket.receive(socket).then(resp => {
-          const pResp = JSON.parse(resp).mg;
+        this.sSocket.localRequest(`ws://${this.tUri}/ws`, this.tRequest, this.tMyPrivKey, this.tDevPubKeyPem).then(resp => {
+          const pResp = JSON.parse(resp);
 
           this.check(pResp.cm !== this.tRequest.command.cm, 'Invalid "cm": ' + pResp.cm);
           this.check(pResp.id !== 0, 'Invalid "id": ' + pResp.id);
@@ -284,10 +269,8 @@ export class oneLocalStress {
 
       try {
         this.tRequest.command = {"cm": 4};
-        await this.tSocket.open(`ws://${this.tUri}/ws`, this.tMyPrivKey);
-        const socket = await this.tSocket.send(this.tRequest, this.tDevPubKeyPem);
-        const resp = await this.tSocket.receive(socket);
-        const pResp = JSON.parse(resp).mg;
+        const resp = await this.tSocket.localRequest(`ws://${this.tUri}/ws`, this.tRequest, this.tMyPrivKey, this.tDevPubKeyPem);
+        const pResp = JSON.parse(resp);
 
         this.check(pResp.cm !== this.tRequest.command.cm, 'Invalid "cm": ' + pResp.cm);
         this.check(pResp.mg !== 'success', 'Invalid "mg": ' + pResp.mg);
@@ -305,10 +288,8 @@ export class oneLocalStress {
     for(let i = 0; i < 100; i++) {
       try {
         this.sRequest.command = {"cm": 1};
-        await this.sSocket.open(`ws://${this.sUri}/ws`, this.sMyPrivKey);
-        const socket = await this.sSocket.send(this.sRequest, this.sDevPubKeyPem);
-        this.sSocket.receive(socket).then(resp => {
-          const pResp = JSON.parse(resp).mg;
+        this.sSocket.localRequest(`ws://${this.sUri}/ws`, this.sRequest, this.sMyPrivKey, this.sDevPubKeyPem).then(resp => {
+          const pResp = JSON.parse(resp);
 
           this.check(pResp.cm !== this.sRequest.command.cm, 'Invalid "cm": ' + pResp.cm);
           this.check(pResp.id !== 0, 'Invalid "id": ' + pResp.id);
@@ -320,10 +301,8 @@ export class oneLocalStress {
 
       try {
         this.sRequest.command = {"cm": 4};
-        await this.sSocket.open(`ws://${this.sUri}/ws`, this.sMyPrivKey);
-        const socket = await this.sSocket.send(this.sRequest, this.sDevPubKeyPem);
-        const resp = await this.sSocket.receive(socket);
-        const pResp = JSON.parse(resp).mg;
+        const resp = await this.sSocket.localRequest(`ws://${this.sUri}/ws`, this.sRequest, this.sMyPrivKey, this.sDevPubKeyPem);
+        const pResp = JSON.parse(resp);
 
         this.check(pResp.cm !== this.sRequest.command.cm, 'Invalid "cm": ' + pResp.cm);
         this.check(pResp.mg !== 'success', 'Invalid "mg": ' + pResp.mg);
@@ -339,6 +318,7 @@ export class oneLocalStress {
 
   public async cancelIr() {
     await this.prepare();
+    await timeout_ms(500);
     this.sCancelIr();
     if (this.tDev.isTicketSet()) {
       this.tCancelIr();
@@ -351,10 +331,8 @@ export class oneLocalStress {
     for(let i = 0; i < 100; i++) {
       try {
         this.tRequest.command = {"cm": 5, "id": 1};
-        await this.tSocket.open(`ws://${this.tUri}/ws`, this.tMyPrivKey);
-        const socket = await this.tSocket.send(this.tRequest, this.tDevPubKeyPem);
-        this.tSocket.receive(socket).then(resp => {
-          const pResp = JSON.parse(resp).mg;
+        this.tSocket.localRequest(`ws://${this.tUri}/ws`, this.tRequest, this.tMyPrivKey, this.tDevPubKeyPem).then(resp => {
+          const pResp = JSON.parse(resp);
 
           this.check(pResp.cm !== this.tRequest.command.cm, 'Invalid "cm": ' + pResp.cm);
           this.check(pResp.id !== this.tRequest.command.id, 'Invalid "id": ' + pResp.id);
@@ -366,10 +344,8 @@ export class oneLocalStress {
 
       try {
         this.sRequest.command = {"cm": 4};
-        await this.sSocket.open(`ws://${this.tUri}/ws`, this.sMyPrivKey);
-        const socket = await this.sSocket.send(this.sRequest, this.sDevPubKeyPem);
-        const resp = await this.sSocket.receive(socket);
-        const pResp = JSON.parse(resp).mg;
+        const resp = await this.sSocket.localRequest(`ws://${this.sUri}/ws`, this.sRequest, this.sMyPrivKey, this.sDevPubKeyPem);
+        const pResp = JSON.parse(resp);
 
         this.check(pResp.cm !== this.sRequest.command.cm, 'Invalid "cm": ' + pResp.cm);
         this.check(pResp.mg !== 'success', 'Invalid "mg": ' + pResp.mg);
@@ -387,10 +363,8 @@ export class oneLocalStress {
     for(let i = 0; i < 150; i++) {
       try {
         this.sRequest.command = {"cm":6,"sc":[{"dy":0,"id": 1,"ch":3}]};
-        await this.sSocket.open(`ws://${this.sUri}/ws`, this.sMyPrivKey);
-        const socket = await this.sSocket.send(this.sRequest, this.sDevPubKeyPem);
-        const resp = await this.sSocket.receive(socket);
-        const pResp = JSON.parse(resp).mg;
+        const resp = await this.sSocket.localRequest(`ws://${this.sUri}/ws`, this.sRequest, this.sMyPrivKey, this.sDevPubKeyPem);
+        const pResp = JSON.parse(resp);
 
         this.check(pResp.cm !== this.sRequest.command.cm, 'Invalid "cm": ' + pResp.cm);
         this.check(pResp.mg !== 'success', 'Invalid "mg": ' + pResp.mg);
@@ -408,10 +382,8 @@ export class oneLocalStress {
     for(let i = 0; i < 150; i++) {
       try {
         this.tRequest.command = {"cm":6,"sc":[{"dy":0,"id": 1,"ch":3}]};
-        await this.tSocket.open(`ws://${this.tUri}/ws`, this.tMyPrivKey);
-        const socket = await this.tSocket.send(this.tRequest, this.tDevPubKeyPem);
-        const resp = await this.tSocket.receive(socket);
-        const pResp = JSON.parse(resp).mg;
+        const resp = await this.tSocket.localRequest(`ws://${this.tUri}/ws`, this.tRequest, this.tMyPrivKey, this.tDevPubKeyPem);
+        const pResp = JSON.parse(resp);
 
         this.check(pResp.cm !== this.tRequest.command.cm, 'Invalid "cm": ' + pResp.cm);
         this.check(pResp.mg !== 'success', 'Invalid "mg": ' + pResp.mg);
@@ -427,6 +399,7 @@ export class oneLocalStress {
 
   public async runScene() {
     await this.prepare();
+    await timeout_ms(500);
     this.sRunScene();
     if (this.tDev.isTicketSet()) {
       this.tRunScene();
@@ -444,10 +417,8 @@ export class oneLocalStress {
   private async sEraseAllIr() {
     try {
       this.sRequest.command = {"cm": 0, "id": 0};
-      await this.sSocket.open(`ws://${this.sUri}/ws`, this.sMyPrivKey);
-      const socket = await this.sSocket.send(this.sRequest, this.sDevPubKeyPem);
-      const resp = await this.sSocket.receive(socket);
-      const pResp = JSON.parse(resp).mg;
+      const resp = await this.sSocket.localRequest(`ws://${this.sUri}/ws`, this.sRequest, this.sMyPrivKey, this.sDevPubKeyPem);
+      const pResp = JSON.parse(resp);
 
       this.check(pResp.cm !== this.sRequest.command.cm, 'Invalid "cm": ' + pResp.cm);
       this.check(pResp.id !== this.sRequest.command.id, 'Invalid "id": ' + pResp.id);
@@ -460,10 +431,8 @@ export class oneLocalStress {
   private async tEraseAllIr() {
     try {
       this.tRequest.command = {"cm": 0, "id": 0};
-      await this.tSocket.open(`ws://${this.tUri}/ws`, this.tMyPrivKey);
-      const socket = await this.tSocket.send(this.tRequest, this.tDevPubKeyPem);
-      const resp = await this.tSocket.receive(socket);
-      const pResp = JSON.parse(resp).mg;
+      const resp = await this.tSocket.localRequest(`ws://${this.tUri}/ws`, this.tRequest, this.tMyPrivKey, this.tDevPubKeyPem);
+      const pResp = JSON.parse(resp);
 
       this.check(pResp.cm !== this.tRequest.command.cm, 'Invalid "cm": ' + pResp.cm);
       this.check(pResp.id !== this.tRequest.command.id, 'Invalid "id": ' + pResp.id);
@@ -489,10 +458,8 @@ export class oneLocalStress {
       this.sRequest.command.f = f;
       this.sRequest.command.l = getLength(raw);
 
-      await this.sSocket.open(`ws://${this.sUri}/ws`, this.sMyPrivKey);
-      const socket = await this.sSocket.send(this.sRequest, this.sDevPubKeyPem);
-      const resp = await this.sSocket.receive(socket);
-      const pResp = JSON.parse(resp).mg;
+      const resp = await this.sSocket.localRequest(`ws://${this.sUri}/ws`, this.sRequest, this.sMyPrivKey, this.sDevPubKeyPem);
+      const pResp = JSON.parse(resp);
 
       this.check(pResp.cm !== this.sRequest.command.cm, 'Invalid "cm": ' + pResp.cm);
     } catch (err) {
@@ -509,10 +476,8 @@ export class oneLocalStress {
       this.tRequest.command.f = f;
       this.tRequest.command.l = getLength(raw);
 
-      await this.tSocket.open(`ws://${this.tUri}/ws`, this.tMyPrivKey);
-      const socket = await this.tSocket.send(this.tRequest, this.tDevPubKeyPem);
-      const resp = await this.tSocket.receive(socket);
-      const pResp = JSON.parse(resp).mg;
+      const resp = await this.tSocket.localRequest(`ws://${this.tUri}/ws`, this.tRequest, this.tMyPrivKey, this.tDevPubKeyPem);
+      const pResp = JSON.parse(resp);
 
       this.check(pResp.cm !== this.tRequest.command.cm, 'Invalid "cm": ' + pResp.cm);
     } catch (err) {
@@ -534,16 +499,66 @@ export class oneLocalStress {
       throw mg;
   }
 
+  private end() {
+    const date = new Date();
+
+    const err = `[${date.toLocaleTimeString()}] [LT] ONE_LOCAL_STRESS_TEST: `;
+    this.cyan(err, this.sTerm);
+    this.cyan(err, this.tTerm);
+
+    if (this.error == true) {
+      var msg = 'FAIL.\r\n';
+      this.red(msg, this.sTerm);
+      this.red(msg, this.tTerm);
+    } else {
+      var msg = 'PASS.\r\n';
+      this.green(msg, this.sTerm);
+      this.green(msg, this.tTerm);
+    }
+
+    const logger = new Uint8Array(this.sDev.getLogger().length + err.length + msg.length);
+    logger.set(this.sDev.getLogger());
+    const err_buf = Cast.stringToBytes(err + msg);
+    logger.set(err_buf, this.sDev.getLogger().length);
+    this.sDev.updateLogger(logger);
+
+    const logger2 = new Uint8Array(this.tDev.getLogger().length + err.length + msg.length);
+    logger2.set(this.tDev.getLogger());
+    const err_buf2 = Cast.stringToBytes(err + msg);
+    logger2.set(err_buf2, this.tDev.getLogger().length);
+    this.tDev.updateLogger(logger2);
+
+    this.error = false;
+  }
+
   private slogErrorAndAbort(api, test, mg) {
     const date = new Date();
-    const err = `[${date.toLocaleTimeString()}] [LS] (${api}) ${test}: FAIL. ${mg}\n\r.`;
-    this.sError$.next(err);
+    const err = `[${date.toLocaleTimeString()}] [LT] (${api}) ${test}: FAIL. ${mg}\n\r.`;
+    this.red(err, this.sTerm);
+
+    const logger = new Uint8Array(this.sDev.getLogger().length + err.length);
+    logger.set(this.sDev.getLogger());
+    const err_buf = Cast.stringToBytes(err);
+    logger.set(err_buf, this.sDev.getLogger().length);
+    this.sDev.updateLogger(logger);
+
+    this.error = true;
+    // this.sError$.next(err);
   }
 
   private tlogErrorAndAbort(api, test, mg) {
     const date = new Date();
-    const err = `[${date.toLocaleTimeString()}] [LS] (${api}) ${test}: FAIL. ${mg}\n\r.`;
-    this.tError$.next(err);
+    const err = `[${date.toLocaleTimeString()}] [LT] (${api}) ${test}: FAIL. ${mg}\n\r.`;
+    this.red(err, this.tTerm);
+
+    const logger = new Uint8Array(this.tDev.getLogger().length + err.length);
+    logger.set(this.tDev.getLogger());
+    const err_buf = Cast.stringToBytes(err);
+    logger.set(err_buf, this.tDev.getLogger().length);
+    this.tDev.updateLogger(logger);
+
+    this.error = true;
+    // this.tError$.next(err);
   }
   
   public sTestFail$(): Observable<string> {
@@ -552,5 +567,28 @@ export class oneLocalStress {
 
   public tTestFail$(): Observable<string> {
     return this.tError$.asObservable();
+  }
+
+  private red(text: string, term) {
+    text = text.replace(/\n/g, '\r\n');
+    const utf8 = Cast.stringToBytes(text);
+    term.write(Colors.red);
+    term.write(utf8);
+    term.write('\r\n');
+  }
+
+  private green(text: string, term) {
+    text = text.replace(/\n/g, '\r\n');
+    const utf8 = Cast.stringToBytes(text);
+    term.write(Colors.green);
+    term.write(utf8);
+    term.write('\r\n');
+  }
+
+  private cyan(text: string, term) {
+    text = text.replace(/\n/g, '\r\n');
+    const utf8 = Cast.stringToBytes(text);
+    term.write(Colors.cyan);
+    term.write(utf8);
   }
 }
