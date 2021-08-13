@@ -5,6 +5,7 @@ import { Observable, Subject } from 'rxjs';
 import { timeout_ms } from "../../utils/utils";
 import { Cast } from '../../utils/cast';
 import * as Colors from '../../utils/color';
+import { GET_INFO_REQ, GET_IR_REQ, CANCEL_IR_REQ, SET_IR_REQ, EDIT_IR_REQ, ERASE_IR_REQ, ERASE_ALL_IR_REQ, RUN_SCENE_REQ, FAC_RESET_REQ, SAVE_IR_REQ, VIEW_IR_REQ, GET_HEAP_REQ, RESET_REQ, BLE_ON_REQ, BLE_OFF_REQ, FIND_ME_REQ } from './requests'
 
 export class oneLocal {
   // source
@@ -67,36 +68,31 @@ export class oneLocal {
     console.log(this.sDevPubKeyPem);
   }
 
-  public async start() {
-    const date = new Date();
-    const err = `[${date.toLocaleTimeString()}] *************** STARTING ONE_LOCAL_TEST ***************\r\n`;
-    this.cyan(err, this.sTerm);
-    this.cyan(err, this.tTerm);
-
-    const logger = new Uint8Array(this.sDev.getLogger().length + err.length);
-    logger.set(this.sDev.getLogger());
-    const err_buf = Cast.stringToBytes(err);
-    logger.set(err_buf, this.sDev.getLogger().length);
-    this.sDev.updateLogger(logger);
-
-    const logger2 = new Uint8Array(this.tDev.getLogger().length + err.length);
-    logger2.set(this.tDev.getLogger());
-    const err_buf2 = Cast.stringToBytes(err);
-    logger2.set(err_buf2, this.tDev.getLogger().length);
-    this.tDev.updateLogger(logger2);
+  public async startTests() {
+    this.start('ONE_LOCAL_TEST');
 
     await this.getInfo();
-    await this.getIr();
+    if (this.tDev.isTicketSet()) {
+      await this.getIr();
+    }
     await this.setIr();
     await this.cancelIr();
-    // await this.editIr();
+    if (this.tDev.isTicketSet()) {
+      await this.editIr();
+    }
+    
     await this.runScene();
+    await this.infrared();
+    await this.bleOnOff();
+    await timeout_ms(3000);
+    await this.findMe();
+    await timeout_ms(500);
     this.end();
   }
 
   public async sEraseIr() {
     try {
-      this.sRequest.command = {"cm": 0, "id": 1};
+      this.sRequest.command = ERASE_IR_REQ;
 
       const resp = await this.sSocket.localRequest(`ws://${this.sUri}/ws`, this.sRequest, this.sMyPrivKey, this.sDevPubKeyPem);
       const pResp = JSON.parse(resp);
@@ -111,7 +107,7 @@ export class oneLocal {
 
   public async tEraseIr() {
     try {
-      this.tRequest.command = {"cm": 0, "id": 1};
+      this.tRequest.command = ERASE_IR_REQ;
       const resp = await this.tSocket.localRequest(`ws://${this.tUri}/ws`, this.tRequest, this.tMyPrivKey, this.tDevPubKeyPem);
       const pResp = JSON.parse(resp);
 
@@ -135,12 +131,12 @@ export class oneLocal {
     await this.prepare();
 
     try {
-      this.tRequest.command = {"cm": 1};
+      this.tRequest.command = GET_IR_REQ;
       this.tSocket.localRequest(`ws://${this.tUri}/ws`, this.tRequest, this.tMyPrivKey, this.tDevPubKeyPem).then(resp => {
         const pResp = JSON.parse(resp);
 
         this.check(pResp.cm !== this.tRequest.command.cm, 'Invalid "cm": ' + pResp.cm);
-        this.check(pResp.id !== 1, 'Invalid "id": ' + pResp.id);
+        this.check(pResp.id !== 2, 'Invalid "id": ' + pResp.id);
         this.check(pResp.mg !== 'success', 'Invalid "mg": ' + pResp.mg);
       });
     } catch (err) {
@@ -150,7 +146,7 @@ export class oneLocal {
     await timeout_ms(300);
 
     try {
-      this.sRequest.command = {"cm": 2, "id": 1, "ch": 3};
+      this.sRequest.command = SET_IR_REQ;
       const resp = await this.sSocket.localRequest(`ws://${this.sUri}/ws`, this.sRequest, this.sMyPrivKey, this.sDevPubKeyPem);
       const pResp = JSON.parse(resp);
 
@@ -165,7 +161,7 @@ export class oneLocal {
 
   public async sSetIr() {
     try {
-      this.sRequest.command = {"cm": 2, "id": 1, "ch": 3};
+      this.sRequest.command = SET_IR_REQ;
       const resp = await this.sSocket.localRequest(`ws://${this.sUri}/ws`, this.sRequest, this.sMyPrivKey, this.sDevPubKeyPem);
       const pResp = JSON.parse(resp);
 
@@ -180,7 +176,7 @@ export class oneLocal {
 
   public async tSetIr() {
     try {
-      this.tRequest.command = {"cm": 2, "id": 1, "ch": 3};
+      this.tRequest.command = SET_IR_REQ;
       const resp = await this.tSocket.localRequest(`ws://${this.tUri}/ws`, this.tRequest, this.tMyPrivKey, this.tDevPubKeyPem);
       const pResp = JSON.parse(resp);
 
@@ -203,7 +199,7 @@ export class oneLocal {
 
   public async sGetInfo() {
     try {
-      this.sRequest.command = {"cm": 3};
+      this.sRequest.command = GET_INFO_REQ;
       const resp = await this.sSocket.localRequest(`ws://${this.sUri}/ws`, this.sRequest, this.sMyPrivKey, this.sDevPubKeyPem);
       const pResp = JSON.parse(resp);
 
@@ -218,7 +214,7 @@ export class oneLocal {
 
   public async tGetInfo() {
     try {
-      this.tRequest.command = {"cm": 3};
+      this.tRequest.command = GET_INFO_REQ;
       const resp = await this.tSocket.localRequest(`ws://${this.tUri}/ws`, this.tRequest, this.tMyPrivKey, this.tDevPubKeyPem);
       const pResp = JSON.parse(resp);
 
@@ -241,7 +237,7 @@ export class oneLocal {
 
   public async tCancelIr() {
     try {
-      this.tRequest.command = {"cm": 1};
+      this.tRequest.command = GET_IR_REQ;
       this.tSocket.localRequest(`ws://${this.tUri}/ws`, this.tRequest, this.tMyPrivKey, this.tDevPubKeyPem).then(resp => {
         const pResp = JSON.parse(resp);
 
@@ -254,7 +250,7 @@ export class oneLocal {
     }
 
     try {
-      this.tRequest.command = {"cm": 4};
+      this.tRequest.command = CANCEL_IR_REQ;
       const resp = await this.tSocket.localRequest(`ws://${this.tUri}/ws`, this.tRequest, this.tMyPrivKey, this.tDevPubKeyPem);
       const pResp = JSON.parse(resp);
 
@@ -267,7 +263,7 @@ export class oneLocal {
 
   public async sCancelIr() {
     try {
-      this.sRequest.command = {"cm": 1};
+      this.sRequest.command = GET_IR_REQ;
       this.sSocket.localRequest(`ws://${this.sUri}/ws`, this.sRequest, this.sMyPrivKey, this.sDevPubKeyPem).then(resp => {
         const pResp = JSON.parse(resp);
 
@@ -280,7 +276,7 @@ export class oneLocal {
     }
 
     try {
-      this.sRequest.command = {"cm": 4};
+      this.sRequest.command = CANCEL_IR_REQ;
       const resp = await this.sSocket.localRequest(`ws://${this.sUri}/ws`, this.sRequest, this.sMyPrivKey, this.sDevPubKeyPem);
       const pResp = JSON.parse(resp);
 
@@ -303,7 +299,7 @@ export class oneLocal {
     await this.prepare();
 
     try {
-      this.tRequest.command = {"cm": 5, "id": 1};
+      this.tRequest.command = EDIT_IR_REQ;
       this.tSocket.localRequest(`ws://${this.tUri}/ws`, this.tRequest, this.tMyPrivKey, this.tDevPubKeyPem).then(resp => {
         const pResp = JSON.parse(resp);
 
@@ -315,21 +311,23 @@ export class oneLocal {
       this.tlogErrorAndAbort('editIr', 'EDIT_IR', err);
     }
 
+    await timeout_ms(500);
+
     try {
-      this.sRequest.command = {"cm": 4};
-      const resp = await this.sSocket.localRequest(`ws://${this.sUri}/ws`, this.sRequest, this.sMyPrivKey, this.sDevPubKeyPem);
+      this.tRequest.command = SET_IR_REQ;
+      const resp = await this.tSocket.localRequest(`ws://${this.tUri}/ws`, this.tRequest, this.tMyPrivKey, this.tDevPubKeyPem);
       const pResp = JSON.parse(resp);
 
-      this.check(pResp.cm !== this.sRequest.command.cm, 'Invalid "cm": ' + pResp.cm);
+      this.check(pResp.cm !== this.tRequest.command.cm, 'Invalid "cm": ' + pResp.cm);
       this.check(pResp.mg !== 'success', 'Invalid "mg": ' + pResp.mg);
     } catch (err) {
-      this.slogErrorAndAbort('editIr', 'SET_IR', err);
+      this.tlogErrorAndAbort('editIr', 'SET_IR', err);
     }
   }
 
   public async sRunScene() {
     try {
-      this.sRequest.command = {"cm":6,"sc":[{"dy":0,"id": 1,"ch":3}]};
+      this.sRequest.command = RUN_SCENE_REQ;
       const resp = await this.sSocket.localRequest(`ws://${this.sUri}/ws`, this.sRequest, this.sMyPrivKey, this.sDevPubKeyPem);
       const pResp = JSON.parse(resp);
 
@@ -342,7 +340,7 @@ export class oneLocal {
 
   public async tRunScene() {
     try {
-      this.tRequest.command = {"cm":6,"sc":[{"dy":0,"id": 1,"ch":3}]};
+      this.tRequest.command = RUN_SCENE_REQ;
       const resp = await this.tSocket.localRequest(`ws://${this.tUri}/ws`, this.tRequest, this.tMyPrivKey, this.tDevPubKeyPem);
       const pResp = JSON.parse(resp);
 
@@ -361,9 +359,146 @@ export class oneLocal {
     }
   }
 
+  public async infrared() {
+    try {
+      this.sRequest.command = VIEW_IR_REQ;
+      let resp = await this.sSocket.localRequest(`ws://${this.sUri}/ws`, this.sRequest, this.sMyPrivKey, this.sDevPubKeyPem);
+      let pResp = JSON.parse(resp);
+
+      const srcCode = pResp.raw;
+      const srcFreq = pResp.f;
+      const srcLen = pResp.l;
+
+      await timeout_ms(500);
+
+      this.sRequest.command = GET_IR_REQ;
+      this.sSocket.localRequest(`ws://${this.sUri}/ws`, this.sRequest, this.sMyPrivKey, this.sDevPubKeyPem);
+    
+      await timeout_ms(300);
+    
+      this.tRequest.command = SET_IR_REQ;
+      resp = await this.tSocket.localRequest(`ws://${this.tUri}/ws`, this.tRequest, this.tMyPrivKey, this.tDevPubKeyPem);
+
+      await timeout_ms(300);
+
+      this.tRequest.command = GET_IR_REQ;
+      this.tSocket.localRequest(`ws://${this.tUri}/ws`, this.tRequest, this.tMyPrivKey, this.tDevPubKeyPem);
+
+      this.sRequest.command = SET_IR_REQ;
+      resp = await this.sSocket.localRequest(`ws://${this.sUri}/ws`, this.sRequest, this.sMyPrivKey, this.sDevPubKeyPem);
+    
+      VIEW_IR_REQ.id = 2;
+      
+      this.tRequest.command = VIEW_IR_REQ;
+      resp = await this.tSocket.localRequest(`ws://${this.tUri}/ws`, this.tRequest, this.tMyPrivKey, this.tDevPubKeyPem);
+      pResp = JSON.parse(resp);
+
+      this.check(pResp.cm !== VIEW_IR_REQ.cm, 'Invalid "cm": ' + pResp.cm);
+      this.check(pResp.id !== 2, 'Invalid "id": ' + pResp.id);
+      this.check(checkBurst(parse2hex(pResp.raw, getLength(pResp.raw)), parse2hex(srcCode, getLength(srcCode))), 'Invalid "code": ' + pResp.raw);
+      this.check(pResp.l !== srcLen, 'Invalid length: ' + pResp.l);
+      this.check(checkFrequency(srcFreq, pResp.f), 'Invalid frequency: ' + pResp.f);
+    } catch (err) {
+      this.slogErrorAndAbort('infrared', 'INFRARED', err);
+      this.tlogErrorAndAbort('infrared', 'INFRARED', err);
+    }
+  }
+
+  private async sbleOnOff() {
+    try {
+      this.sRequest.command = BLE_ON_REQ;
+      const resp = await this.sSocket.localRequest(`ws://${this.sUri}/ws`, this.sRequest, this.sMyPrivKey, this.sDevPubKeyPem);
+      const pResp = JSON.parse(resp);
+
+      this.check(pResp.cm !== this.sRequest.command.cm, 'Invalid "cm": ' + pResp.cm);
+      this.check(pResp.mg !== 'success', 'Invalid "mg": ' + pResp.mg);
+    } catch (err) {
+      this.slogErrorAndAbort('bleOnOff', 'BLE_ON', err);
+    }
+
+    await timeout_ms(500);
+
+    try {
+      this.sRequest.command = BLE_OFF_REQ;
+      const resp = await this.sSocket.localRequest(`ws://${this.sUri}/ws`, this.sRequest, this.sMyPrivKey, this.sDevPubKeyPem);
+      const pResp = JSON.parse(resp);
+
+      this.check(pResp.cm !== this.sRequest.command.cm, 'Invalid "cm": ' + pResp.cm);
+      this.check(pResp.mg !== 'success', 'Invalid "mg": ' + pResp.mg);
+    } catch (err) {
+      this.slogErrorAndAbort('bleOnOff', 'BLE_OFF', err);
+    }
+  }
+
+  private async tbleOnOff() {
+    try {
+      this.tRequest.command = BLE_ON_REQ;
+      const resp = await this.tSocket.localRequest(`ws://${this.tUri}/ws`, this.tRequest, this.tMyPrivKey, this.tDevPubKeyPem);
+      const pResp = JSON.parse(resp);
+
+      this.check(pResp.cm !== this.tRequest.command.cm, 'Invalid "cm": ' + pResp.cm);
+      this.check(pResp.mg !== 'success', 'Invalid "mg": ' + pResp.mg);
+    } catch (err) {
+      this.tlogErrorAndAbort('bleOnOff', 'BLE_ON', err);
+    }
+
+    await timeout_ms(500);
+
+    try {
+      this.tRequest.command = BLE_OFF_REQ;
+      const resp = await this.tSocket.localRequest(`ws://${this.tUri}/ws`, this.tRequest, this.tMyPrivKey, this.tDevPubKeyPem);
+      const pResp = JSON.parse(resp);
+
+      this.check(pResp.cm !== this.tRequest.command.cm, 'Invalid "cm": ' + pResp.cm);
+      this.check(pResp.mg !== 'success', 'Invalid "mg": ' + pResp.mg);
+    } catch (err) {
+      this.tlogErrorAndAbort('bleOnOff', 'BLE_OFF', err);
+    }
+  }
+
+  private async bleOnOff() {
+    this.sbleOnOff();
+    if (this.tDev.isTicketSet()) {
+      this.tbleOnOff();
+    }
+  }
+
+  private async sFindMe() {
+    try {
+      this.sRequest.command = FIND_ME_REQ;
+      const resp = await this.sSocket.localRequest(`ws://${this.sUri}/ws`, this.sRequest, this.sMyPrivKey, this.sDevPubKeyPem);
+      const pResp = JSON.parse(resp);
+
+      this.check(pResp.cm !== this.sRequest.command.cm, 'Invalid "cm": ' + pResp.cm);
+      this.check(pResp.mg !== 'success', 'Invalid "mg": ' + pResp.mg);
+    } catch (err) {
+      this.slogErrorAndAbort('findMe', 'FIND_ME', err);
+    }
+  }
+
+  private async tFindMe() {
+    try {
+      this.tRequest.command = FIND_ME_REQ;
+      const resp = await this.tSocket.localRequest(`ws://${this.tUri}/ws`, this.tRequest, this.tMyPrivKey, this.tDevPubKeyPem);
+      const pResp = JSON.parse(resp);
+
+      this.check(pResp.cm !== this.tRequest.command.cm, 'Invalid "cm": ' + pResp.cm);
+      this.check(pResp.mg !== 'success', 'Invalid "mg": ' + pResp.mg);
+    } catch (err) {
+      this.tlogErrorAndAbort('findMe', 'FIND_ME', err);
+    }
+  }
+
+  private async findMe() {
+    this.sFindMe();
+    if (this.tDev.isTicketSet()) {
+      this.tFindMe();
+    }
+  }
+
   private async sEraseAllIr() {
     try {
-      this.sRequest.command = {"cm": 0, "id": 0};
+      this.sRequest.command = ERASE_ALL_IR_REQ;
       const resp = await this.sSocket.localRequest(`ws://${this.sUri}/ws`, this.sRequest, this.sMyPrivKey, this.sDevPubKeyPem);
       const pResp = JSON.parse(resp);
 
@@ -377,7 +512,7 @@ export class oneLocal {
 
   private async tEraseAllIr() {
     try {
-      this.tRequest.command = {"cm": 0, "id": 0};
+      this.tRequest.command = ERASE_ALL_IR_REQ;
       const resp = await this.tSocket.localRequest(`ws://${this.tUri}/ws`, this.tRequest, this.tMyPrivKey, this.tDevPubKeyPem);
       const pResp = JSON.parse(resp);
 
@@ -398,7 +533,7 @@ export class oneLocal {
 
   private async sSaveIr(index: number) {
     try { 
-      this.sRequest.command = {"cm": 187};
+      this.sRequest.command = SAVE_IR_REQ;
       let raw = removePreamble(code[index]);
       let f = getFrequency(code[index]);
       this.sRequest.command.code = parse2hex(raw, getLength(raw));
@@ -416,7 +551,7 @@ export class oneLocal {
 
   private async tSaveIr(index: number) {
     try { 
-      this.tRequest.command = {"cm": 187};
+      this.tRequest.command = SAVE_IR_REQ;
       let raw = removePreamble(code[index]);
       let f = getFrequency(code[index]);
       this.tRequest.command.code = parse2hex(raw, getLength(raw));
@@ -443,6 +578,25 @@ export class oneLocal {
   private check(test, mg: string) {
     if (test)
       throw mg;
+  }
+
+  private start(api: string) {
+    const date = new Date();
+    const err = `[${date.toLocaleTimeString()}] *************** STARTING ${api} ***************\r\n`;
+    this.cyan(err, this.sTerm);
+    this.cyan(err, this.tTerm);
+
+    const logger = new Uint8Array(this.sDev.getLogger().length + err.length);
+    logger.set(this.sDev.getLogger());
+    const err_buf = Cast.stringToBytes(err);
+    logger.set(err_buf, this.sDev.getLogger().length);
+    this.sDev.updateLogger(logger);
+
+    const logger2 = new Uint8Array(this.tDev.getLogger().length + err.length);
+    logger2.set(this.tDev.getLogger());
+    const err_buf2 = Cast.stringToBytes(err);
+    logger2.set(err_buf2, this.tDev.getLogger().length);
+    this.tDev.updateLogger(logger2);
   }
 
   private end() {
@@ -479,7 +633,7 @@ export class oneLocal {
 
   private slogErrorAndAbort(api, test, mg) {
     const date = new Date();
-    const err = `[${date.toLocaleTimeString()}] [LT] (${api}) ${test}: FAIL. ${mg}\n\r.`;
+    const err = `[${date.toLocaleTimeString()}] [LT] (${api}) ${test}: FAIL. ${mg}\n\r`;
     this.red(err, this.sTerm);
 
     const logger = new Uint8Array(this.sDev.getLogger().length + err.length);
@@ -494,7 +648,7 @@ export class oneLocal {
 
   private tlogErrorAndAbort(api, test, mg) {
     const date = new Date();
-    const err = `[${date.toLocaleTimeString()}] [LT] (${api}) ${test}: FAIL. ${mg}\n\r.`;
+    const err = `[${date.toLocaleTimeString()}] [LT] (${api}) ${test}: FAIL. ${mg}\n\r`;
     this.red(err, this.tTerm);
 
     const logger = new Uint8Array(this.tDev.getLogger().length + err.length);

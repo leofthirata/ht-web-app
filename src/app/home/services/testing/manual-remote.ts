@@ -40,8 +40,8 @@ export class OneRemoteTestingService {
     }
   }
   
-  public async ERASE_IR() {
-    this.request.payload.command = {"cm": 0, "id": 1};
+  public async ERASE_IR(id: number) {
+    this.request.payload.command = {"cm": 0, "id": id};
     let devReq = this.request;
 
     try {
@@ -64,8 +64,8 @@ export class OneRemoteTestingService {
     }
   }
 
-  public async SET_IR() {
-    this.request.payload.command = {"cm": 2, "id": 1, "ch": 3};
+  public async SET_IR(id: number, ch: number) {
+    this.request.payload.command = {"cm": 2, "id": id, "ch": ch};
     let devReq = this.request;
 
     try {
@@ -87,8 +87,8 @@ export class OneRemoteTestingService {
     }
   }
 
-  public async EDIT_IR() {
-    this.request.payload.command = {"cm": 5, "id": 1};
+  public async EDIT_IR(id: number) {
+    this.request.payload.command = {"cm": 5, "id": id};
     let devReq = this.request;
 
     try {
@@ -180,6 +180,14 @@ export class OneRemoteTestingService {
       let jResp = JSON.parse(resp).mg;
     } catch (err) {
       // this.slogErrorAndAbort('saveIr', 'SAVE_IR', err);
+    }
+  }
+
+  public async CUSTOM(request) {
+    try {
+      await this.socket.remoteRequest(this.uri, request);
+    } catch (err) {
+
     }
   }
 

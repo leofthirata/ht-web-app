@@ -36,9 +36,7 @@ export class BluetoothService {
   public find(): Promise<boolean> {
     return new Promise(async resolve => {
       this.m_device = await navigator.bluetooth.requestDevice({
-        // acceptAllDevices: true
         filters: [ 
-          // {name: `Hausenn ONE:${this.m_name}`},
           {services: [0x75A5]}
         ] 
       });
@@ -81,18 +79,23 @@ export class BluetoothService {
   public getService(): Promise<boolean> {
     return new Promise(async resolve => {
 
-      while (!this.m_device.gatt.connected) {
+      // while (!this.m_device.gatt.connected) {
+      //   await this.connect();
+      // }
+      try {
+        this.m_service = await this.m_device.gatt.getPrimaryService(this.HAUSENN_SERVICE_UUID);
+        console.log(this.m_service);
+        if (this.m_service) {
+          console.log("svc true");
+          resolve(true);
+        } else {
+          console.log("svc false");
+          resolve(false);
+        }
+      } catch (err) {
+        console.log('getsvc fail');
         await this.connect();
-      }
-
-      this.m_service = await this.m_device.gatt.getPrimaryService(this.HAUSENN_SERVICE_UUID);
-      console.log(this.m_service);
-      if (this.m_service) {
-        console.log("svc true");
-        resolve(true);
-      } else {
-        console.log("svc false");
-        resolve(false);
+        await this.getService();
       }
     });
   }
@@ -100,24 +103,30 @@ export class BluetoothService {
   public getCharacteristics(): Promise<boolean> {
     return new Promise(async resolve => {
 
-      while (!this.m_device.gatt.connected) {
-        console.log('[BLE] Reconnecting');
+      // while (!this.m_device.gatt.connected) {
+      //   console.log('[BLE] Reconnecting');
+      //   await this.connect();
+      // }
+      try {
+        this.m_readCharacteristic = await this.m_service.getCharacteristic(
+                this.HAUSENN_READ_CHARACTERISTIC);
+        this.m_writeCharacteristic = await this.m_service.getCharacteristic(
+                this.HAUSENN_WRITE_CHARACTERISTIC);
+
+        console.log(this.m_readCharacteristic);
+        console.log(this.m_writeCharacteristic);
+        if (this.m_readCharacteristic && this.m_writeCharacteristic) {
+          console.log("chr true");
+          resolve(true);
+        } else {
+          console.log("chr false");
+          resolve(false);
+        }
+      } catch (err) {
+        console.log('getchar fail');
         await this.connect();
-      }
-
-      this.m_readCharacteristic = await this.m_service.getCharacteristic(
-              this.HAUSENN_READ_CHARACTERISTIC);
-      this.m_writeCharacteristic = await this.m_service.getCharacteristic(
-              this.HAUSENN_WRITE_CHARACTERISTIC);
-
-      console.log(this.m_readCharacteristic);
-      console.log(this.m_writeCharacteristic);
-      if (this.m_readCharacteristic && this.m_writeCharacteristic) {
-        console.log("chr true");
-        resolve(true);
-      } else {
-        console.log("chr false");
-        resolve(false);
+        await this.getService();
+        await this.getCharacteristics();
       }
     });
   }

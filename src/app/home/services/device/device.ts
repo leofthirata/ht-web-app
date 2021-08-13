@@ -379,9 +379,7 @@ export class DeviceService {
       "key": this.m_myPubKeyPem
     };
 
-    const onOpen = await this.socket.open(`ws://${this.m_ip}/get_key`, this.m_myPrivKey);
-    const socket = await this.socket.send(request);
-    const resp = await this.socket.receive(socket);
+    const resp = await this.socket.localRequest(`ws://${this.m_ip}/get_key`, request, this.m_myPrivKey);
     console.log(resp);
 
     this.m_devicePublicKey = importPubKeyRSA(JSON.parse(resp).key);
@@ -526,11 +524,11 @@ export class DeviceService {
     }
   }
 
-  public eraseIrOnClick() {
+  public eraseIrOnClick(id: number) {
     if (this.local) {
-      this.manualLocalTest.ERASE_IR();
+      this.manualLocalTest.ERASE_IR(id);
     } else {
-      this.manualRemoteTest.ERASE_IR();
+      this.manualRemoteTest.ERASE_IR(id);
     }
   }
 
@@ -542,11 +540,11 @@ export class DeviceService {
     }
   }
 
-  public setIrOnClick() {
+  public setIrOnClick(id: number, ch: number) {
     if (this.local) {
-      this.manualLocalTest.SET_IR();
+      this.manualLocalTest.SET_IR(id, ch);
     } else {
-      this.manualRemoteTest.SET_IR();
+      this.manualRemoteTest.SET_IR(id, ch);
     }
   }
 
@@ -558,11 +556,11 @@ export class DeviceService {
     }
   }
 
-  public editIrOnClick() {
+  public editIrOnClick(id: number) {
     if (this.local) {
-      this.manualLocalTest.EDIT_IR();
+      this.manualLocalTest.EDIT_IR(id);
     } else {
-      this.manualRemoteTest.EDIT_IR();
+      this.manualRemoteTest.EDIT_IR(id);
     }
   }
 
@@ -619,6 +617,14 @@ export class DeviceService {
       this.manualLocalTest.FIND_ME();
     } else {
       this.manualRemoteTest.FIND_ME();
+    }
+  }
+
+  public sendCustomOnClick(request) {
+    if (this.local) {
+      this.manualLocalTest.CUSTOM(request);
+    } else {
+      this.manualRemoteTest.CUSTOM(request);
     }
   }
 

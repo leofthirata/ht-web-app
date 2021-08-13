@@ -1,4 +1,5 @@
 import { DeviceState, WebSocketService } from "../websocket/ws";
+import { GET_INFO_REQ, GET_IR_REQ, CANCEL_IR_REQ, SET_IR_REQ, EDIT_IR_REQ, ERASE_IR_REQ, ERASE_ALL_IR_REQ, RUN_SCENE_REQ, FAC_RESET_REQ, SAVE_IR_REQ, VIEW_IR_REQ, GET_HEAP_REQ, RESET_REQ, BLE_ON_REQ, BLE_OFF_REQ, FIND_ME_REQ } from './requests'
 
 export class OneLocalTestingService {
   private m_request: any;
@@ -22,7 +23,7 @@ export class OneLocalTestingService {
 
    // TESTS
   public async GET_INFO() {
-    this.m_request.command = {"cm": 3};
+    this.m_request.command = GET_INFO_REQ;
 
     // const onOpen = await this.socket.open(`ws://${this.uri}/ws`, this.myPrivKey);
     // const socket = await this.socket.send(this.m_request, this.devicePubKeyPem);
@@ -35,63 +36,68 @@ export class OneLocalTestingService {
     const resp = await this.socket.localRequest(`ws://${this.uri}/ws`, this.m_request, this.myPrivKey, this.devicePubKeyPem);
   }
   
-  public async ERASE_IR() {
-    this.m_request.command = {"cm": 0, "id": 1};
+  public async ERASE_IR(id: number) {
+    this.m_request.command = {"cm": 0, "id": id};
     const resp = await this.socket.localRequest(`ws://${this.uri}/ws`, this.m_request, this.myPrivKey, this.devicePubKeyPem);
   }
   
   public async GET_IR() {
-    this.m_request.command = {"cm": 1};
+    this.m_request.command = GET_IR_REQ;
     const resp = await this.socket.localRequest(`ws://${this.uri}/ws`, this.m_request, this.myPrivKey, this.devicePubKeyPem);
   }
 
-  public async SET_IR() {
-    this.m_request.command = {"cm": 2, "id": 1, "ch": 3};
+  public async SET_IR(id: number, ch: number) {
+    this.m_request.command = {"cm": 2, "id": id, "ch": ch};
     const resp = await this.socket.localRequest(`ws://${this.uri}/ws`, this.m_request, this.myPrivKey, this.devicePubKeyPem);
   }
 
   public async CANCEL_IR() {
-    this.m_request.command = {"cm": 4};
+    this.m_request.command = CANCEL_IR_REQ;
     const resp = await this.socket.localRequest(`ws://${this.uri}/ws`, this.m_request, this.myPrivKey, this.devicePubKeyPem);
   }
 
-  public async EDIT_IR() {
-    this.m_request.command = {"cm": 5, "id": 1};
+  public async EDIT_IR(id: number) {
+    this.m_request.command = {"cm": 5, "id": id};
     const resp = await this.socket.localRequest(`ws://${this.uri}/ws`, this.m_request, this.myPrivKey, this.devicePubKeyPem);
   }
 
   public async RUN_SCENE() {
-    this.m_request.command = {"cm": 6, "sc":[{"dy":1,"id": 1,"ch":3}]};
+    this.m_request.command = RUN_SCENE_REQ;
     const resp = await this.socket.localRequest(`ws://${this.uri}/ws`, this.m_request, this.myPrivKey, this.devicePubKeyPem);
   }
 
   public async FAC_RESET() {
-    this.m_request.command = {"cm": 11};
+    this.m_request.command = FAC_RESET_REQ;
     const resp = await this.socket.localRequest(`ws://${this.uri}/ws`, this.m_request, this.myPrivKey, this.devicePubKeyPem);
   }
 
   public async GET_HEAP() {
-    this.m_request.command = {"cm": 13};
+    this.m_request.command = GET_HEAP_REQ;
     const resp = await this.socket.localRequest(`ws://${this.uri}/ws`, this.m_request, this.myPrivKey, this.devicePubKeyPem);
   }
 
   public async RESET() {
-    this.m_request.command = {"cm": 14};
+    this.m_request.command = RESET_REQ;
     const resp = await this.socket.localRequest(`ws://${this.uri}/ws`, this.m_request, this.myPrivKey, this.devicePubKeyPem);
   }
 
   public async BLE_ON() {
-    this.m_request.command = {"cm": 15};
+    this.m_request.command = BLE_ON_REQ;
     const resp = await this.socket.localRequest(`ws://${this.uri}/ws`, this.m_request, this.myPrivKey, this.devicePubKeyPem);
   }
 
   public async BLE_OFF() {
-    this.m_request.command = {"cm": 16};
+    this.m_request.command = BLE_OFF_REQ;
     const resp = await this.socket.localRequest(`ws://${this.uri}/ws`, this.m_request, this.myPrivKey, this.devicePubKeyPem);
   }
 
   public async FIND_ME() {
-    this.m_request.command = {"cm": 17};
+    this.m_request.command = FIND_ME_REQ;
+    const resp = await this.socket.localRequest(`ws://${this.uri}/ws`, this.m_request, this.myPrivKey, this.devicePubKeyPem);
+  }
+
+  public async CUSTOM(request) {
+    this.m_request.command = request;
     const resp = await this.socket.localRequest(`ws://${this.uri}/ws`, this.m_request, this.myPrivKey, this.devicePubKeyPem);
   }
 }

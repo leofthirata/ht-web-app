@@ -89,11 +89,14 @@ export class HomePage {
 
   public isConnected: boolean;
   public isAuthenticated: boolean;
-  public isTesting: boolean;
+  public isTesting = false;
   public stateEn = 'SOURCE';
   public stateClass = 'state-disconnected';
 
-  public isTestingAndLocal = false;
+  public isManual = true;
+  public isAutomated = false;
+
+  public isTestingAndLocal = true;
   public isTestingAndRemote = false;
   private local: oneLocal;
   public localTest = false;
@@ -104,6 +107,13 @@ export class HomePage {
   public showAuth = false;
   public showManTests = false;
   public showAutoTests = false;
+
+  public eraseIrId = 1;
+  public setIrId = 1;
+  public setIrCh = 3;
+  public editIrId = 1;
+
+  public send: string;
 
   constructor(private nav: NavController, private alertController: AlertController, private popoverController: PopoverController) {
     this.device = new DeviceService(this.term, this.term2);
@@ -237,7 +247,7 @@ export class HomePage {
   public async localTestOnClick() {
     this.localTest = true;
     this.local = new oneLocal(this.device, this.term, this.device2, this.term3);
-    await this.local.start();
+    await this.local.startTests();
     this.localTest = false;
   }
 
@@ -270,8 +280,16 @@ export class HomePage {
     this.stress.editIr();
   }
 
-  public stressrunSceneOnClick() {
+  public stressRunSceneOnClick() {
     this.stress.runScene();
+  }
+
+  public stressBleOnOffOnClick() {
+    this.stress.bleOnOff();
+  }
+
+  public stressFindMeOnClick() {
+    this.stress.findMe();
   }
 
   public stopStressTestOnClick() {
@@ -291,7 +309,7 @@ export class HomePage {
   }
 
   public eraseIrOnClick() {
-    this.dev.eraseIrOnClick();
+    this.dev.eraseIrOnClick(this.eraseIrId);
   }
 
   public getIrOnClick() {
@@ -299,7 +317,7 @@ export class HomePage {
   }
 
   public setIrOnClick() {
-    this.dev.setIrOnClick();
+    this.dev.setIrOnClick(this.setIrId, this.setIrCh);
   }
 
   public cancelIrOnClick() {
@@ -307,7 +325,7 @@ export class HomePage {
   }
 
   public editIrOnClick() {
-    this.dev.editIrOnClick();
+    this.dev.editIrOnClick(this.editIrId);
   }
 
   public runSceneOnClick() {
@@ -336,6 +354,38 @@ export class HomePage {
 
   public findMeWsOnClick() {
     this.dev.findMeWsOnClick();
+  }
+
+  public async customOnClick() {
+    const alert = await this.alertController.create({
+      header: 'CUSTOM CMD',
+      inputs: [
+        {
+          name: 'json',
+          type: 'textarea',
+          value: `{ "cm": 1 }`,
+          placeholder: 'Enter json to send'
+        }
+      ],
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel',
+          cssClass: 'secondary',
+          handler: () => {
+            console.log('Confirm Cancel');
+          }
+        }, {
+          text: 'Ok',
+          handler: ans => {
+            this.send = ans.json;
+            this.dev.sendCustomOnClick(JSON.parse(this.send));    
+          }
+        }
+      ]
+    });
+
+    await alert.present();
   }
 
   public ionViewDidEnter() {
@@ -411,6 +461,16 @@ export class HomePage {
     });
 
     await alert.present();
+  }
+
+  public setManualOnClick() {
+    this.isManual = true;
+    this.isAutomated = false;
+  }
+
+  public setAutomatedOnClick() {
+    this.isManual = false;
+    this.isAutomated = true;
   }
 
   public setLocalOnClick() {

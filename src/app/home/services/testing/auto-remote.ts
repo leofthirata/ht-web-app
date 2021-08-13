@@ -5,6 +5,7 @@ import { Observable, Subject } from 'rxjs';
 import { timeout_ms } from "../../utils/utils";
 import { Cast } from '../../utils/cast';
 import * as Colors from '../../utils/color';
+import { GET_INFO_REQ, GET_IR_REQ, CANCEL_IR_REQ, SET_IR_REQ, EDIT_IR_REQ, ERASE_IR_REQ, ERASE_ALL_IR_REQ, RUN_SCENE_REQ, FAC_RESET_REQ, SAVE_IR_REQ, VIEW_IR_REQ, GET_HEAP_REQ, RESET_REQ, BLE_ON_REQ, BLE_OFF_REQ, FIND_ME_REQ } from './requests'
 
 export class oneRemote {
   // source
@@ -442,6 +443,51 @@ export class oneRemote {
     this.sRunScene();
     if (this.tDev.isTicketSet()) {
       this.tRunScene();
+    }
+  }
+
+  public async infrared() {
+    try {
+      this.sRequest.command = VIEW_IR_REQ;
+      let resp = await this.sSocket.remoteRequest(this.uri, this.sRequest);
+      let pResp = JSON.parse(resp).command;
+
+      const srcCode = pResp.raw;
+      const srcFreq = pResp.f;
+      const srcLen = pResp.l;
+
+      await timeout_ms(500);
+
+      this.sRequest.command = GET_IR_REQ;
+      this.sSocket.localRequest(`ws://${this.sUri}/ws`, this.sRequest, this.sMyPrivKey, this.sDevPubKeyPem);
+    
+      await timeout_ms(300);
+    
+      this.tRequest.command = SET_IR_REQ;
+      resp = await this.tSocket.localRequest(`ws://${this.tUri}/ws`, this.tRequest, this.tMyPrivKey, this.tDevPubKeyPem);
+
+      await timeout_ms(300);
+
+      this.tRequest.command = GET_IR_REQ;
+      this.tSocket.localRequest(`ws://${this.tUri}/ws`, this.tRequest, this.tMyPrivKey, this.tDevPubKeyPem);
+
+      this.sRequest.command = SET_IR_REQ;
+      resp = await this.sSocket.localRequest(`ws://${this.sUri}/ws`, this.sRequest, this.sMyPrivKey, this.sDevPubKeyPem);
+    
+      VIEW_IR_REQ.id = 2;
+      
+      this.tRequest.command = VIEW_IR_REQ;
+      resp = await this.tSocket.localRequest(`ws://${this.tUri}/ws`, this.tRequest, this.tMyPrivKey, this.tDevPubKeyPem);
+      pResp = JSON.parse(resp).command;
+
+      this.check(pResp.cm !== VIEW_IR_REQ.cm, 'Invalid "cm": ' + pResp.cm);
+      this.check(pResp.id !== 2, 'Invalid "id": ' + pResp.id);
+      this.check(checkBurst(parse2hex(pResp.raw, getLength(pResp.raw)), parse2hex(srcCode, getLength(srcCode))), 'Invalid "code": ' + pResp.raw);
+      this.check(pResp.l !== srcLen, 'Invalid length: ' + pResp.l);
+      this.check(checkFrequency(srcFreq, pResp.f), 'Invalid frequency: ' + pResp.f);
+    } catch (err) {
+      this.slogErrorAndAbort('infrared', 'INFRARED', err);
+      this.tlogErrorAndAbort('infrared', 'INFRARED', err);
     }
   }
 

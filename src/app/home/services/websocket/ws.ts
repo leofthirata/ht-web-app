@@ -54,90 +54,94 @@ export class WebSocketService {
       });
   }
 
-  public send(data, devicePublicKey?): Promise<string> {
-    if (devicePublicKey) {
-      this.m_devicePublicKey = devicePublicKey;
-    }
-    const socket = uint8ArrayToHexString(window.crypto.getRandomValues(new Uint8Array(8)));
-    const obsData = data;
-    obsData.socket = socket;
-    this.sentPacketSubject$.next(obsData);
+  // public send(data, devicePublicKey?): Promise<string> {
+  //   if (devicePublicKey) {
+  //     this.m_devicePublicKey = devicePublicKey;
+  //   }
+  //   const socket = uint8ArrayToHexString(window.crypto.getRandomValues(new Uint8Array(8)));
+  //   const obsData = data;
+  //   obsData.socket = socket;
+  //   this.sentPacketSubject$.next(obsData);
 
-    return new Promise(resolve => {
-      console.log(this.m_state);
-      switch (this.m_state) {
-        case DeviceState.FIND_ME: {
-          console.log(data);
-          this.m_ws.send(JSON.stringify(data));
-          break;
-        }
-        case DeviceState.GET_KEY: {
-          console.log(data);
-          this.m_ws.send(JSON.stringify(data));
-          break;
-        }
-        case DeviceState.SEND_CMD: {
-          this.m_ws.send(this._encryptWebsocketJSON(JSON.stringify(data)));
-          break;
-        }
-        default: {
-          break;
-        }
-      }
-      resolve(socket); 
-    });
-  }
+  //   return new Promise(resolve => {
+  //     console.log(this.m_state);
+  //     switch (this.m_state) {
+  //       case DeviceState.FIND_ME: {
+  //         console.log(data);
+  //         this.m_ws.send(JSON.stringify(data));
+  //         break;
+  //       }
+  //       case DeviceState.GET_KEY: {
+  //         console.log(data);
+  //         this.m_ws.send(JSON.stringify(data));
+  //         break;
+  //       }
+  //       case DeviceState.SEND_CMD: {
+  //         this.m_ws.send(this._encryptWebsocketJSON(JSON.stringify(data)));
+  //         break;
+  //       }
+  //       default: {
+  //         break;
+  //       }
+  //     }
+  //     resolve(socket); 
+  //   });
+  // }
 
-  public receive(socket: string): Promise<string> {
-    return new Promise(resolve => {
-      this.m_ws.binaryType = 'arraybuffer';
-      this.m_ws.onmessage = event => {
-        if (this.m_state == DeviceState.FIND_ME) {
-          const resp = event.data.toString();
-          const obsResp = resp;
-          obsResp.socket = socket;
-          this.rcvPacketSubject$.next(obsResp);
-          console.log(resp);
-          resolve(resp);
-        } else {
-          const decrypted = this.decryptWebsocketJSON(new Uint8Array(event.data));
-          const obsResp = {
-            'str': decrypted,
-            'socket': socket,
-          };
-          this.rcvPacketSubject$.next(obsResp);
-          resolve(decrypted);
-        }
-      }
-    });
-  }
+  // public receive(socket: string): Promise<string> {
+  //   return new Promise(resolve => {
+  //     this.m_ws.binaryType = 'arraybuffer';
+  //     this.m_ws.onmessage = event => {
+  //       if (this.m_state == DeviceState.FIND_ME) {
+  //         const resp = event.data.toString();
+  //         const obsResp = resp;
+  //         obsResp.socket = socket;
+  //         this.rcvPacketSubject$.next(obsResp);
+  //         console.log(resp);
+  //         resolve(resp);
+  //       } else {
+  //         const decrypted = this.decryptWebsocketJSON(new Uint8Array(event.data));
+  //         const obsResp = {
+  //           'str': decrypted,
+  //           'socket': socket,
+  //         };
+  //         this.rcvPacketSubject$.next(obsResp);
+  //         resolve(decrypted);
+  //       }
+  //     }
+  //   });
+  // }
 
   public localRequest(uri: string, request: any, privKey?, devicePublicKey?): Promise<string> {
     return new Promise(async resolve => {
-      this.m_uri = uri;
+      try {
+        this.m_uri = uri;
 
-      await this.open(this.m_uri);
+        await this.open(this.m_uri);
 
-      this.m_devicePublicKey = devicePublicKey;
-      this.m_privKey = privKey;
+        this.m_devicePublicKey = devicePublicKey;
+        this.m_privKey = privKey;
 
-      this.send2(request);
+        this.send(request);
 
-      const socket = uint8ArrayToHexString(window.crypto.getRandomValues(new Uint8Array(8)));
-      const obsData = request;
-      obsData.socket = socket;
-      this.sentPacketSubject$.next(obsData);
+        const socket = uint8ArrayToHexString(window.crypto.getRandomValues(new Uint8Array(8)));
+        const obsData = request;
+        obsData.socket = socket;
+        this.sentPacketSubject$.next(obsData);
 
-      this.m_ws.binaryType = 'arraybuffer';
-      this.m_ws.onmessage = event => {
-        const resp = this.receive2(event.data, socket);
-        console.log(resp);
-        resolve(resp);
+        this.m_ws.binaryType = 'arraybuffer';
+        this.m_ws.onmessage = event => {
+          const resp = this.receive(event.data, socket);
+          console.log(resp);
+          resolve(resp);
+        }
+      } catch (err) {
+        console.log(err);
       }
-    })
+    });
   }
   
-  private send2(request) {
+  private send(request) {
     console.log(this.m_state);
     switch (this.m_state) {
       case DeviceState.FIND_ME: {
@@ -160,7 +164,7 @@ export class WebSocketService {
     }
   }
 
-  private receive2(data, socket): string {
+  private receive(data, socket): string {
     console.log(data);
 
     if (this.m_state == DeviceState.FIND_ME) {
