@@ -26,15 +26,13 @@ export class Packet {
     this.m_cmd = new Uint8Array([0x01, ap]);
   }
 
-  // private _createWifiConnCmd(ssid: string, pswd: string) {
-  //   let cmd = str2arr('02' + ascii2hex(ssid) + '00' + ascii2hex(pswd) + '00');
+  private _createCustomCmd(data) {
+    const dataHex = Cast.hexToBytes(data);
+    const cmd = new Uint8Array(dataHex.length);
+    cmd.set(dataHex);
 
-  //   for(let i = 0; i < 12; i++) {
-  //     cmd[cmd.length] = 0x00;
-  //   }
-
-  //   this.m_cmd = cmd;
-  // }
+    this.m_cmd = cmd;
+  }
 
   private _createWifiConnCmd(ssid: string, pswd: string, bssid: string) {
     // let cmd = str2arr('02' + ascii2hex(ssid) + '00' + ascii2hex(pswd) + '00' + Cast.bytesToHex(Cast.hexToBytes(bssid)) + '00');
@@ -108,6 +106,10 @@ export class Packet {
       }
       case bleMode.FIND_ME: {
         this._createFindMeCmd();
+        break;
+      }
+      case bleMode.CUSTOM: {
+        this._createCustomCmd(data);
         break;
       }
       default: {

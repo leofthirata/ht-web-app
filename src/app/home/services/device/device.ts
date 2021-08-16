@@ -74,7 +74,7 @@ export class DeviceService {
   public manualRemoteTest: OneRemoteTestingService;
   private local = true;
   public socket: WebSocketService;
-  private remoteRequest: Object;
+  private remoteRequest: any;
   // public remoteTest: 
   private term: Terminal;
   private term2: Terminal;
@@ -303,7 +303,7 @@ export class DeviceService {
       try {
         const str = JSON.stringify(bytes, null, 2);
         const date = new Date();
-        const dateStr = `[${date.toLocaleTimeString()}] [BLE] PARSED:`;
+        const dateStr = `[${date.toLocaleTimeString()}] [BLE] DECODED:`;
         this.blue(dateStr);
 
         const buf1 = Cast.stringToBytes(dateStr);
@@ -359,6 +359,14 @@ export class DeviceService {
     await this.m_ble.disconnect();
     this.operation = Operation.AUTH;
     // this.nav.navigateForward('authentication', { state: this.m_ble.getIp() });
+  }
+
+  public async customBlePacketOnClick(data) {
+    await this.m_ble.connect();
+    await this.m_ble.getService();
+    await this.m_ble.getCharacteristics();
+    await this.m_ble.custom(data);
+    await this.m_ble.disconnect();
   }
 
   public isBleConnected() {
@@ -624,7 +632,8 @@ export class DeviceService {
     if (this.local) {
       this.manualLocalTest.CUSTOM(request);
     } else {
-      this.manualRemoteTest.CUSTOM(request);
+      this.remoteRequest.payload.command = request;
+      this.manualRemoteTest.CUSTOM(this.remoteRequest);
     }
   }
 

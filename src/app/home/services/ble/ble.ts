@@ -4,7 +4,8 @@ import { Observable, Subject } from 'rxjs';
 export enum bleMode {
   SCAN = 'scan',
   CONN = 'conn',
-  FIND_ME = 'find_me'
+  FIND_ME = 'find_me',
+  CUSTOM = 'custom',
 }
 
 export class BluetoothService {
@@ -78,10 +79,6 @@ export class BluetoothService {
 
   public getService(): Promise<boolean> {
     return new Promise(async resolve => {
-
-      // while (!this.m_device.gatt.connected) {
-      //   await this.connect();
-      // }
       try {
         this.m_service = await this.m_device.gatt.getPrimaryService(this.HAUSENN_SERVICE_UUID);
         console.log(this.m_service);
@@ -102,11 +99,6 @@ export class BluetoothService {
 
   public getCharacteristics(): Promise<boolean> {
     return new Promise(async resolve => {
-
-      // while (!this.m_device.gatt.connected) {
-      //   console.log('[BLE] Reconnecting');
-      //   await this.connect();
-      // }
       try {
         this.m_readCharacteristic = await this.m_service.getCharacteristic(
                 this.HAUSENN_READ_CHARACTERISTIC);
@@ -337,6 +329,32 @@ export class BluetoothService {
       console.log(request);
 
       await request.setData();
+
+      const packet = request.getPackage().buffer;
+
+      this.sentPacketSubject$.next(new Uint8Array(packet));
+
+      this._write(packet, packet.byteLength);
+
+      await this.m_readCharacteristic.readValue();
+
+      await this.m_readCharacteristic.startNotifications();
+
+      await this._listen();
+
+      resolve(true);
+    });
+  }
+
+  public custom(data): Promise<boolean> {
+    return new Promise(async resolve => {
+      this.setMode(bleMode.CUSTOM);
+
+      const request = new Packet(bleMode.CUSTOM);
+
+      console.log(request);
+
+      await request.setData(data);
 
       const packet = request.getPackage().buffer;
 

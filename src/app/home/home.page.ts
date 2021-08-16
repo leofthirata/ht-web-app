@@ -18,7 +18,7 @@ import * as Colors from './utils/color';
 // authentication
 import { AuthService } from '../home/services/auth/auth';
 import { DeviceState, WebSocketService } from '../home/services/websocket/ws';
-import { uint8ArrayToHexString } from '../home/utils/utils';
+import { timeout_ms, timeout_s, uint8ArrayToHexString } from '../home/utils/utils';
 import * as forge from "node-forge";
 import { printPubKeyRSA, importPubKeyRSA } from '../home/utils/encrypt';
 import { getAccessToken, sync, createPlace, createEnvironment, createDevice } from '../home/services/backend/backend'
@@ -113,6 +113,36 @@ export class HomePage {
   public setIrCh = 3;
   public editIrId = 1;
 
+  public eraseIrIndex = 1;
+  public getIrIndex = 1;
+  public setIrIndex = 1;
+  public getInfoIndex = 1;
+  public cancelIrIndex = 1;
+  public editIrIndex = 1;
+  public runSceneIndex = 1;
+  public facResetIndex = 1;
+  public getHeapIndex = 1;
+  public resetIndex = 1;
+  public bleOnIndex = 1;
+  public bleOffIndex = 1;
+  public findMeIndex = 1;
+  public customIndex = 1;
+
+  public eraseIrDelay = 0;
+  public getIrDelay = 0;
+  public setIrDelay = 0;
+  public getInfoDelay = 0;
+  public cancelIrDelay = 0;
+  public editIrDelay = 0;
+  public runSceneDelay = 0;
+  public facResetDelay = 0;
+  public getHeapDelay = 0;
+  public resetDelay = 0;
+  public bleOnDelay = 0;
+  public bleOffDelay = 0;
+  public findMeDelay = 0;
+  public customDelay = 0;
+
   public send: string;
 
   constructor(private nav: NavController, private alertController: AlertController, private popoverController: PopoverController) {
@@ -161,6 +191,38 @@ export class HomePage {
 
   public connectToWifiOnClick() {
     this.dev.connectToWifiOnClick();
+  }
+
+  public async customBlePacketOnClick() {
+    const alert = await this.alertController.create({
+      header: 'CUSTOM CMD',
+      inputs: [
+        {
+          name: 'packet',
+          type: 'textarea',
+          value: `0x1234`,
+          placeholder: 'Enter hex to send through BLE'
+        }
+      ],
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel',
+          cssClass: 'secondary',
+          handler: () => {
+            console.log('Confirm Cancel');
+          }
+        }, {
+          text: 'Ok',
+          handler: async ans => {
+            this.send = ans.packet;
+            this.dev.customBlePacketOnClick(this.send);    
+          }
+        }
+      ]
+    });
+
+    await alert.present();
   }
 
   public updateOperation() {
@@ -304,56 +366,92 @@ export class HomePage {
     return this.ticketSet;
   }
 
-  public getInfoOnClick() {
-    this.dev.getInfoOnClick();
+  public async getInfoOnClick() {
+    for(let i = 0; i < this.getInfoIndex; i++) {
+      this.dev.getInfoOnClick();
+      await timeout_s(this.getInfoDelay);
+    }
   }
 
-  public eraseIrOnClick() {
-    this.dev.eraseIrOnClick(this.eraseIrId);
+  public async eraseIrOnClick() {
+    for(let i = 0; i < this.eraseIrIndex; i++) {
+      this.dev.eraseIrOnClick(this.eraseIrId);
+      await timeout_s(this.eraseIrDelay);
+    }
   }
 
-  public getIrOnClick() {
-    this.dev.getIrOnClick();
+  public async getIrOnClick() {
+    for(let i = 0; i < this.getIrIndex; i++) {
+      this.dev.getIrOnClick();
+      await timeout_s(this.getIrDelay);
+    }
   }
 
-  public setIrOnClick() {
-    this.dev.setIrOnClick(this.setIrId, this.setIrCh);
+  public async setIrOnClick() {
+    for(let i = 0; i < this.setIrIndex; i++) {
+      this.dev.setIrOnClick(this.setIrId, this.setIrCh);
+      await timeout_s(this.setIrDelay);
+    }
   }
 
-  public cancelIrOnClick() {
-    this.dev.cancelIrOnClick();
+  public async cancelIrOnClick() {
+    for(let i = 0; i < this.cancelIrIndex; i++) {
+      this.dev.cancelIrOnClick();
+      await timeout_s(this.cancelIrDelay);
+    }
   }
 
-  public editIrOnClick() {
-    this.dev.editIrOnClick(this.editIrId);
+  public async editIrOnClick() {
+    for(let i = 0; i < this.editIrIndex; i++) {
+      this.dev.editIrOnClick(this.editIrId);
+      await timeout_s(this.editIrDelay);
+    }
   }
 
-  public runSceneOnClick() {
-    this.dev.runSceneOnClick();
+  public async runSceneOnClick() {
+    for(let i = 0; i < this.runSceneIndex; i++) {
+      this.dev.runSceneOnClick();
+      await timeout_s(this.runSceneDelay);
+    }
   }
 
-  public facResetOnClick() {
+  public async facResetOnClick() {
     this.dev.facResetOnClick();
   }
 
-  public getHeapOnClick() {
-    this.dev.getHeapOnClick();
+  public async getHeapOnClick() {
+    for(let i = 0; i < this.getHeapIndex; i++) {
+      this.dev.getHeapOnClick();
+      await timeout_s(this.getHeapDelay);
+    }
   }
 
-  public resetOnClick() {
-    this.dev.resetOnClick();
+  public async resetOnClick() {
+    for(let i = 0; i < this.resetIndex; i++) {
+      this.dev.resetOnClick();
+      await timeout_s(this.resetDelay);
+    }
   }
 
-  public bleOnOnClick() {
-    this.dev.bleOnOnClick();
+  public async bleOnOnClick() {
+    for(let i = 0; i < this.bleOnIndex; i++) {
+      this.dev.bleOnOnClick();
+      await timeout_s(this.bleOnDelay);
+    }
   }
 
-  public bleOffOnClick() {
-    this.dev.bleOffOnClick();
+  public async bleOffOnClick() {
+    for(let i = 0; i < this.bleOffIndex; i++) {
+      this.dev.bleOffOnClick();
+      await timeout_s(this.bleOffDelay);
+    }
   }
 
-  public findMeWsOnClick() {
-    this.dev.findMeWsOnClick();
+  public async findMeWsOnClick() {
+    for(let i = 0; i < this.findMeIndex; i++) {
+      this.dev.findMeWsOnClick();
+      await timeout_s(this.findMeDelay);
+    }
   }
 
   public async customOnClick() {
@@ -377,9 +475,12 @@ export class HomePage {
           }
         }, {
           text: 'Ok',
-          handler: ans => {
+          handler: async ans => {
             this.send = ans.json;
-            this.dev.sendCustomOnClick(JSON.parse(this.send));    
+            for(let i = 0; i < this.customIndex; i++) {
+              this.dev.sendCustomOnClick(JSON.parse(this.send));    
+              await timeout_s(this.customDelay);
+            }
           }
         }
       ]
@@ -632,43 +733,5 @@ export class HomePage {
 
   public reportBugOnClick() {
     window.open('https://gitlab.padotec.com.br/groups/hausenn/-/boards', '_blank');
-  }
-
-  async editEraseIr() {
-    const alert = await this.alertController.create({
-      header: 'ERASE_IR',
-      inputs: [
-        {
-          name: 'cmd',
-          type: 'text',
-          placeholder: '1'
-        },
-        {
-          name: 'id',
-          type: 'text',
-          placeholder: 'Enter password'
-        },
-      ],
-      buttons: [
-        {
-          text: 'Cancel',
-          role: 'cancel',
-          cssClass: 'secondary',
-          handler: () => {
-            console.log('Confirm Cancel');
-          }
-        }, {
-          text: 'Ok',
-          handler: ans => {
-            this.wifiSsid = ans.ssid;
-            this.wifiPassword = ans.pswd;
-            this.wifiBssid = ans.bssid;
-            this.connectToWifiOnClick()          
-          }
-        }
-      ]
-    });
-
-    await alert.present();
   }
 }

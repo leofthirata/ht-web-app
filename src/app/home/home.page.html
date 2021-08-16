@@ -236,6 +236,10 @@
         <ion-button (click)="wifiConfigAndConnectOnClick()" expand="full" color="dark" [disabled]="!isDeviceSelected()">
           CONNECT TO WIFI
         </ion-button>
+        <br/>
+        <ion-button (click)="customBlePacketOnClick()" expand="full" color="dark" [disabled]="!isDeviceSelected()">
+          CUSTOM
+        </ion-button>
       </div>
 
       <div [hidden]="isNotConnectedToWifiorIsTesting()">
@@ -284,20 +288,26 @@
         </ion-row>
 
         <ion-row>
-          <ion-button class="op-button" (click)="eraseIrOnClick()" expand="block" color="dark">
+          <ion-input type="number" [(ngModel)]="eraseIrIndex" value=1 placeholder="id"></ion-input>
+          <ion-input type="number" [(ngModel)]="eraseIrDelay" value=0 placeholder="id"></ion-input>
+          <ion-button class="op-button1" (click)="eraseIrOnClick()" expand="block" color="dark">
             ERASE_IR
           </ion-button>
           <ion-input type="number" [(ngModel)]="eraseIrId" value=1 placeholder="id"></ion-input>
         </ion-row>
 
         <ion-row>
+          <ion-input type="number" [(ngModel)]="getIrIndex" value=1 placeholder="id"></ion-input>
+          <ion-input type="number" [(ngModel)]="getIrDelay" value=0 placeholder="id"></ion-input>
           <ion-button class="op-button" (click)="getIrOnClick()" expand="block" color="dark">
             GET_IR
           </ion-button>
         </ion-row>
 
         <ion-row>
-          <ion-button class="op-button" (click)="setIrOnClick()" expand="block" color="dark">
+          <ion-input type="number" [(ngModel)]="setIrIndex" value=1 placeholder="id"></ion-input>
+          <ion-input type="number" [(ngModel)]="setIrDelay" value=0 placeholder="id"></ion-input>
+          <ion-button class="op-button2" (click)="setIrOnClick()" expand="block" color="dark">
             SET_IR
           </ion-button>
           <ion-input type="number" [(ngModel)]="setIrId" value=1 placeholder="id"></ion-input>
@@ -305,69 +315,93 @@
         </ion-row>
 
         <ion-row>
+          <ion-input type="number" [(ngModel)]="getInfoIndex" value=1 placeholder="id"></ion-input>
+          <ion-input type="number" [(ngModel)]="getInfoDelay" value=0 placeholder="id"></ion-input>
           <ion-button class="op-button" (click)="getInfoOnClick()" expand="block" color="dark">
             GET_INFO
           </ion-button>
         </ion-row>
 
         <ion-row>
+          <ion-input type="number" [(ngModel)]="cancelIrIndex" value=1 placeholder="id"></ion-input>
+          <ion-input type="number" [(ngModel)]="cancelIrDelay" value=0 placeholder="id"></ion-input>
           <ion-button class="op-button" (click)="cancelIrOnClick()" expand="block" color="dark">
             CANCEL_IR
           </ion-button>
         </ion-row>
 
         <ion-row>
-          <ion-button class="op-button" (click)="editIrOnClick()" expand="block" color="dark">
+          <ion-input type="number" [(ngModel)]="editIrIndex" value=1 placeholder="id"></ion-input>
+          <ion-input type="number" [(ngModel)]="editIrDelay" value=0 placeholder="id"></ion-input>
+          <ion-button class="op-button1" (click)="editIrOnClick()" expand="block" color="dark">
             EDIT_IR
           </ion-button>
           <ion-input type="number" [(ngModel)]="editIrId" value=1 placeholder="id"></ion-input>
         </ion-row>
 
         <ion-row>
+          <ion-input type="number" [(ngModel)]="runSceneIndex" value=1 placeholder="id"></ion-input>
+          <ion-input type="number" [(ngModel)]="runSceneDelay" value=0 placeholder="id"></ion-input>
           <ion-button class="op-button" (click)="runSceneOnClick()" expand="block" color="dark">
             RUN_SCENE
           </ion-button>
         </ion-row>
 
         <ion-row>
+          <ion-input type="number" [(ngModel)]="facResetIndex" value=1 placeholder="id"></ion-input>
+          <ion-input type="number" [(ngModel)]="facResetDelay" value=0 placeholder="id"></ion-input>
           <ion-button class="op-button" (click)="facResetOnClick()" expand="block" color="dark">
             FAC_RESET
           </ion-button> 
         </ion-row>
 
         <ion-row>
+          <ion-input type="number" [(ngModel)]="getHeapIndex" value=1 placeholder="id"></ion-input>
+          <ion-input type="number" [(ngModel)]="getHeapDelay" value=0 placeholder="id"></ion-input>
           <ion-button class="op-button" (click)="getHeapOnClick()" expand="block" color="dark">
             GET_HEAP
           </ion-button>
         </ion-row>
 
         <ion-row>
+          <ion-input type="number" [(ngModel)]="resetIndex" value=1 placeholder="id"></ion-input>
+          <ion-input type="number" [(ngModel)]="resetDelay" value=0 placeholder="id"></ion-input>
           <ion-button class="op-button" (click)="resetOnClick()" expand="block" color="dark">
             RESET
           </ion-button>
         </ion-row>
         
         <ion-row>
+          <ion-input type="number" [(ngModel)]="bleOnIndex" value=1 placeholder="id"></ion-input>
+          <ion-input type="number" [(ngModel)]="bleOnDelay" value=0 placeholder="id"></ion-input>
           <ion-button class="op-button" (click)="bleOnOnClick()" expand="block" color="dark">
             BLE_ON
           </ion-button>
         </ion-row>
         
         <ion-row>
+          <ion-input type="number" [(ngModel)]="bleOffIndex" value=1 placeholder="id"></ion-input>
+          <ion-input type="number" [(ngModel)]="bleOffDelay" value=0 placeholder="id"></ion-input>
           <ion-button class="op-button" (click)="bleOffOnClick()" expand="block" color="dark">
             BLE_OFF
           </ion-button>
         </ion-row>
       
         <ion-row>
+          <ion-input type="number" [(ngModel)]="findMeIndex" value=1 placeholder="id"></ion-input>
+          <ion-input type="number" [(ngModel)]="findMeDelay" value=0 placeholder="id"></ion-input>
           <ion-button class="op-button" (click)="findMeWsOnClick()" expand="block" color="dark">
             FIND_ME
           </ion-button>
         </ion-row>
 
-        <ion-button class="op-button" (click)="customOnClick()" expand="block" color="dark">
-          CUSTOM
-        </ion-button>
+        <ion-row>
+          <ion-input type="number" [(ngModel)]="customIndex" value=1 placeholder="id"></ion-input>
+          <ion-input type="number" [(ngModel)]="customDelay" value=0 placeholder="id"></ion-input>
+          <ion-button class="op-button" (click)="customOnClick()" expand="block" color="dark">
+            CUSTOM
+          </ion-button>
+        </ion-row>
 
         <!-- <ion-item lines="none">
           <ion-textarea rows="6" cols="20" [disabled]="!connected" [(ngModel)]="send"></ion-textarea>
