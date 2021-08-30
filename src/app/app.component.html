@@ -1,3 +1,40 @@
 <ion-app>
-  <ion-router-outlet></ion-router-outlet>
+    <ion-menu menuId="main-menu" content-id="main">
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>
+            Tools
+          </ion-title>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content>
+        <ion-list>
+          <ion-menu-toggle>
+            <ion-item routerLink="home">
+              <ion-icon name="mail" slot="start"></ion-icon>
+              <ion-label>Test Tool</ion-label>
+            </ion-item>
+          </ion-menu-toggle>
+          <ion-menu-toggle>
+            <ion-item routerLink="bluetooth">
+              <ion-icon name="unlock" slot="start"></ion-icon>
+              <ion-label>Bluetooth Packaging</ion-label>
+            </ion-item>
+          </ion-menu-toggle>
+          <ion-menu-toggle>
+            <ion-item routerLink="serial">
+              <ion-icon name="flash" slot="start"></ion-icon>
+              <ion-label>Serial Terminal</ion-label>
+            </ion-item>
+          </ion-menu-toggle>
+          <ion-menu-toggle>
+            <ion-item>
+              <ion-icon name="bluetooth" slot="start"></ion-icon>
+              <ion-label>Tbd</ion-label>
+            </ion-item>
+          </ion-menu-toggle>
+        </ion-list>
+      </ion-content>
+    </ion-menu>
+  <ion-router-outlet id="main"></ion-router-outlet>
 </ion-app>

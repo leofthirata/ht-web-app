@@ -1,0 +1,72 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button menu="main-menu"></ion-menu-button>
+    </ion-buttons>
+    <ion-title>bluetooth</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <!-- <ion-row>
+    <ion-col size="12">
+      <ion-label>Package</ion-label>
+      <ion-item lines="none">
+        <ion-textarea rows="1" cols="20" [(ngModel)]="package"></ion-textarea>
+      </ion-item>
+    </ion-col>
+  </ion-row> -->
+
+  <ion-item lines="none">
+    <ion-label class="labels" fixed>Package</ion-label>
+    <ion-input [disabled]="teste" class="rounded" type="text" [(ngModel)]="package" placeholder="Enter HEX here"></ion-input>
+  </ion-item>
+
+  <ion-item lines="none">
+    <ion-label class="labels" fixed>Header</ion-label>
+    <ion-input [readonly]="isReadOnly" class="rounded" type="text" [(ngModel)]="pHeader"></ion-input>
+  </ion-item>
+
+  <ion-item lines="none">
+    <ion-label class="labels" fixed>Length</ion-label>
+    <ion-input [readonly]="isReadOnly" class="rounded" type="text" [(ngModel)]="pLength"></ion-input>
+  </ion-item>
+
+  <ion-item lines="none">
+    <ion-label class="labels" fixed>IV</ion-label>
+    <ion-input [readonly]="isReadOnly" class="rounded" type="text" [(ngModel)]="pIV"></ion-input>
+  </ion-item>
+
+  <ion-item lines="none">
+    <ion-label class="labels" fixed>Encrypted</ion-label>
+    <ion-input [readonly]="isReadOnly" class="rounded" type="text" [(ngModel)]="pEnc"></ion-input>
+  </ion-item>
+
+  <ion-item lines="none">
+    <ion-label class="labels" fixed>Tail</ion-label>
+    <ion-input [readonly]="isReadOnly" class="rounded" type="text" [(ngModel)]="pTail"></ion-input>
+  </ion-item>
+
+  <ion-item lines="none">
+    <ion-label class="labels" fixed>Result</ion-label>
+    <ion-input [readonly]="isReadOnly" class="rounded" type="text" [(ngModel)]="pResult"></ion-input>
+  </ion-item>
+
+  <ion-item lines="none" id="rounded">
+    <ion-label class="labels" fixed>Decrypted</ion-label>
+    <ion-input [readonly]="isReadOnly" class="rounded" type="text" [(ngModel)]="pDec"></ion-input>
+  </ion-item>
+
+  <ion-item>
+    <ion-button (click)="clearOnClick()">
+      CLEAR
+    </ion-button>
+    <ion-button (click)="decodePackageOnClick()">
+      UNPACK
+    </ion-button>
+    <ion-button (click)="buildPackageOnClick()">
+      PACK
+    </ion-button>
+  </ion-item>
+
+</ion-content>
