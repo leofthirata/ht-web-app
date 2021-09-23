@@ -27,7 +27,11 @@ export class Packet {
   }
 
   private _createCustomCmd(data) {
-    const dataHex = Cast.hexToBytes(data);
+    if (data.substring(0,2) == "0x") {
+      var dataHex = Cast.hexToBytes(data.substring(2,data.length));
+    } else {
+      var dataHex = Cast.hexToBytes(data);
+    }
     const cmd = new Uint8Array(dataHex.length);
     cmd.set(dataHex);
 

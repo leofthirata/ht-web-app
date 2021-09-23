@@ -234,6 +234,7 @@ export class WebSocketService {
         console.log(resp);
         this.rcvRemotePacketSubject$.next(resp);
         resolve(resp);
+        // this.m_ws.close();
       }
     })
   } 

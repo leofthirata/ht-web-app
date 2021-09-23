@@ -122,6 +122,9 @@ export class DeviceService {
 
   private operation = Operation.BLE;
 
+  private reader;
+  private portConnected = false;
+
   constructor(term, term2) {
     this.term = term;
     this.term2 = term2;
@@ -348,7 +351,11 @@ export class DeviceService {
     await this.m_ble.disconnect();
   }
 
-  public async connectToWifiOnClick() {
+  public async connectToWifiOnClick(ssid, pswd, bssid) {
+    this.wifiSsid = ssid;
+    this.wifiPassword = pswd;
+    this.wifiBssid = bssid;
+
     await this.m_ble.connect();
     await this.m_ble.getService();
     await this.m_ble.getCharacteristics();
@@ -702,10 +709,10 @@ export class DeviceService {
   }
 
   public async onConnectDevice() {
-    this.devPort = await this.open(24592, 1027);
+    this.devPort = await this.open();
 
     if (this.devPort) {
-      this.devConnected = true;
+      this.portConnected = true;
       const date = new Date();
       const dateStr = `[${date.toLocaleTimeString()}] [SERIAL] Connected to serial port\n\r`;
       this.green(dateStr);
@@ -714,20 +721,18 @@ export class DeviceService {
       let buffer = new Uint8Array(buf1.length);
       buffer.set(buf1);
       this.loggerIndex += buf1.length;
+      this.readUntilClosed();
     }
-
-    this.readUntilClosed();
   }
 
   async readUntilClosed() {
-    let reader;
     let buffer: number[] = [];
     var index = 0;
 
-    reader = this.devPort.readable.getReader();
+    this.reader = this.devPort.readable.getReader();
     try {
       while (true) {
-        const { value, done } = await reader.read();
+        const { value, done } = await this.reader.read();
         if (done) {
           // |reader| has been canceled.
           break;
@@ -750,28 +755,41 @@ export class DeviceService {
     } catch (error) {
       // Handle |error|...
     } finally {
-      reader.releaseLock();
+      this.reader.releaseLock();
     }
-
-    await this.devPort.close();
   }
 
   public async onDisconnectDevice() {
+    this.portConnected = false;
+    this.reader.cancel();
+    this.reader.releaseLock();
     await this.close(this.devPort);
-    this.devConnected = false;
+
+    const date = new Date();
+    const dateStr = `[${date.toLocaleTimeString()}] [SERIAL] Serial port disconnected\n\r`;
+    this.yellow(dateStr);
+
+    const buf1 = Cast.stringToBytes(dateStr);
+    let buffer = new Uint8Array(buf1.length);
+    buffer.set(buf1);
+    this.loggerIndex += buf1.length;
   }
 
-  private async open(pid: number, vid: number): Promise<SerialPort> {
+  public isPortConnected() {
+    return this.portConnected;
+  }
+  
+  private async open(): Promise<SerialPort> {
     try {
       const port = await navigator.serial.requestPort({
-        filters: [{ usbProductId: pid, usbVendorId: vid }],
+        filters: [{ usbProductId: 60000, usbVendorId: 4292},
+                  { usbProductId: 24592, usbVendorId: 1027}]
       });
 
       await port.open({ baudRate: 115200, bufferSize: 4096, flowControl: 'none' });
 
       return port;
     } catch (error) {
-      this.logError(error);
       return null;
     }
   }

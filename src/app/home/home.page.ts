@@ -59,7 +59,7 @@ export class HomePage {
   public product = "ONE";
   public wifiSsid = "PADOTEC";
   public wifiPassword = "P@d0t3c2021";
-  public wifiBssid = '0263DA3A342A';
+  public wifiBssid = 'EE63DA3A342A';
 
   // public isTesting = false;
   private term = new Terminal();
@@ -190,7 +190,7 @@ export class HomePage {
   }
 
   public connectToWifiOnClick() {
-    this.dev.connectToWifiOnClick();
+    this.dev.connectToWifiOnClick(this.wifiSsid, this.wifiPassword, this.wifiBssid);
   }
 
   public async customBlePacketOnClick() {
@@ -552,6 +552,7 @@ export class HomePage {
         }, {
           text: 'Ok',
           handler: ans => {
+            console.log(ans.pswd);
             this.wifiSsid = ans.ssid;
             this.wifiPassword = ans.pswd;
             this.wifiBssid = ans.bssid;
@@ -596,6 +597,10 @@ export class HomePage {
 
   public async onDisconnectDevice() {
     this.dev.onDisconnectDevice();
+  }
+
+  public isPortConnected() {
+    return this.dev.isPortConnected();
   }
 
   public async saveTermOnClick() {

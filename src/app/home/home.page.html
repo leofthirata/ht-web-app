@@ -9,20 +9,20 @@
       </ion-title>
 
       <ion-buttons slot="end">
-        <ion-button (click)="showKeyPairOnClick()" expand="full" color="dark" [disabled]="!gotKey">
-          <ion-icon name="key"></ion-icon>
-        </ion-button>
-      </ion-buttons>
-
-      <ion-buttons slot="end">
         <ion-button (click)="deviceSelectionOnClick()" expand="full" color="dark">
-          <ion-icon name="bluetooth"></ion-icon>
+          <ion-icon name="bluetooth-outline"></ion-icon>
         </ion-button>
       </ion-buttons>
 
       <ion-buttons slot="end">
-        <ion-button (click)="onConnectDevice()" expand="full" color="dark" >
-          <ion-icon name="flash"></ion-icon>
+        <ion-button (click)="onConnectDevice()" expand="full" color="dark" [hidden]="isPortConnected()">
+          <ion-icon name="flash-outline"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+
+      <ion-buttons slot="end">
+        <ion-button (click)="onDisconnectDevice()" expand="full" color="dark" [hidden]="!isPortConnected()">
+          <ion-icon name="flash-off-outline"></ion-icon>
         </ion-button>
       </ion-buttons>
 

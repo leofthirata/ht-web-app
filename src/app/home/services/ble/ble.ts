@@ -127,17 +127,20 @@ export class BluetoothService {
     return new Promise(async resolve => {
       console.log('listening');
       const notify = await this.m_readCharacteristic.startNotifications();
-      // notify.addEventListener('characteristicvaluechanged', this._read.bind(this));
-      notify.addEventListener('characteristicvaluechanged', async ev => {
+
+      let read = async ev => {
         const target = (<BluetoothRemoteGATTCharacteristic>ev.target);
         const data = new Uint8Array(target.value.buffer);
         const rslt = await this._parsePacket(data);
         this.m_rslt = rslt;
-        console.log(rslt);
-
+        console.log(`[BLE] Result:`);
+        console.log(this.m_rslt);
+  
         if (this.mode == bleMode.SCAN) {
           if ((this.m_rslt.n) && (this.m_rslt.n == this.m_rslt.ap)) {
             console.log("n == ap")
+            notify.removeEventListener('characteristicvaluechanged', read);
+            await this.m_readCharacteristic.stopNotifications();
             resolve(true);
           }
         }
@@ -145,57 +148,50 @@ export class BluetoothService {
           if (this.isIpValid(rslt)) {
             console.log("n == true")
             this.m_rslt = rslt;
+            notify.removeEventListener('characteristicvaluechanged', read);
+            await this.m_readCharacteristic.stopNotifications();
             resolve(true);
           }
         }
         else if (this.mode == bleMode.FIND_ME) {
-          // if (this.m_rslt == 'ERR_OK') {
+            notify.removeEventListener('characteristicvaluechanged', read);
+            await this.m_readCharacteristic.stopNotifications();
             resolve(true);
-          // } else {
-            // resolve(false);
-          // }
-        }
-      });
+          }
+      }
+      
+      notify.addEventListener('characteristicvaluechanged', read);
     });
   }
 
-  private _read = async ev => {
-    return new Promise(async res => {
-      const target = (<BluetoothRemoteGATTCharacteristic>ev.target);
-      const data = new Uint8Array(target.value.buffer);
-      const rslt = await this._parsePacket(data);
-      this.m_rslt = rslt;
-      console.log(`[BLE] Result:`);
-      console.log(this.m_rslt);
+  // private _read = async ev => {
+  //   return new Promise(async res => {
+  //     const target = (<BluetoothRemoteGATTCharacteristic>ev.target);
+  //     const data = new Uint8Array(target.value.buffer);
+  //     const rslt = await this._parsePacket(data);
+  //     this.m_rslt = rslt;
+  //     console.log(`[BLE] Result:`);
+  //     console.log(this.m_rslt);
 
-      if (this.mode == bleMode.SCAN) {
-        console.log(this.m_rslt.n);
-        console.log(this.m_rslt.ap);
-        if ((this.m_rslt.n) && (this.m_rslt.n == this.m_rslt.ap)) {
-          console.log("n == ap")
-          res(true);
-        }
-      }
-      else if (this.mode == bleMode.CONN) {
-        console.log('mode conn')
-        if (this.isIpValid(rslt)) {
-          this.m_rslt = rslt;
-          console.log('mode tr')
-          res(true);
-        } else {
-          console.log('mode fa')
-          res(false);
-        }
-      }
-      // else if (this.mode == bleMode.FIND_ME) {
-      //   if (this.m_rslt == 'ERR_OK') {
-      //     res(true);
-      //   } else {
-      //     res(false);
-      //   }
-      // }
-    });
-  }
+  //     if (this.mode == bleMode.SCAN) {
+  //       if ((this.m_rslt.n) && (this.m_rslt.n == this.m_rslt.ap)) {
+  //         notify.removeEventListener('characteristicvaluechanged', this._listen);
+  //         console.log("n == ap")
+  //         resolve(true);
+  //       }
+  //     }
+  //     else if (this.mode == bleMode.CONN) {
+  //       if (this.isIpValid(rslt)) {
+  //         console.log("n == true")
+  //         this.m_rslt = rslt;
+  //         resolve(true);
+  //       }
+  //     }
+  //     else if (this.mode == bleMode.FIND_ME) {
+  //         resolve(true);
+  //     }
+  //   });
+  // }
 
   // private async _listen() {
   //   const notify = await this.m_readCharacteristic.startNotifications();
@@ -281,7 +277,11 @@ export class BluetoothService {
 
       await this.m_readCharacteristic.startNotifications();
 
-      await this._listen();
+      const prom = await this._listen();
+
+      Promise.all([prom]);
+
+      console.log('bbbbbbbbbb');
 
       resolve(true);
     });
@@ -314,7 +314,11 @@ export class BluetoothService {
 
       await this.m_readCharacteristic.startNotifications();
 
-      await this._listen();
+      const prom = await this._listen();
+
+      Promise.all([prom]);
+
+      console.log('aaaaaaaaaaa');
 
       resolve(true);
     });
@@ -340,7 +344,11 @@ export class BluetoothService {
 
       await this.m_readCharacteristic.startNotifications();
 
-      await this._listen();
+      const prom = await this._listen();
+
+      Promise.all([prom]);
+
+      console.log('cccccccccc');
 
       resolve(true);
     });
