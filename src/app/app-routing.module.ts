@@ -37,10 +37,15 @@ const routes: Routes = [
   {
     path: 'serial',
     loadChildren: () => import('./pages/serial/serial.module').then( m => m.SerialPageModule)
-  },  {
-    path: 'websocket',
-    loadChildren: () => import('./pages/websocket/websocket.module').then( m => m.WebsocketPageModule)
   },
+  {
+    path: 'coredump',
+    loadChildren: () => import('./pages/coredump/coredump.module').then( m => m.CoredumpPageModule)
+  },  {
+    path: 'backend-info',
+    loadChildren: () => import('./pages/backend-info/backend-info.module').then( m => m.BackendInfoPageModule)
+  },
+
 
 
 ];

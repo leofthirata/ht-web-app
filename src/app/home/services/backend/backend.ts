@@ -1,6 +1,3 @@
-import * as api from 'node-fetch';
-import { pem } from 'node-forge';
-
 // old staging
 // const backend = `http://stage.hausenn.com.br/devices-service`;
 // const refreshTokenRoute = `https://stage.padotec.com.br/auth/realms/hausenn/protocol/openid-connect/token`;

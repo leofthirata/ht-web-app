@@ -140,7 +140,7 @@ export class BluetoothService {
           if ((this.m_rslt.n) && (this.m_rslt.n == this.m_rslt.ap)) {
             console.log("n == ap")
             notify.removeEventListener('characteristicvaluechanged', read);
-            await this.m_readCharacteristic.stopNotifications();
+            // await this.m_readCharacteristic.stopNotifications();
             resolve(true);
           }
         }
@@ -149,13 +149,13 @@ export class BluetoothService {
             console.log("n == true")
             this.m_rslt = rslt;
             notify.removeEventListener('characteristicvaluechanged', read);
-            await this.m_readCharacteristic.stopNotifications();
+            // await this.m_readCharacteristic.stopNotifications();
             resolve(true);
           }
         }
         else if (this.mode == bleMode.FIND_ME) {
             notify.removeEventListener('characteristicvaluechanged', read);
-            await this.m_readCharacteristic.stopNotifications();
+            // await this.m_readCharacteristic.stopNotifications();
             resolve(true);
           }
       }

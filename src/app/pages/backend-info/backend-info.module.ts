@@ -4,17 +4,17 @@ import { FormsModule } from '@angular/forms';
 
 import { IonicModule } from '@ionic/angular';
 
-import { WebsocketPageRoutingModule } from './websocket-routing.module';
+import { BackendInfoPageRoutingModule } from './backend-info-routing.module';
 
-import { WebsocketPage } from './websocket.page';
+import { BackendInfoPage } from './backend-info.page';
 
 @NgModule({
   imports: [
     CommonModule,
     FormsModule,
     IonicModule,
-    WebsocketPageRoutingModule
+    BackendInfoPageRoutingModule
   ],
-  declarations: [WebsocketPage]
+  declarations: [BackendInfoPage]
 })
-export class WebsocketPageModule {}
+export class BackendInfoPageModule {}

@@ -2,7 +2,7 @@
 /// <reference types="w3c-web-serial" />
 
 // home
-import { Component, ElementRef, ViewChild } from '@angular/core';
+import { Component, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
 import { NavController, AlertController } from '@ionic/angular';
 import { PopoverController } from '@ionic/angular';
 
@@ -41,7 +41,7 @@ enum Operation {
   styleUrls: ['home.page.scss'],
 })
 
-export class HomePage {
+export class HomePage implements AfterViewInit {
   @ViewChild('terminal1') terminal: ElementRef;
   @ViewChild('terminal2') terminal2: ElementRef;
   @ViewChild('terminal3') terminal3: ElementRef;
@@ -149,6 +149,28 @@ export class HomePage {
     this.device = new DeviceService(this.term, this.term2);
     this.device2 = new DeviceService(this.term3, this.term4);
     this.dev = this.device;
+  }
+
+  ngAfterViewInit() {
+    const fitAddon = new FitAddon();
+    this.term.loadAddon(fitAddon);
+    this.term.open(this.terminal.nativeElement);
+    fitAddon.fit();
+
+    const fitAddon2 = new FitAddon();
+    this.term2.loadAddon(fitAddon2);
+    this.term2.open(this.terminal2.nativeElement);
+    fitAddon2.fit();
+
+    const fitAddon3 = new FitAddon();
+    this.term3.loadAddon(fitAddon3);
+    this.term3.open(this.terminal3.nativeElement);
+    fitAddon3.fit();
+
+    const fitAddon4 = new FitAddon();
+    this.term4.loadAddon(fitAddon4);
+    this.term4.open(this.terminal4.nativeElement);
+    fitAddon4.fit();
   }
 
   public addNewDeviceOnClick() {
@@ -490,25 +512,25 @@ export class HomePage {
   }
 
   public ionViewDidEnter() {
-    const fitAddon = new FitAddon();
-    this.term.loadAddon(fitAddon);
-    this.term.open(this.terminal.nativeElement);
-    fitAddon.fit();
+    // const fitAddon = new FitAddon();
+    // this.term.loadAddon(fitAddon);
+    // this.term.open(this.terminal.nativeElement);
+    // fitAddon.fit();
 
-    const fitAddon2 = new FitAddon();
-    this.term2.loadAddon(fitAddon2);
-    this.term2.open(this.terminal2.nativeElement);
-    fitAddon2.fit();
+    // const fitAddon2 = new FitAddon();
+    // this.term2.loadAddon(fitAddon2);
+    // this.term2.open(this.terminal2.nativeElement);
+    // fitAddon2.fit();
 
-    const fitAddon3 = new FitAddon();
-    this.term3.loadAddon(fitAddon3);
-    this.term3.open(this.terminal3.nativeElement);
-    fitAddon3.fit();
+    // const fitAddon3 = new FitAddon();
+    // this.term3.loadAddon(fitAddon3);
+    // this.term3.open(this.terminal3.nativeElement);
+    // fitAddon3.fit();
 
-    const fitAddon4 = new FitAddon();
-    this.term4.loadAddon(fitAddon4);
-    this.term4.open(this.terminal4.nativeElement);
-    fitAddon4.fit();
+    // const fitAddon4 = new FitAddon();
+    // this.term4.loadAddon(fitAddon4);
+    // this.term4.open(this.terminal4.nativeElement);
+    // fitAddon4.fit();
 
     // window.onresize = () => {
     //   fitAddon.fit();

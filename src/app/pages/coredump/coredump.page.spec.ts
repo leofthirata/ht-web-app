@@ -1,19 +1,19 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { IonicModule } from '@ionic/angular';
 
-import { WebsocketPage } from './websocket.page';
+import { CoredumpPage } from './coredump.page';
 
-describe('WebsocketPage', () => {
-  let component: WebsocketPage;
-  let fixture: ComponentFixture<WebsocketPage>;
+describe('CoredumpPage', () => {
+  let component: CoredumpPage;
+  let fixture: ComponentFixture<CoredumpPage>;
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [ WebsocketPage ],
+      declarations: [ CoredumpPage ],
       imports: [IonicModule.forRoot()]
     }).compileComponents();
 
-    fixture = TestBed.createComponent(WebsocketPage);
+    fixture = TestBed.createComponent(CoredumpPage);
     component = fixture.componentInstance;
     fixture.detectChanges();
   }));
