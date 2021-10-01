@@ -26,6 +26,7 @@
     "@types/node-forge": "^0.10.2",
     "@types/w3c-web-serial": "^1.0.2",
     "angular-cli-ghpages": "^1.0.0-rc.2",
+    "keycloak-js": "^15.0.2",
     "rxjs": "~6.6.0",
     "tslib": "^2.2.0",
     "xterm": "^4.13.0",
