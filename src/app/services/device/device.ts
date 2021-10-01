@@ -125,17 +125,27 @@ export class DeviceService {
   private reader;
   private portConnected = false;
 
+  private token;
+
   constructor(term, term2) {
     this.term = term;
     this.term2 = term2;
 
-    navigator.serial.addEventListener('disconnect', (event) => {
-      const port = event.target as SerialPort;
+    navigator.serial.addEventListener('disconnect', async (event) => {
+      let port = event.target as SerialPort;
       console.log('Port disconnected', port);
 
       if (port === this.devPort) {
-        this.devConnected = false;
+        this.portConnected = false;
       }
+
+      // if (port) {
+      //   await port.close();
+      //   port = null;
+      // }
+
+      // this.reader.cancel();
+      // this.reader.releaseLock();
       
       this.setState(State.DISCONNECTED);
     });
@@ -429,13 +439,13 @@ export class DeviceService {
      }
   }
 
-  public async registerDevice() {
+  public async registerDevice(place: string, addr: string, env: string, app: string) {
     // const refreshToken = "eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICIwZDU4YmIzYy1hNzZjLTQwYzEtYjA4ZS01MjJkOGQwMmE1ZjUifQ.eyJqdGkiOiJiZmI4ZTA1MC0zMGE0LTQyMmItOTc5Ni0xMzEzMzQ3YjRjMTUiLCJleHAiOjAsIm5iZiI6MCwiaWF0IjoxNjI1NzQ4MDkwLCJpc3MiOiJodHRwczovL3N0YWdlLnBhZG90ZWMuY29tLmJyL2F1dGgvcmVhbG1zL2hhdXNlbm4iLCJhdWQiOiJodHRwczovL3N0YWdlLnBhZG90ZWMuY29tLmJyL2F1dGgvcmVhbG1zL2hhdXNlbm4iLCJzdWIiOiJkZTFjMmIyMy1hNGM0LTRiYzQtYjQ2Ni0zNTM4OTVmNTgxOTAiLCJ0eXAiOiJPZmZsaW5lIiwiYXpwIjoiaGF1c2Vubi1jbGllbnQtYXBwIiwiYXV0aF90aW1lIjowLCJzZXNzaW9uX3N0YXRlIjoiMTM5MzAyZjgtZDBhZC00ZjFjLWJlOWQtOTRlYjdkMGNhNTJmIiwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbIm9mZmxpbmVfYWNjZXNzIiwidW1hX2F1dGhvcml6YXRpb24iXX0sInJlc291cmNlX2FjY2VzcyI6eyJhY2NvdW50Ijp7InJvbGVzIjpbIm1hbmFnZS1hY2NvdW50IiwibWFuYWdlLWFjY291bnQtbGlua3MiLCJ2aWV3LXByb2ZpbGUiXX19LCJzY29wZSI6Im9wZW5pZCBvZmZsaW5lX2FjY2VzcyBlbWFpbCBwcm9maWxlIn0.TqvywFzLXqEYZHCi1w4EAwFNQPfGPyfA14IJ5Bu_bac";
-    const accessToken = await getAccessToken(this.refreshToken);
-    const user = await sync(accessToken);
-    const place = await createPlace(accessToken, 'Local1', 'Address1');
-    const env = await createEnvironment(accessToken, place, 'Environment1');
-    const dev = await createDevice(this.m_secret, accessToken, env, 'Device1', this.m_ip, '123123', '321321', 'PADOTEC', 'one', forge.pki.publicKeyToPem(this.m_devicePublicKey));
+    // const accessToken = await getAccessToken(this.refreshToken);
+    const user = await sync(this.token);
+    const placeId = await createPlace(this.token, place, addr);
+    const envId = await createEnvironment(this.token, placeId, env);
+    const dev = await createDevice(this.m_secret, this.token, envId, app, this.m_ip, '12:23:34:45:56:67', '12:23:34:45:56:69', this.wifiSsid, 'one', forge.pki.publicKeyToPem(this.m_devicePublicKey));
     this.m_userTicket = user[1];
     this.m_userUuid = user[0];
     this.m_deviceTicket = dev[0];
@@ -951,6 +961,10 @@ export class DeviceService {
 
   public getUserTicket() {
     return this.m_userTicket;
+  }
+
+  public setToken(token) {
+    this.token = token;
   }
 
   private start() {

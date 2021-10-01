@@ -148,6 +148,7 @@ export class TestsPage implements AfterViewInit {
   public send: string;
 
   private keycloak;
+  private token;
 
   constructor(private nav: NavController, private alertController: AlertController, private popoverController: PopoverController) {
     this.device = new DeviceService(this.term, this.term2);
@@ -161,15 +162,16 @@ export class TestsPage implements AfterViewInit {
     });
 
     this.keycloak.init({ onLoad: 'login-required' }).then(authenticated => {
-        console.log(authenticated);
-    });
+      console.log(authenticated);
+      this.token = this.keycloak.token;
 
-    console.log('aaaaaaaaaaaaaaaaaaa');
+      this.device.setToken(this.token);
+      this.device2.setToken(this.token);
+    });
   }
 
   public logoutOnClick() {
     this.keycloak.logout();
-    console.log('bbbbbbbbbbbbbbbbbbb');
   }
 
   ngAfterViewInit() {
@@ -308,7 +310,54 @@ export class TestsPage implements AfterViewInit {
   }
 
   public async registerDevice() {
-    await this.dev.registerDevice();
+    const alert = await this.alertController.create({
+      header: 'REMOTE INFO',
+      inputs: [
+        {
+          name: 'place',
+          type: 'textarea',
+          value: `Local`,
+          placeholder: 'Digite o nome do local'
+        },
+        {
+          name: 'address',
+          type: 'textarea',
+          value: `Endereço`,
+          placeholder: 'Digite o endereço'
+        },
+        {
+          name: 'environment',
+          type: 'textarea',
+          value: `Ambiente`,
+          placeholder: 'Digite o nome do ambiente'
+        },
+        {
+          name: 'appliance',
+          type: 'textarea',
+          value: `Aparelho`,
+          placeholder: 'Digite o nome do Aparelho'
+        }
+      ],
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel',
+          cssClass: 'secondary',
+          handler: () => {
+            console.log('Confirm Cancel');
+          }
+        }, {
+          text: 'Ok',
+          handler: async ans => {
+            this.send = ans.packet;
+            this.dev.customBlePacketOnClick(this.send);
+            await this.dev.registerDevice(ans.place, ans.address, ans.environment, ans.appliance);    
+          }
+        }
+      ]
+    });
+
+    await alert.present();
   }
 
   public async setTicket() {
