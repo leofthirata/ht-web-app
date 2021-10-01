@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import * as backend from '../../home/services/backend/backend';
+import * as backend from '../../services/backend/backend';
 import Keycloak from 'keycloak-js';
 
 @Component({

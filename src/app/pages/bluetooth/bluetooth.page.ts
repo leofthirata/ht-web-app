@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 
-import { encrypt, decrypt } from "../../home/utils/encrypt";
-import { crc8 } from "../../home//utils/crc8";
-import { Cast } from '../../home/utils/cast';
+import { encrypt, decrypt } from "../../utils/encrypt";
+import { crc8 } from "../../utils/crc8";
+import { Cast } from '../../utils/cast';
 
 @Component({
   selector: 'app-bluetooth',

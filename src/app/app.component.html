@@ -10,7 +10,7 @@
       <ion-content>
         <ion-list>
           <ion-menu-toggle>
-            <ion-item routerLink="home">
+            <ion-item routerLink="tests">
               <ion-icon name="mail" slot="start"></ion-icon>
               <ion-label>Test Tool</ion-label>
             </ion-item>
@@ -37,6 +37,13 @@
             <ion-item routerLink="backend-info">
               <ion-icon name="file-tray-stacked-outline" slot="start"></ion-icon>
               <ion-label>User/Device-Info</ion-label>
+            </ion-item>
+          </ion-menu-toggle>
+          <ion-menu-toggle>
+            <ion-item>
+              <ion-button (click)="logoutOnClick()">
+                <ion-label>logout</ion-label>
+              </ion-button>
             </ion-item>
           </ion-menu-toggle>
         </ion-list>

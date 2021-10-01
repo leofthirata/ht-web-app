@@ -5,8 +5,8 @@ import { Component, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
 import { Terminal } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
 
-import { Cast } from '../../home/utils/cast';
-import * as Colors from '../../home/utils/color';
+import { Cast } from '../../utils/cast';
+import * as Colors from '../../utils/color';
 
 @Component({
   selector: 'app-serial',

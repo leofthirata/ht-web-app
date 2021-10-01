@@ -1,0 +1,535 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+
+    <ion-buttons slot="start">
+      <ion-menu-button menu="main-menu"></ion-menu-button>
+    </ion-buttons>
+      <ion-title>
+      Hausenn Product Test Tool
+      </ion-title>
+
+      <ion-buttons slot="end">
+        <ion-button (click)="deviceSelectionOnClick()" expand="full" color="dark">
+          <ion-icon name="bluetooth-outline"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+
+      <ion-buttons slot="end">
+        <ion-button (click)="onConnectDevice()" expand="full" color="dark" [hidden]="isPortConnected()">
+          <ion-icon name="flash-outline"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+
+      <ion-buttons slot="end">
+        <ion-button (click)="onDisconnectDevice()" expand="full" color="dark" [hidden]="!isPortConnected()">
+          <ion-icon name="flash-off-outline"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+
+      <ion-select slot="end" class="select" [(ngModel)]="backend">
+        <ion-select-option value="Staging">Staging</ion-select-option>
+        <ion-select-option value="Production">Production</ion-select-option>
+      </ion-select>
+
+      <ion-select slot="end" class="select" [(ngModel)]="product">
+        <ion-select-option value="ONE">ONE</ion-select-option>
+        <ion-select-option value="Lumina">Lumina</ion-select-option>
+        <ion-select-option value="tbd">tbd</ion-select-option>
+      </ion-select>
+
+      <ion-buttons slot="end" class="button-end">
+        <ion-button (click)="chooseSourceOnClick()" expand="full" color="dark">
+          SOURCE
+        </ion-button>
+      </ion-buttons>
+
+      <ion-buttons slot="end" class="button-end">
+        <ion-button (click)="chooseTargetOnClick()" expand="full" color="dark">
+          TARGET
+        </ion-button>
+      </ion-buttons>
+
+      <ion-buttons slot="end" class="button-end">
+        <ion-button (click)="shareOnClick()" expand="full" color="dark" [disabled]="!deviceRegistered">
+          <ion-icon name="person-add"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+
+      <ion-buttons slot="end" class="button-end">
+        <ion-button (click)="reportBugOnClick()" expand="full" color="dark">
+          <ion-icon name="bug"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+<div class="wrapper">
+  <div class="main">
+    <ion-item>
+      <ion-label>
+        <h1>Source Test Log</h1>
+      </ion-label>
+
+      <ion-buttons slot="end">
+        <ion-button (click)="showUserInfo()" expand="block" color="dark">
+          <ion-icon name="information-circle"></ion-icon>
+        </ion-button>
+        <!-- <ion-item>
+          <ion-textarea rows="15">{{teste}}</ion-textarea>
+        </ion-item> -->
+        
+        <ion-button (click)="saveTermOnClick()" expand="block" color="dark">
+          <ion-icon name="save"></ion-icon>
+          <!-- Save log -->
+        </ion-button>
+
+        <ion-button (click)="eraseTermOnClick()" expand="block" color="dark">
+          <ion-icon name="trash"></ion-icon>
+          <!-- Save log -->
+        </ion-button>
+      </ion-buttons>
+    </ion-item>
+
+    <div #terminal1 id="terminal1" class="term"></div>
+    <ion-item>
+      <ion-label><h1>Source Device Log</h1></ion-label>
+
+      <ion-buttons slot="end">
+        <ion-button (click)="showDeviceInfo()" expand="block" color="dark">
+          <ion-icon name="information-circle"></ion-icon>
+        </ion-button>
+
+        <ion-button (click)="saveTerm2OnClick()" expand="block" color="dark">
+          <ion-icon name="save"></ion-icon>
+          <!-- Save log -->
+        </ion-button>
+
+        <ion-button (click)="eraseTerm2OnClick()" expand="block" color="dark">
+          <ion-icon name="trash"></ion-icon>
+          <!-- Save log -->
+        </ion-button>
+      </ion-buttons>
+    </ion-item>
+    <div #terminal2 id="terminal2" class="term"></div>
+  </div>
+
+  <div class="main">
+    <ion-item>
+      <ion-label>
+        <h1>Target Test Log</h1>
+      </ion-label>
+
+      <ion-buttons slot="end">
+        <ion-button (click)="showUser2Info()" expand="block" color="dark">
+          <ion-icon name="information-circle"></ion-icon>
+        </ion-button>
+        
+        <ion-button (click)="saveTerm3OnClick()" expand="block" color="dark">
+          <ion-icon name="save"></ion-icon>
+          <!-- Save log -->
+        </ion-button>
+
+        <ion-button (click)="eraseTerm3OnClick()" expand="block" color="dark">
+          <ion-icon name="trash"></ion-icon>
+          <!-- Save log -->
+        </ion-button>
+      </ion-buttons>
+    </ion-item>
+
+    <div #terminal3 id="terminal3" class="term2"></div>
+    <ion-item>
+      <ion-label><h1>Target Device Log</h1></ion-label>
+
+      <ion-buttons slot="end">
+        <ion-button (click)="showDevice2Info()" expand="block" color="dark">
+          <ion-icon name="information-circle"></ion-icon>
+        </ion-button>
+
+        <ion-button (click)="saveTerm4OnClick()" expand="block" color="dark">
+          <ion-icon name="save"></ion-icon>
+          <!-- Save log -->
+        </ion-button>
+
+        <ion-button (click)="eraseTerm4OnClick()" expand="block" color="dark">
+          <ion-icon name="trash"></ion-icon>
+          <!-- Save log -->
+        </ion-button>
+      </ion-buttons>
+    </ion-item>
+    <div #terminal4 id="terminal4" class="term2"></div>
+  </div>
+
+  <div class="menu">
+    <h4 class="box-title">Device</h4>
+    <div class="box-connect ion-text-center">
+      <h2 [ngClass]="stateClass">{{stateEn}}</h2>
+    </div>
+    <!-- <div class="box-connect ion-text-center" [hidden]="isConnectedToWifi()"> 
+      <ion-button color="primary" expand="full">
+        <ng-container *ngIf="isStateTesting">
+          BLUETOOTH CONFIGURATION
+          <ion-spinner name="circles"></ion-spinner>
+        </ng-container>
+      </ion-button>
+      <h2 [ngClass]="stateClass">{{stateEn}}</h2>
+    </div>
+
+    <div class="box-connect ion-text-center" [hidden]="isNotConnectedToWifiorIsTesting()"> 
+      <ion-button color="warning" expand="full">
+        <ng-container *ngIf="isStateTesting">
+          AUTHENTICATION
+          <ion-spinner name="circles"></ion-spinner>
+        </ng-container>
+      </ion-button>
+      <h2 [ngClass]="stateClass">{{stateEn}}</h2>
+    </div>
+
+    <div class="box-connect ion-text-center" [hidden]="!isStateTesting()"> 
+      <ion-button color="warning" expand="full">
+        <ng-container *ngIf="isStateTesting">
+          RUNNING TESTS
+          <ion-spinner name="circles"></ion-spinner>
+        </ng-container>
+      </ion-button>
+      <h2 [ngClass]="stateClass">{{stateEn}}</h2>
+    </div> -->
+    <h4 class="box-title">
+      Operation 
+    </h4>
+    <div class="box-connect ion-text-center">
+      <ion-row>
+        <ion-button class="choose-button" (click)="setManualOnClick()" expand="block" color="success" [hidden]="!isManual">
+          MANUAL
+        </ion-button>
+        <ion-button class="choose-button" (click)="setManualOnClick()" expand="block" color="danger" [hidden]="isManual">
+          MANUAL
+        </ion-button>
+        <ion-button class="choose-button" (click)="setAutomatedOnClick()" expand="block" color="success" [hidden]="!isAutomated">
+          AUTOMATED
+        </ion-button>
+        <ion-button class="choose-button" (click)="setAutomatedOnClick()" expand="block" color="danger" [hidden]="isAutomated">
+          AUTOMATED
+        </ion-button>
+      </ion-row>
+    </div>
+
+    <h4 class="box-title" *ngIf="isTesting && !isAutomated && !isTestingAndLocal">
+      Commands 
+    </h4>
+    <h4 class="box-title" [hidden]="!isTestingAndLocal">
+      Local Websocket
+    </h4>
+    <h4 class="box-title" [hidden]="!isTestingAndRemote">
+      Remote Websocket
+    </h4>
+    <div class="box-connect">
+      <div [hidden]="isConnectedToWifi()">
+        <ion-button (click)="scanWifiOnClick()" expand="full" color="dark" [disabled]="!isDeviceSelected()">
+          SCAN WIFI
+        </ion-button>
+        <br/>
+        <ion-button (click)="findMeOnClick()" expand="full" color="dark" [disabled]="!isDeviceSelected()">
+          FIND ME
+        </ion-button>
+        <br/>
+        <ion-button (click)="wifiConfigAndConnectOnClick()" expand="full" color="dark" [disabled]="!isDeviceSelected()">
+          CONNECT TO WIFI
+        </ion-button>
+        <br/>
+        <ion-button (click)="customBlePacketOnClick()" expand="full" color="dark" [disabled]="!isDeviceSelected()">
+          CUSTOM
+        </ion-button>
+      </div>
+
+      <div [hidden]="isNotConnectedToWifiorIsTesting()">
+        <ion-button (click)="getKey()" expand="block" color="dark" [disabled]="hasKey()">
+          GET_KEY
+        </ion-button>
+        <br/>
+        <ion-button (click)="setSecret()" expand="block" color="dark" [disabled]="isSecretSet()">
+          SET_SECRET
+        </ion-button>
+        <br/>
+        <ion-button (click)="registerDevice()" expand="block" color="dark" [disabled]="isDeviceRegistered()">
+          REGISTER_DEVICE
+        </ion-button>
+        <br/>
+        <ion-button (click)="setTicket()" expand="block" color="dark" [disabled]="isTicketSet()">
+          SET_TICKET
+        </ion-button>
+        <br/>
+        <ion-button (click)="findMeWsHandler()" expand="block" color="dark">
+          FIND_ME_WS
+        </ion-button>
+      </div>
+
+      <!-- <ion-button (click)="onRun()" color="success" expand="full">
+        <ng-container *ngIf="isTesting">
+          <ion-icon slot="start" name="play"></ion-icon>
+          teste
+        </ng-container>
+      </ion-button> -->
+
+      <div *ngIf="isTicketSet() && !isAutomated">
+        <ion-row>
+          <ion-button class="choose-button" (click)="setLocalOnClick()" expand="block" color="success" [hidden]="!isTestingAndLocal">
+            LOCAL
+          </ion-button>
+          <ion-button class="choose-button" (click)="setLocalOnClick()" expand="block" color="danger" [hidden]="isTestingAndLocal">
+            LOCAL
+          </ion-button>
+          <ion-button class="choose-button" (click)="setRemoteOnClick()" expand="block" color="success" [hidden]="!isTestingAndRemote">
+            REMOTE
+          </ion-button>
+          <ion-button class="choose-button" (click)="setRemoteOnClick()" expand="block" color="danger" [hidden]="isTestingAndRemote">
+            REMOTE
+          </ion-button>
+        </ion-row>
+
+        <ion-row>
+          <ion-input type="number" [(ngModel)]="eraseIrIndex" value=1 placeholder="id"></ion-input>
+          <ion-input type="number" [(ngModel)]="eraseIrDelay" value=0 placeholder="id"></ion-input>
+          <ion-button class="op-button1" (click)="eraseIrOnClick()" expand="block" color="dark">
+            ERASE_IR
+          </ion-button>
+          <ion-input type="number" [(ngModel)]="eraseIrId" value=1 placeholder="id"></ion-input>
+        </ion-row>
+
+        <ion-row>
+          <ion-input type="number" [(ngModel)]="getIrIndex" value=1 placeholder="id"></ion-input>
+          <ion-input type="number" [(ngModel)]="getIrDelay" value=0 placeholder="id"></ion-input>
+          <ion-button class="op-button" (click)="getIrOnClick()" expand="block" color="dark">
+            GET_IR
+          </ion-button>
+        </ion-row>
+
+        <ion-row>
+          <ion-input type="number" [(ngModel)]="setIrIndex" value=1 placeholder="id"></ion-input>
+          <ion-input type="number" [(ngModel)]="setIrDelay" value=0 placeholder="id"></ion-input>
+          <ion-button class="op-button2" (click)="setIrOnClick()" expand="block" color="dark">
+            SET_IR
+          </ion-button>
+          <ion-input type="number" [(ngModel)]="setIrId" value=1 placeholder="id"></ion-input>
+          <ion-input type="number" [(ngModel)]="setIrCh" value=3 placeholder="id"></ion-input>
+        </ion-row>
+
+        <ion-row>
+          <ion-input type="number" [(ngModel)]="getInfoIndex" value=1 placeholder="id"></ion-input>
+          <ion-input type="number" [(ngModel)]="getInfoDelay" value=0 placeholder="id"></ion-input>
+          <ion-button class="op-button" (click)="getInfoOnClick()" expand="block" color="dark">
+            GET_INFO
+          </ion-button>
+        </ion-row>
+
+        <ion-row>
+          <ion-input type="number" [(ngModel)]="cancelIrIndex" value=1 placeholder="id"></ion-input>
+          <ion-input type="number" [(ngModel)]="cancelIrDelay" value=0 placeholder="id"></ion-input>
+          <ion-button class="op-button" (click)="cancelIrOnClick()" expand="block" color="dark">
+            CANCEL_IR
+          </ion-button>
+        </ion-row>
+
+        <ion-row>
+          <ion-input type="number" [(ngModel)]="editIrIndex" value=1 placeholder="id"></ion-input>
+          <ion-input type="number" [(ngModel)]="editIrDelay" value=0 placeholder="id"></ion-input>
+          <ion-button class="op-button1" (click)="editIrOnClick()" expand="block" color="dark">
+            EDIT_IR
+          </ion-button>
+          <ion-input type="number" [(ngModel)]="editIrId" value=1 placeholder="id"></ion-input>
+        </ion-row>
+
+        <ion-row>
+          <ion-input type="number" [(ngModel)]="runSceneIndex" value=1 placeholder="id"></ion-input>
+          <ion-input type="number" [(ngModel)]="runSceneDelay" value=0 placeholder="id"></ion-input>
+          <ion-button class="op-button" (click)="runSceneOnClick()" expand="block" color="dark">
+            RUN_SCENE
+          </ion-button>
+        </ion-row>
+
+        <ion-row>
+          <ion-input type="number" [(ngModel)]="facResetIndex" value=1 placeholder="id"></ion-input>
+          <ion-input type="number" [(ngModel)]="facResetDelay" value=0 placeholder="id"></ion-input>
+          <ion-button class="op-button" (click)="facResetOnClick()" expand="block" color="dark">
+            FAC_RESET
+          </ion-button> 
+        </ion-row>
+
+        <ion-row>
+          <ion-input type="number" [(ngModel)]="getHeapIndex" value=1 placeholder="id"></ion-input>
+          <ion-input type="number" [(ngModel)]="getHeapDelay" value=0 placeholder="id"></ion-input>
+          <ion-button class="op-button" (click)="getHeapOnClick()" expand="block" color="dark">
+            GET_HEAP
+          </ion-button>
+        </ion-row>
+
+        <ion-row>
+          <ion-input type="number" [(ngModel)]="resetIndex" value=1 placeholder="id"></ion-input>
+          <ion-input type="number" [(ngModel)]="resetDelay" value=0 placeholder="id"></ion-input>
+          <ion-button class="op-button" (click)="resetOnClick()" expand="block" color="dark">
+            RESET
+          </ion-button>
+        </ion-row>
+        
+        <ion-row>
+          <ion-input type="number" [(ngModel)]="bleOnIndex" value=1 placeholder="id"></ion-input>
+          <ion-input type="number" [(ngModel)]="bleOnDelay" value=0 placeholder="id"></ion-input>
+          <ion-button class="op-button" (click)="bleOnOnClick()" expand="block" color="dark">
+            BLE_ON
+          </ion-button>
+        </ion-row>
+        
+        <ion-row>
+          <ion-input type="number" [(ngModel)]="bleOffIndex" value=1 placeholder="id"></ion-input>
+          <ion-input type="number" [(ngModel)]="bleOffDelay" value=0 placeholder="id"></ion-input>
+          <ion-button class="op-button" (click)="bleOffOnClick()" expand="block" color="dark">
+            BLE_OFF
+          </ion-button>
+        </ion-row>
+      
+        <ion-row>
+          <ion-input type="number" [(ngModel)]="findMeIndex" value=1 placeholder="id"></ion-input>
+          <ion-input type="number" [(ngModel)]="findMeDelay" value=0 placeholder="id"></ion-input>
+          <ion-button class="op-button" (click)="findMeWsOnClick()" expand="block" color="dark">
+            FIND_ME
+          </ion-button>
+        </ion-row>
+
+        <ion-row>
+          <ion-input type="number" [(ngModel)]="customIndex" value=1 placeholder="id"></ion-input>
+          <ion-input type="number" [(ngModel)]="customDelay" value=0 placeholder="id"></ion-input>
+          <ion-button class="op-button" (click)="customOnClick()" expand="block" color="dark">
+            CUSTOM
+          </ion-button>
+        </ion-row>
+
+        <!-- <ion-item lines="none">
+          <ion-textarea rows="6" cols="20" [disabled]="!connected" [(ngModel)]="send"></ion-textarea>
+        </ion-item> -->
+      </div>
+    </div>
+
+    <h4 class="box-title" [hidden]="localStress" [hidden]="isManual">Automated tests</h4>
+    <h4 class="box-title" [hidden]="!localStress">Stress tests</h4>
+    <div class="box-connect ion-text-center" [hidden]="isManual">
+      <div [hidden]="localStress">
+        <ion-button (click)="localTestOnClick()" color="dark" expand="full" [disabled]="!isTicketSet()">
+          LOCAL TESTS
+        </ion-button>
+        <br/>
+
+        <ion-button (click)="localStressTestOnClick()" color="dark" expand="full" [disabled]="!isTicketSet()">
+          LOCAL STRESS TESTS
+        </ion-button>
+        <br/>
+
+        <ion-button (click)="onRun()" color="dark" expand="full" [disabled]="!isTicketSet()">
+          REMOTE TESTS
+        </ion-button>
+        <br/>
+
+        <ion-button (click)="onRun()" color="dark" expand="full" [disabled]="!isTicketSet()">
+          REMOTE STRESS TESTS
+        </ion-button>
+      </div>
+
+      <div [hidden]="!localStress">
+        <ion-button (click)="stressEraseIrOnClick()" color="dark" expand="full">
+          ERASE_IR
+        </ion-button>
+        <br/>
+        <ion-button (click)="stressGetIrOnClick()" color="dark" expand="full">
+          GET_IR
+        </ion-button>
+        <br/>
+        <ion-button (click)="stressSetIrOnClick()" color="dark" expand="full">
+          SET_IR
+        </ion-button>
+        <br/>
+        <ion-button (click)="stressGetInfoOnClick()" color="dark" expand="full">
+          GET_INFO
+        </ion-button>
+        <br/>
+        <ion-button (click)="stressCancelIrOnClick()" color="dark" expand="full">
+          CANCEL_IR
+        </ion-button>
+        <br/>
+        <ion-button (click)="stressRunSceneOnClick()" color="dark" expand="full">
+          RUN_SCENE
+        </ion-button>
+        <br/>
+        <ion-button (click)="stressBleOnOffOnClick()" color="dark" expand="full">
+          BLE_ON / BLE_OFF
+        </ion-button>
+        <br/>
+        <ion-button (click)="stressFindMeOnClick()" color="dark" expand="full">
+          FIND_ME
+        </ion-button>
+        <br/>
+        <ion-button (click)="stressInfraredOnClick()" color="dark" expand="full">
+          INFRARED
+        </ion-button>
+        <br/>
+        <ion-button (click)="stopStressTestOnClick()" color="danger" expand="full">
+          STOP
+        </ion-button>
+      </div>
+    </div>
+
+    <!-- <h4 class="box-title">Operation (程序)</h4>
+      <div class="box-connect">
+        <ion-button (click)="onRun()" color="success" expand="full" [disabled]="!canRun()">
+          <ng-container *ngIf="!isTesting">
+            <ion-icon slot="start" name="play"></ion-icon>
+            RUN FCT (测试)
+          </ng-container>
+          <ng-container *ngIf="isTesting">
+            <ion-spinner name="circles"></ion-spinner>
+          </ng-container>
+        </ion-button>
+      </div> -->
+
+    <!-- <h4 class="box-title">Operation (程序)</h4>
+    <div class="box-connect">
+      <ion-button (click)="onBurnFirmware()" color="danger" expand="full" [disabled]="!canBurn()">
+        <ng-container *ngIf="!isBurning">
+          <ion-icon slot="start" name="flame-outline"></ion-icon>
+          Burn FIRMWARE (烧录固件)
+        </ng-container>
+        <ng-container *ngIf="isBurning">
+          <ion-spinner name="circles"></ion-spinner>
+        </ng-container>
+      </ion-button>
+      <br />
+      <ion-button (click)="onRun()" color="success" expand="full" [disabled]="!canRun()">
+        <ng-container *ngIf="!isTesting">
+          <ion-icon name="play"></ion-icon>
+          RUN FCT (测试)
+        </ng-container>
+        <ng-container *ngIf="isTesting">
+          <ion-spinner name="circles"></ion-spinner>
+        </ng-container>
+      </ion-button>
+    </div> -->
+
+  </div>
+</div>
+<!-- 
+
+<ion-menu side="start" menuId="first" contentId="main">
+  <ion-header>
+    <ion-toolbar color="primary">
+      <ion-title>Start Menu</ion-title>
+    </ion-toolbar>
+  </ion-header>
+  <ion-content>
+    <ion-list>
+      <ion-item>Menu Item</ion-item>
+      <ion-item>Menu Item</ion-item>
+      <ion-item>Menu Item</ion-item>
+      <ion-item>Menu Item</ion-item>
+      <ion-item>Menu Item</ion-item>
+    </ion-list>
+  </ion-content>
+</ion-menu> -->
+</ion-content>
