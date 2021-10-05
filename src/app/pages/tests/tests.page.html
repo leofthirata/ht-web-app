@@ -133,12 +133,10 @@
         
         <ion-button (click)="saveTerm3OnClick()" expand="block" color="dark">
           <ion-icon name="save"></ion-icon>
-          <!-- Save log -->
         </ion-button>
 
         <ion-button (click)="eraseTerm3OnClick()" expand="block" color="dark">
           <ion-icon name="trash"></ion-icon>
-          <!-- Save log -->
         </ion-button>
       </ion-buttons>
     </ion-item>
@@ -154,12 +152,10 @@
 
         <ion-button (click)="saveTerm4OnClick()" expand="block" color="dark">
           <ion-icon name="save"></ion-icon>
-          <!-- Save log -->
         </ion-button>
 
         <ion-button (click)="eraseTerm4OnClick()" expand="block" color="dark">
           <ion-icon name="trash"></ion-icon>
-          <!-- Save log -->
         </ion-button>
       </ion-buttons>
     </ion-item>
@@ -245,6 +241,10 @@
         <br/>
         <ion-button (click)="customBlePacketOnClick()" expand="full" color="dark" [disabled]="!isDeviceSelected()">
           CUSTOM
+        </ion-button>
+        <br/>
+        <ion-button (click)="testBleOnClick()" expand="full" color="dark" [disabled]="!isDeviceSelected()">
+          TEST BLE
         </ion-button>
       </div>
 

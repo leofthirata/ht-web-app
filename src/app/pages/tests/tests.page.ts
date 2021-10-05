@@ -238,6 +238,16 @@ export class TestsPage implements AfterViewInit {
     this.dev.connectToWifiOnClick(this.wifiSsid, this.wifiPassword, this.wifiBssid);
   }
 
+  public async testBleOnClick() {
+    for(let i = 0; i < 50; i++) {
+      await this.dev.connectToWifi(this.wifiSsid, this.wifiPassword, this.wifiBssid);
+      await timeout_ms(2000);
+      await this.dev.facResetWsHandler();
+      await timeout_ms(7000);
+      console.log(i);
+    }
+  }
+
   public async customBlePacketOnClick() {
     const alert = await this.alertController.create({
       header: 'CUSTOM CMD',

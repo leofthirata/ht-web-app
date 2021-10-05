@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { PopoverController, } from '@ionic/angular';
 
 @Component({
@@ -6,6 +6,7 @@ import { PopoverController, } from '@ionic/angular';
   templateUrl: './device-info.component.html',
   styleUrls: ['./device-info.component.scss'],
 })
+
 export class DeviceInfoComponent implements OnInit {
   device;
 

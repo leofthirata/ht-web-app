@@ -378,6 +378,27 @@ export class DeviceService {
     // this.nav.navigateForward('authentication', { state: this.m_ble.getIp() });
   }
 
+
+  public async connectToWifi(ssid, pswd, bssid) {
+    return new Promise(async res => {
+      this.wifiSsid = ssid;
+      this.wifiPassword = pswd;
+      this.wifiBssid = bssid;
+  
+      await this.m_ble.connect();
+      await this.m_ble.getService();
+      await this.m_ble.getCharacteristics();
+      await this.m_ble.connectToWifi(this.wifiSsid, this.wifiPassword, this.wifiBssid);
+      this.m_ip = this.m_ble.getIp();
+      console.log(this.m_ip)
+      this.m_auth = new AuthService();
+      await this.m_ble.disconnect();
+      this.operation = Operation.AUTH;
+      // this.nav.navigateForward('authentication', { state: this.m_ble.getIp() });
+      res(true);
+    });
+  }
+
   public async customBlePacketOnClick(data) {
     await this.m_ble.connect();
     await this.m_ble.getService();
@@ -498,9 +519,19 @@ export class DeviceService {
     
     this.socket.setState(DeviceState.FIND_ME);
 
-    this.socket.localRequest(`ws://${this.m_ip}/findme`, request, this.m_myPrivKey, this.m_devicePublicKey);
+    this.socket.localRequest(`ws://${this.m_ip}/findme`, request);
 
     this.socket.setState(DeviceState.SEND_CMD);
+  }
+
+  public async facResetWsHandler() {
+    let request = { 
+      'fac_reset': 'true',
+    };
+    
+    this.socket.setState(DeviceState.FIND_ME);
+
+    this.socket.localRequest(`ws://${this.m_ip}/fac_reset`, request);
   }
 
   public enableTesting() {
@@ -1002,6 +1033,37 @@ export class DeviceService {
     this.stateClass = 'state-disconnected';
   
     this.operation = Operation.BLE;
+  }
+
+  public restart() {
+    // this.deviceSelected = false;
+    // this.m_ble = new BluetoothService(this.bleMac);
+    this.socket = new WebSocketService();
+    this.socket.setState(DeviceState.GET_KEY);
+    this.m_ip = '';
+    this.m_auth = null;
+    this.manualLocalTest = null;
+    this.manualRemoteTest = null;
+    this.local = true;
+    this.remoteRequest = null;
+  
+    this.m_devicePublicKey = null;
+    this.m_secret = null;
+    this.m_deviceTicket = null;
+    this.m_deviceUuid = null;
+    this.m_userTicket = null;
+    this.m_userUuid = null;
+    this.gotKey = false;
+    this.secretSet = false;
+    this.ticketSet = false;
+    this.deviceRegistered = false;
+  
+    // testing
+    this.m_deviceToken = null;
+    this.m_myPubKey = null; 
+    this.m_myPubKeyPem = null; 
+    this.m_myPrivKey = null;
+    this.m_myPrivKeyPem = null;
   }
 
   public logger$(): Observable<any> {

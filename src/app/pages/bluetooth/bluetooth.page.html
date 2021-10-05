@@ -3,7 +3,7 @@
     <ion-buttons slot="start">
       <ion-menu-button menu="main-menu"></ion-menu-button>
     </ion-buttons>
-    <ion-title>bluetooth</ion-title>
+    <ion-title>Bluetooth</ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -19,7 +19,7 @@
 
   <ion-item lines="none">
     <ion-label class="labels" fixed>Package</ion-label>
-    <ion-input [disabled]="teste" class="rounded" type="text" [(ngModel)]="package" placeholder="Enter HEX here"></ion-input>
+    <ion-input class="rounded" type="text" [(ngModel)]="package" placeholder="Enter HEX here"></ion-input>
   </ion-item>
 
   <ion-item lines="none">
@@ -52,10 +52,114 @@
     <ion-input [readonly]="isReadOnly" class="rounded" type="text" [(ngModel)]="pResult"></ion-input>
   </ion-item>
 
-  <ion-item lines="none" id="rounded">
+  <ion-item lines="none">
     <ion-label class="labels" fixed>Decrypted</ion-label>
     <ion-input [readonly]="isReadOnly" class="rounded" type="text" [(ngModel)]="pDec"></ion-input>
   </ion-item>
+
+  <ion-item lines="none">
+    <ion-label class="labels" fixed>CMD</ion-label>
+    <ion-input [readonly]="isReadOnly" class="rounded" type="text" [(ngModel)]="pCmd"></ion-input>
+  </ion-item>
+
+  <ion-item lines="none">
+    <ion-label class="labels" fixed>CRC</ion-label>
+    <ion-input [readonly]="isReadOnly" class="rounded" type="text" [(ngModel)]="pCrc"></ion-input>
+  </ion-item>
+
+  <ion-item lines="none">
+    <ion-label class="labels" fixed>Data (hex)</ion-label>
+    <ion-input [readonly]="isReadOnly" class="rounded" type="text" [(ngModel)]="pData"></ion-input>
+  </ion-item>
+
+  <ng-container *ngIf="isDone">
+    <ion-item lines="none">
+      <ion-label class="labels" fixed>Response</ion-label>
+      <ion-input [readonly]="isReadOnly" class="rounded" type="text" [(ngModel)]="pResp"></ion-input>
+    </ion-item>
+  </ng-container>
+
+  <ng-container *ngIf="isScanWifi">
+    <ng-container *ngIf="isSent">
+      <ion-item lines="none">
+        <ion-label class="labels" fixed>AP TOTAL</ion-label>
+        <ion-input [readonly]="isReadOnly" class="rounded" type="text" [(ngModel)]="apTotal"></ion-input>
+      </ion-item>
+    </ng-container>
+
+    <ng-container *ngIf="isRcvd">
+      <ion-item lines="none">
+        <ion-label class="labels" fixed>AP FOUND</ion-label>
+        <ion-input [readonly]="isReadOnly" class="rounded" type="text" [(ngModel)]="apFound"></ion-input>
+      </ion-item>
+
+      <ion-item lines="none">
+        <ion-label class="labels" fixed>AP COUNT</ion-label>
+        <ion-input [readonly]="isReadOnly" class="rounded" type="text" [(ngModel)]="apNum"></ion-input>
+      </ion-item>
+
+      <ion-item lines="none">
+        <ion-label class="labels" fixed>SSID</ion-label>
+        <ion-input [readonly]="isReadOnly" class="rounded" type="text" [(ngModel)]="ssid"></ion-input>
+      </ion-item>
+
+      <ion-item lines="none">
+        <ion-label class="labels" fixed>RSSI</ion-label>
+        <ion-input [readonly]="isReadOnly" class="rounded" type="text" [(ngModel)]="rssi"></ion-input>
+      </ion-item>
+
+      <ion-item lines="none">
+        <ion-label class="labels" fixed>AUTH</ion-label>
+        <ion-input [readonly]="isReadOnly" class="rounded" type="text" [(ngModel)]="auth"></ion-input>
+      </ion-item>
+
+      <ion-item lines="none">
+        <ion-label class="labels" fixed>CIPH</ion-label>
+        <ion-input [readonly]="isReadOnly" class="rounded" type="text" [(ngModel)]="ciph"></ion-input>
+      </ion-item>
+
+      <ion-item lines="none">
+        <ion-label class="labels" fixed>BSSID</ion-label>
+        <ion-input [readonly]="isReadOnly" class="rounded" type="text" [(ngModel)]="bssid"></ion-input>
+      </ion-item>
+    </ng-container>
+  </ng-container>
+
+  <ng-container *ngIf="isConnectWifi">
+    <ng-container *ngIf="isRcvd">
+      <ion-item lines="none">
+        <ion-label class="labels" fixed>REG</ion-label>
+        <ion-input [readonly]="isReadOnly" class="rounded" type="text" [(ngModel)]="reg"></ion-input>
+      </ion-item>
+
+      <ion-item lines="none">
+        <ion-label class="labels" fixed>IP</ion-label>
+        <ion-input [readonly]="isReadOnly" class="rounded" type="text" [(ngModel)]="ip"></ion-input>
+      </ion-item>
+
+      <ion-item lines="none">
+        <ion-label class="labels" fixed>STA MAC</ion-label>
+        <ion-input [readonly]="isReadOnly" class="rounded" type="text" [(ngModel)]="staMac"></ion-input>
+      </ion-item>
+    </ng-container>
+
+    <ng-container *ngIf="isSent">
+      <ion-item lines="none">
+        <ion-label class="labels" fixed>SSID</ion-label>
+        <ion-input [readonly]="isReadOnly" class="rounded" type="text" [(ngModel)]="ssid"></ion-input>
+      </ion-item>
+  
+      <ion-item lines="none">
+        <ion-label class="labels" fixed>PSWD</ion-label>
+        <ion-input [readonly]="isReadOnly" class="rounded" type="text" [(ngModel)]="pswd"></ion-input>
+      </ion-item>
+  
+      <ion-item lines="none">
+        <ion-label class="labels" fixed>BSSID</ion-label>
+        <ion-input [readonly]="isReadOnly" class="rounded" type="text" [(ngModel)]="bssid"></ion-input>
+      </ion-item>
+    </ng-container>
+  </ng-container>
 
   <ion-item>
     <ion-button (click)="clearOnClick()">

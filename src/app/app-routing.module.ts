@@ -23,6 +23,8 @@
 
 import { NgModule } from '@angular/core';
 import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { IonicModule } from '@ionic/angular';
 
 const routes: Routes = [
   { path: '', redirectTo: 'tests', pathMatch: 'full' },
@@ -54,7 +56,9 @@ const routes: Routes = [
 
 @NgModule({
   imports: [
-    RouterModule.forRoot(routes, { preloadingStrategy: PreloadAllModules })
+    RouterModule.forRoot(routes, { preloadingStrategy: PreloadAllModules }),
+    CommonModule,
+    IonicModule
   ],
   exports: [RouterModule]
 })

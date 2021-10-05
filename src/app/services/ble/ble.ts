@@ -139,24 +139,24 @@ export class BluetoothService {
         if (this.mode == bleMode.SCAN) {
           if ((this.m_rslt.n) && (this.m_rslt.n == this.m_rslt.ap)) {
             console.log("n == ap")
+            resolve(true);
             notify.removeEventListener('characteristicvaluechanged', read);
             await this.m_readCharacteristic.stopNotifications();
-            resolve(true);
           }
         }
         else if (this.mode == bleMode.CONN) {
           if (this.isIpValid(rslt)) {
             console.log("n == true")
             this.m_rslt = rslt;
+            resolve(true);
             notify.removeEventListener('characteristicvaluechanged', read);
             await this.m_readCharacteristic.stopNotifications();
-            resolve(true);
           }
         }
         else if (this.mode == bleMode.FIND_ME) {
+            resolve(true);
             notify.removeEventListener('characteristicvaluechanged', read);
             await this.m_readCharacteristic.stopNotifications();
-            resolve(true);
           }
       }
       
@@ -294,6 +294,7 @@ export class BluetoothService {
       const request = new Packet(bleMode.CONN);
 
       console.log(request);
+      console.log()
 
       const data = {
         "ap": null,
@@ -386,9 +387,11 @@ export class BluetoothService {
 
   private isIpValid(ip: string) {  
     if (/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(ip)) {  
+      console.log('valid ip');
       return true;  
-    }  
-    // throw `Invalid IP address: ${ip}`;  
+    } else {
+      return false;
+    } 
   } 
 
   private setMode(mode: bleMode) {
