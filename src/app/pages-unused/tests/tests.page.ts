@@ -26,7 +26,7 @@ import { getAccessToken, sync, createPlace, createEnvironment, createDevice } fr
 // logger
 import { download } from '../../utils/logger';
 import { DeviceService } from '../../services/device/device';
-import { oneLocalStress } from '../../services/testing/auto-local-stress';
+import { oneLocalStress } from '../../services/testing/one/auto-local-stress';
 import { oneLocal } from '../../services/testing/auto-local';
 
 import Keycloak from 'keycloak-js';
@@ -234,17 +234,64 @@ export class TestsPage implements AfterViewInit {
     this.dev.findMeOnClick();
   }
 
-  public connectToWifiOnClick() {
+  private connectToWifiOnClick() {
     this.dev.connectToWifiOnClick(this.wifiSsid, this.wifiPassword, this.wifiBssid);
   }
 
   public async testBleOnClick() {
+    const alert = await this.alertController.create({
+      header: 'Wi-Fi Configuration',
+      inputs: [
+        {
+          name: 'ssid',
+          type: 'text',
+          value: this.wifiSsid,
+          placeholder: 'Enter ssid'
+        },
+        {
+          name: 'pswd',
+          type: 'text',
+          value: this.wifiPassword,
+          placeholder: 'Enter password'
+        },
+        {
+          name: 'bssid',
+          type: 'text',
+          value: this.wifiBssid,
+          placeholder: 'Enter bssid (ex.: 0263DA3A342A)'
+        }
+      ],
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel',
+          cssClass: 'secondary',
+          handler: () => {
+            console.log('Confirm Cancel');
+          }
+        }, {
+          text: 'Ok',
+          handler: async ans => {
+            console.log(ans.pswd);
+            this.wifiSsid = ans.ssid;
+            this.wifiPassword = ans.pswd;
+            this.wifiBssid = ans.bssid;
+            this.testBlePacketRcv();
+          }
+        }
+      ]
+    });
+
+    await alert.present();
+  }
+
+  private async testBlePacketRcv() {
     for(let i = 0; i < 50; i++) {
       await this.dev.connectToWifi(this.wifiSsid, this.wifiPassword, this.wifiBssid);
       await timeout_ms(2000);
       await this.dev.facResetWsHandler();
       await timeout_ms(7000);
-      console.log(i);
+      console.log(i+1);
     }
   }
 
@@ -658,7 +705,7 @@ export class TestsPage implements AfterViewInit {
             this.wifiSsid = ans.ssid;
             this.wifiPassword = ans.pswd;
             this.wifiBssid = ans.bssid;
-            this.connectToWifiOnClick()          
+            this.connectToWifiOnClick();
           }
         }
       ]

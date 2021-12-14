@@ -9,9 +9,8 @@
 
 // production
 const backend = `https://cloud1.hausenn.com.br/devices-service/v1`;
-// const refreshTokenRoute = `https://auth.hausenn.com.br/auth/realms/hausenn/protocol/openid-connect/token`;
-const refreshTokenRoute = `https://pado.hausenn.com.br/auth/realms/hausenn/protocol/openid-connect/token`;
-const refreshToken = "eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICI2NTZkZTY4Yi1mMGVjLTQzOTEtODk4Yi0xMjliNWRhYWExYjkifQ.eyJpYXQiOjE2Mzk0OTkwMDEsImp0aSI6IjUwOGM1NjQ3LWVkNDgtNDE2NC1iODIwLWRhNzdlZjljZjIyMyIsImlzcyI6Imh0dHBzOi8vYXV0aC5oYXVzZW5uLmNvbS5ici9hdXRoL3JlYWxtcy9oYXVzZW5uIiwiYXVkIjoiaHR0cHM6Ly9hdXRoLmhhdXNlbm4uY29tLmJyL2F1dGgvcmVhbG1zL2hhdXNlbm4iLCJzdWIiOiJjOGY2NzkxMy0zNGJjLTRmNDQtYTNjZC00OTEzNjY1NzBkMjYiLCJ0eXAiOiJPZmZsaW5lIiwiYXpwIjoiaGF1c2Vubi1jbGllbnQtYXBwIiwic2Vzc2lvbl9zdGF0ZSI6ImRkYTZkYzJhLTNkYmYtNDA0Yy04Yzk4LWU4NWU0YmE1M2M1NyIsInNjb3BlIjoib3BlbmlkIG9mZmxpbmVfYWNjZXNzIGVtYWlsIHByb2ZpbGUifQ.bcDKkixRqdNqhJJ9NGcJD0kyvInef9l4PCbDix-Npv4";
+const refreshTokenRoute = `https://auth.hausenn.com.br/auth/realms/hausenn/protocol/openid-connect/token`;
+const refreshToken = "eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICI2NTZkZTY4Yi1mMGVjLTQzOTEtODk4Yi0xMjliNWRhYWExYjkifQ.eyJpYXQiOjE2Mjc1NzM5MzYsImp0aSI6IjM3ZjQ3Y2E3LWI0NDUtNGE5My1hMzFlLTA5YWY1ZjgzNWEyMiIsImlzcyI6Imh0dHBzOi8vYXV0aC5oYXVzZW5uLmNvbS5ici9hdXRoL3JlYWxtcy9oYXVzZW5uIiwiYXVkIjoiaHR0cHM6Ly9hdXRoLmhhdXNlbm4uY29tLmJyL2F1dGgvcmVhbG1zL2hhdXNlbm4iLCJzdWIiOiJjOGY2NzkxMy0zNGJjLTRmNDQtYTNjZC00OTEzNjY1NzBkMjYiLCJ0eXAiOiJPZmZsaW5lIiwiYXpwIjoiaGF1c2Vubi1jbGllbnQtYXBwIiwic2Vzc2lvbl9zdGF0ZSI6IjlhN2ZlODAyLWQxYzItNGMwYy1hN2YyLTdkNzk0NzQ5YWU2MSIsInNjb3BlIjoib3BlbmlkIG9mZmxpbmVfYWNjZXNzIGVtYWlsIHByb2ZpbGUifQ.sl2jtOIjbUN7smaxw_Nf3FquPKCtAp9BjKQXtutBfD4";
 
 // const refreshTokenRoute = `https://cloud1.hausenn.com.br/auth/realms/hausenn/protocol/openid-connect/token`;
 
@@ -20,7 +19,6 @@ const key = '02E596CDAB2D81320A94BFD6D52BAFAE';
 export async function getAccessToken(rToken: string): Promise<string> {
   let res = await fetch(`${refreshTokenRoute}`, {
                         method: 'post',
-                        mode: 'cors',
                         body: `client_id=hausenn-client-app&grant_type=refresh_token&refresh_token=${rToken}`,
                         headers: {'Content-Type': 'application/x-www-form-urlencoded'}
                       });

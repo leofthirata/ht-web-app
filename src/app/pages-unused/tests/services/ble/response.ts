@@ -52,8 +52,13 @@ export class PacketResponse {
   private _createScanResponse(): Promise<any> {
     return new Promise(resolve => {
       console.log(this.m_data);
+      // const ssid = Cast.bytesToString(new Uint8Array(this.m_data.subarray(4, this.m_data.length - 4)));
+      // const rssi = this.m_data.subarray(this.m_data.length - 3, this.m_data.length - 2)[0];
+      // const authIndex = this.m_data.subarray(this.m_data.length - 2, this.m_data.length - 1)[0];
+      // const ciphIndex = this.m_data.subarray(this.m_data.length - 1, this.m_data.length)[0];
 
       const ssid = Cast.bytesToString(new Uint8Array(this.m_data.subarray(4, this.m_data.length - 10)));
+      // this.m_data.subarray(this.m_data.length - 10, this.m_data.length - 9) is the 0 to sinalize end of ssid
       const rssi = this.m_data.subarray(this.m_data.length - 9, this.m_data.length - 8)[0];
       const authIndex = this.m_data.subarray(this.m_data.length - 8, this.m_data.length - 7)[0];
       const ciphIndex = this.m_data.subarray(this.m_data.length - 7, this.m_data.length - 6)[0];
@@ -70,6 +75,8 @@ export class PacketResponse {
       };
       resolve(res);
     });
+
+    // TODO: print all APs correctly until n == ap
   }
 
   private _createConnResponse(): Promise<any> {

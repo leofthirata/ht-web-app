@@ -11,12 +11,14 @@
       <ion-buttons slot="end">
         <ion-button (click)="deviceSelectionOnClick()" expand="full" color="dark">
           <ion-icon name="bluetooth-outline"></ion-icon>
+          <!-- BLE -->
         </ion-button>
       </ion-buttons>
 
       <ion-buttons slot="end">
         <ion-button (click)="onConnectDevice()" expand="full" color="dark" [hidden]="isPortConnected()">
           <ion-icon name="flash-outline"></ion-icon>
+          <!-- SERIAL -->
         </ion-button>
       </ion-buttons>
 
@@ -51,7 +53,8 @@
 
       <ion-buttons slot="end" class="button-end">
         <ion-button (click)="shareOnClick()" expand="full" color="dark" [disabled]="!deviceRegistered">
-          <ion-icon name="person-add"></ion-icon>
+        <!-- <ion-button expand="full" color="dark" [disabled]="!deviceRegistered"> -->
+            <ion-icon name="person-add"></ion-icon>
         </ion-button>
       </ion-buttons>
 
@@ -63,7 +66,8 @@
 
       <ion-buttons slot="end" class="button-end">
         <ion-button (click)="logoutOnClick()" expand="full" color="dark">
-          <ion-icon name="log-out-outline"></ion-icon>        
+        <!-- <ion-button expand="full" color="dark"> -->
+            <ion-icon name="log-out-outline"></ion-icon>        
         </ion-button>
       </ion-buttons>
   </ion-toolbar>
@@ -79,7 +83,8 @@
 
       <ion-buttons slot="end">
         <ion-button (click)="showUserInfo()" expand="block" color="dark">
-          <ion-icon name="information-circle"></ion-icon>
+        <!-- <ion-button expand="block" color="dark"> -->
+            <ion-icon name="information-circle"></ion-icon>
         </ion-button>
         <!-- <ion-item>
           <ion-textarea rows="15">{{teste}}</ion-textarea>
@@ -103,7 +108,8 @@
 
       <ion-buttons slot="end">
         <ion-button (click)="showDeviceInfo()" expand="block" color="dark">
-          <ion-icon name="information-circle"></ion-icon>
+        <!-- <ion-button expand="block" color="dark"> -->
+            <ion-icon name="information-circle"></ion-icon>
         </ion-button>
 
         <ion-button (click)="saveTerm2OnClick()" expand="block" color="dark">
@@ -128,7 +134,8 @@
 
       <ion-buttons slot="end">
         <ion-button (click)="showUser2Info()" expand="block" color="dark">
-          <ion-icon name="information-circle"></ion-icon>
+        <!-- <ion-button expand="block" color="dark"> -->
+            <ion-icon name="information-circle"></ion-icon>
         </ion-button>
         
         <ion-button (click)="saveTerm3OnClick()" expand="block" color="dark">
@@ -147,7 +154,8 @@
 
       <ion-buttons slot="end">
         <ion-button (click)="showDevice2Info()" expand="block" color="dark">
-          <ion-icon name="information-circle"></ion-icon>
+        <!-- <ion-button expand="block" color="dark"> -->
+            <ion-icon name="information-circle"></ion-icon>
         </ion-button>
 
         <ion-button (click)="saveTerm4OnClick()" expand="block" color="dark">
@@ -429,13 +437,15 @@
         </ion-button>
         <br/>
 
-        <ion-button (click)="onRun()" color="dark" expand="full" [disabled]="!isTicketSet()">
-          REMOTE TESTS
+        <!-- <ion-button (click)="onRun()" color="dark" expand="full" [disabled]="!isTicketSet()"> -->
+        <ion-button color="dark" expand="full" [disabled]="!isTicketSet()">
+            REMOTE TESTS
         </ion-button>
         <br/>
 
-        <ion-button (click)="onRun()" color="dark" expand="full" [disabled]="!isTicketSet()">
-          REMOTE STRESS TESTS
+        <!-- <ion-button (click)="onRun()" color="dark" expand="full" [disabled]="!isTicketSet()"> -->
+        <ion-button color="dark" expand="full" [disabled]="!isTicketSet()">
+            REMOTE STRESS TESTS
         </ion-button>
       </div>
 
@@ -472,7 +482,8 @@
           FIND_ME
         </ion-button>
         <br/>
-        <ion-button (click)="stressInfraredOnClick()" color="dark" expand="full">
+        <!-- <ion-button (click)="stressInfraredOnClick()" color="dark" expand="full"> -->
+        <ion-button color="dark" expand="full">
           INFRARED
         </ion-button>
         <br/>

@@ -1,0 +1,120 @@
+.button-end {
+  padding-right: 2.5em;
+}
+
+.choose-button {
+  width: 48.7%;
+}
+
+.op-button {
+  width: 79%;
+}
+
+.op-button1 {
+  width: 70%;
+}
+
+.op-button2 {
+  width: 60%;
+}
+
+.cog {
+  width: 50px;
+}
+
+// .middle {
+//   // align-items: center;
+//   // display: flex;
+//   // justify-content: center;
+// }
+
+.icon {
+  font-size: 30px;
+}
+
+.select {
+  padding-right: 2em;
+}
+
+// .term {
+//   width: 80%;
+//   max-width: 80%;
+//   height: 40%;
+//   max-height: 40%;
+// }
+
+// .term2 {
+//   width: 100%;
+//   max-width: 100%;
+//   height: 40%;
+//   max-height: 40%;
+// }
+
+.term {
+  flex: 1;
+  border: 1px solid white;
+}
+
+.wrapper {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: 100%;
+  padding-top: 0.5em;
+  padding-left: 1em;
+
+  .main {
+    flex: 1 1 auto;
+    flex-direction: column;
+  }
+
+  .menu {
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: column;
+    align-items: center;
+    width: 450px;
+    height: 100%;
+
+    .box-title {
+      margin-bottom: 5px;
+    }
+
+    .box-connect {
+      height: fit-content;
+      width: 80%;
+      margin: 0 1em;
+      padding: 1em;
+      border: 1px solid black;
+      border-radius: 1em;
+    }
+  }
+}
+
+h2 {
+  margin: 0;
+}
+
+.state-disconnected {
+  color: var(--ion-color-medium);
+}
+
+.state-ready {
+  color: var(--ion-color-dark);
+}
+
+.state-programming {
+  color: var(--ion-color-secondary);
+}
+
+.state-running {
+  color: var(--ion-color-primary);
+}
+
+.state-fail {
+  color: var(--ion-color-danger);
+}
+
+.state-pass {
+  color: var(--ion-color-success);
+}

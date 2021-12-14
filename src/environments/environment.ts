@@ -2,8 +2,13 @@
 // `ng build --prod` replaces `environment.ts` with `environment.prod.ts`.
 // The list of file replacements can be found in `angular.json`.
 
+import { HausennProducts } from '../app/enum/hausenn-products.enum';
+
 export const environment = {
-  production: false
+  production: false,
+  backend: 'staging',
+  product: HausennProducts.ONE,
+  keycloak: 'https://pado.hausenn.com.br/auth/',
 };
 
 /*
