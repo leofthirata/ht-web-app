@@ -53,115 +53,151 @@ export class BluetoothService {
     });
   }
 
-  public connect(): Promise<boolean> {
-    return new Promise(async resolve => {
-      this.server = await this.device.gatt.connect();
-      if (this.server) {
-        resolve(true);
-        console.log("[BLE] Connected");
-      } else {
-        resolve(false);
-        console.log("[BLE] Could not connect");
+  public async connect() {
+    this.service = undefined;
+    this.readCharacteristic = undefined;
+    this.writeCharacteristic = undefined;
+    let tries = 0;
+    while (!this.device.gatt.connected) {
+      try {
+        await this.device.gatt.connect();
+      } catch (err) {
+        console.log(err);
+
+        if (tries == 5) {
+          break;
+        }
+      } finally {
+        console.log("[BLE] Connect: " + this.device.gatt.connected);
       }
-    });
+    }
   }
 
-  public disconnect(): Promise<boolean> {
-    return new Promise(async resolve => {
-      this.device.gatt.disconnect();
-      console.log("[BLE] Disconnected by user");
-      resolve(true);
-    });
+  public disconnect() {
+    try {
+      if (this.device.gatt.connected) {
+        this.device.gatt.disconnect();
+        console.log("[BLE] Disconnected by user");
+      }
+    } catch (err) {
+      console.log(err);
+    }
   }
 
   public isConnected() {
     return this.device.gatt.connected;
   }
 
-  public getService(): Promise<boolean> {
-    return new Promise(async resolve => {
+  public async getService() {
+    let tries = 0;
+    while (this.service === undefined) {
       try {
         this.service = await this.device.gatt.getPrimaryService(this.HAUSENN_SERVICE_UUID);
-        console.log(this.service);
-        if (this.service) {
-          console.log("svc true");
-          resolve(true);
-        } else {
-          console.log("svc false");
-          resolve(false);
-        }
       } catch (err) {
-        console.log('getsvc fail');
-        await this.connect();
-        await this.getService();
+        console.log(err);
+
+        if (tries == 5) {
+          break;
+        }
+        } finally {
+          console.log(this.device.gatt.connected);
+          console.log("[BLE] Service: " + this.service);
       }
-    });
+    }
   }
 
-  public getCharacteristics(): Promise<boolean> {
-    return new Promise(async resolve => {
+  public async getCharacteristics() {
+    let tries = 0;
+
+    while (this.readCharacteristic === undefined || this.writeCharacteristic === undefined) {
       try {
         this.readCharacteristic = await this.service.getCharacteristic(
                 this.HAUSENN_READ_CHARACTERISTIC);
         this.writeCharacteristic = await this.service.getCharacteristic(
                 this.HAUSENN_WRITE_CHARACTERISTIC);
+      } catch (err) {
+        console.log(err);
 
+        if (tries == 5) {
+          break;
+        }
+        } finally {
+        console.log("[BLE] Characteristic: ");
         console.log(this.readCharacteristic);
         console.log(this.writeCharacteristic);
-        if (this.readCharacteristic && this.writeCharacteristic) {
-          console.log("chr true");
-          resolve(true);
-        } else {
-          console.log("chr false");
-          resolve(false);
-        }
-      } catch (err) {
-        console.log('getchar fail');
-        await this.connect();
-        await this.getService();
-        await this.getCharacteristics();
       }
-    });
+    }
+  }
+
+  public async startBle() {
+    let tries = 0;
+    this.service = undefined;
+    this.readCharacteristic = undefined;
+    this.writeCharacteristic = undefined;
+
+    while (this.readCharacteristic === undefined || this.writeCharacteristic === undefined) {
+      try {
+        await this.device.gatt.connect();
+        this.service = await this.device.gatt.getPrimaryService(this.HAUSENN_SERVICE_UUID);
+        this.readCharacteristic = await this.service.getCharacteristic(
+              this.HAUSENN_READ_CHARACTERISTIC);
+        this.writeCharacteristic = await this.service.getCharacteristic(
+              this.HAUSENN_WRITE_CHARACTERISTIC);
+      } catch (err) {
+        console.log(err); 
+        tries++;
+        if (tries === 5) {
+          break;
+        }
+      }
+    }
   }
 
   private listen(): Promise<boolean> {
     return new Promise(async resolve => {
-      console.log('listening');
-      const notify = await this.readCharacteristic.startNotifications();
+      try {
+        console.log('listening');
+        const notify = await this.readCharacteristic.startNotifications();
 
-      let read = async ev => {
-        const target = (<BluetoothRemoteGATTCharacteristic>ev.target);
-        const data = new Uint8Array(target.value.buffer);
-        const rslt = await  this.parsePacket(data);
-        this.rslt = rslt;
-        console.log(`[BLE] Result:`);
-        console.log(this.rslt);
-  
-        if (this.mode == bleMode.SCAN) {
-          if ((this.rslt.n) && (this.rslt.n == this.rslt.ap)) {
-            console.log("n == ap")
-            resolve(true);
-            notify.removeEventListener('characteristicvaluechanged', read);
-            await this.readCharacteristic.stopNotifications();
-          }
-        }
-        else if (this.mode == bleMode.CONN) {
-          if (this.isIpValid(rslt)) {
-            console.log("n == true")
+        let read = async ev => {
+          var done = false;
+          try {
+            const target = (<BluetoothRemoteGATTCharacteristic>ev.target);
+            const data = new Uint8Array(target.value.buffer);
+            const rslt = await this.parsePacket(data);
             this.rslt = rslt;
-            resolve(true);
-            notify.removeEventListener('characteristicvaluechanged', read);
-            await this.readCharacteristic.stopNotifications();
+            console.log(`[BLE] Result:`);
+            console.log(this.rslt);
+      
+            if (this.mode == bleMode.SCAN) {
+              if ((this.rslt.n) && (this.rslt.n == this.rslt.ap)) {
+                console.log("n == ap");
+                done = true;
+              }
+            }
+            else if (this.mode == bleMode.CONN) {
+              if (this.isIpValid(rslt)) {
+                console.log("n == true")
+                this.rslt = rslt;
+                done = true;
+              }
+            }
+            else if (this.mode == bleMode.FIND_ME) {
+              done = true;
+            }
+          } finally {
+            if (done) {
+              notify.removeEventListener('characteristicvaluechanged', read);
+              await this.readCharacteristic.stopNotifications();
+              resolve(true);
+            }
           }
         }
-        else if (this.mode == bleMode.FIND_ME) {
-            resolve(true);
-            notify.removeEventListener('characteristicvaluechanged', read);
-            await this.readCharacteristic.stopNotifications();
-          }
+        
+        notify.addEventListener('characteristicvaluechanged', read);
+      } catch (err) {
+        console.log(err);
       }
-      
-      notify.addEventListener('characteristicvaluechanged', read);
     });
   }
 
@@ -312,9 +348,10 @@ export class BluetoothService {
 
       await this.readCharacteristic.startNotifications();
 
-      const prom = await this.listen();
+      // const prom = await this.listen();
 
-      Promise.all([prom]);
+      // Promise.all([prom]);
+      await this.listen();
 
       console.log('cccccccccc');
 

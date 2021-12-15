@@ -137,6 +137,8 @@ export class WebSocketService {
         }
       } catch (err) {
         console.log(err);
+      } finally {
+        this.m_ws.close();
       }
     });
   }

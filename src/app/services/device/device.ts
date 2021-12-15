@@ -241,17 +241,23 @@ export class DeviceService {
 
   //TODO: disconnect after getting IP
   public async scanWifiOnClick() {
-    await this.ble.connect();
-    await this.ble.getService();
-    await this.ble.getCharacteristics();
-    await this.ble.scanWifi(15);
-    await this.ble.disconnect();
+    try {
+      // await this.ble.connect();
+      // await this.ble.getService();
+      // await this.ble.getCharacteristics();
+      await this.ble.startBle();
+      await this.ble.scanWifi(15);
+      await this.ble.disconnect();
+    } catch (err) {
+      console.log(err);
+    }
   }
 
   public async findMeOnClick() {
-    await this.ble.connect();
-    await this.ble.getService();
-    await this.ble.getCharacteristics();
+    // await this.ble.connect();
+    // await this.ble.getService();
+    // await this.ble.getCharacteristics();
+    await this.ble.startBle();
     await this.ble.findMe();
     await this.ble.disconnect();
   }
@@ -270,26 +276,6 @@ export class DeviceService {
     this.auth = new AuthService();
     await this.ble.disconnect();
     this.operation = Operation.AUTH;
-  }
-
-
-  public async connectToWifi(ssid, pswd, bssid) {
-    return new Promise(async res => {
-      this.wifiSsid = ssid;
-      this.wifiPassword = pswd;
-      this.wifiBssid = bssid;
-  
-      await this.ble.connect();
-      await this.ble.getService();
-      await this.ble.getCharacteristics();
-      await this.ble.connectToWifi(this.wifiSsid, this.wifiPassword, this.wifiBssid);
-      this.ip = this.ble.getIp();
-      console.log(this.ip)
-      this.auth = new AuthService();
-      await this.ble.disconnect();
-      this.operation = Operation.AUTH;
-      res(true);
-    });
   }
 
   public async customBlePacketOnClick() {
