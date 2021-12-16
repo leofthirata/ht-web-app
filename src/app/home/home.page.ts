@@ -164,11 +164,10 @@ export class HomePage implements AfterViewInit {
     });
 
     this.keycloak.init({ onLoad: 'login-required' }).then(authenticated => {
-      console.log(authenticated);
       this.token = this.keycloak.token;
 
-      this.device.setToken(this.token);
-      this.device2.setToken(this.token);
+      this.device.setAccessToken(this.token);
+      this.device2.setAccessToken(this.token);
     });
   }
 
@@ -232,53 +231,6 @@ export class HomePage implements AfterViewInit {
     this.dev.connectToWifiOnClick(this.wifiSsid, this.wifiPassword, this.wifiBssid);
   }
 
-  // public async testBleOnClick() {
-  //   const alert = await this.alertController.create({
-  //     header: 'Wi-Fi Configuration',
-  //     inputs: [
-  //       {
-  //         name: 'ssid',
-  //         type: 'text',
-  //         value: this.wifiSsid,
-  //         placeholder: 'Enter ssid'
-  //       },
-  //       {
-  //         name: 'pswd',
-  //         type: 'text',
-  //         value: this.wifiPassword,
-  //         placeholder: 'Enter password'
-  //       },
-  //       {
-  //         name: 'bssid',
-  //         type: 'text',
-  //         value: this.wifiBssid,
-  //         placeholder: 'Enter bssid (ex.: 0263DA3A342A)'
-  //       }
-  //     ],
-  //     buttons: [
-  //       {
-  //         text: 'Cancel',
-  //         role: 'cancel',
-  //         cssClass: 'secondary',
-  //         handler: () => {
-  //           console.log('Confirm Cancel');
-  //         }
-  //       }, {
-  //         text: 'Ok',
-  //         handler: async ans => {
-  //           console.log(ans.pswd);
-  //           this.wifiSsid = ans.ssid;
-  //           this.wifiPassword = ans.pswd;
-  //           this.wifiBssid = ans.bssid;
-  //           this.testBlePacketRcv();
-  //         }
-  //       }
-  //     ]
-  //   });
-
-  //   await alert.present();
-  // }
-
   // private async testBlePacketRcv() {
   //   for(let i = 0; i < 50; i++) {
   //     await this.dev.connectToWifi(this.wifiSsid, this.wifiPassword, this.wifiBssid);
@@ -293,8 +245,8 @@ export class HomePage implements AfterViewInit {
     this.dev.customBlePacketOnClick();
   }
 
-  public isBleConnected() {
-    return this.dev.isBleConnected();
+  public isBleStarted() {
+    return this.dev.isBleStarted();
   }
 
   public isConnectedToWifi() {
@@ -302,6 +254,7 @@ export class HomePage implements AfterViewInit {
   }
 
   public async getKey() {
+    this.setProduct();
     await this.dev.getKey();
   }
 
@@ -388,6 +341,10 @@ export class HomePage implements AfterViewInit {
 
   public async findMeWsHandler() {
     this.dev.findMeWsHandler();
+  }
+
+  public setProduct() {
+    this.product = this.dev.getProduct();
   }
 
   private enableTesting() {

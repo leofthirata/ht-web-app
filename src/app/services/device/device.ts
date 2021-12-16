@@ -132,6 +132,8 @@ export class DeviceService {
 
   private customPacket: string;
 
+  private isBle = false;
+
   constructor(private alertController: AlertController, term: Terminal, term2: Terminal) {
     this.term = term;
     this.term2 = term2;
@@ -242,83 +244,100 @@ export class DeviceService {
   //TODO: disconnect after getting IP
   public async scanWifiOnClick() {
     try {
-      // await this.ble.connect();
-      // await this.ble.getService();
-      // await this.ble.getCharacteristics();
-      await this.ble.startBle();
+      this.isBle = true;
+      await this.ble.connect();
       await this.ble.scanWifi(15);
       await this.ble.disconnect();
     } catch (err) {
       console.log(err);
+    } finally {
+      this.isBle = false;
     }
   }
 
   public async findMeOnClick() {
-    // await this.ble.connect();
-    // await this.ble.getService();
-    // await this.ble.getCharacteristics();
-    await this.ble.startBle();
-    await this.ble.findMe();
-    await this.ble.disconnect();
+    try {
+      this.isBle = true;
+      await this.ble.connect();
+      await this.ble.findMe();
+      await this.ble.disconnect();
+    } catch (err) {
+      console.log(err);
+    } finally {
+      this.isBle = false;
+    }
   }
 
   public async connectToWifiOnClick(ssid, pswd, bssid) {
-    this.wifiSsid = ssid;
-    this.wifiPassword = pswd;
-    this.wifiBssid = bssid;
+    try {
+      this.isBle = true;
+      this.wifiSsid = ssid;
+      this.wifiPassword = pswd;
+      this.wifiBssid = bssid;
 
-    await this.ble.connect();
-    await this.ble.getService();
-    await this.ble.getCharacteristics();
-    await this.ble.connectToWifi(this.wifiSsid, this.wifiPassword, this.wifiBssid);
-    this.ip = this.ble.getIp();
-    console.log(this.ip)
-    this.auth = new AuthService();
-    await this.ble.disconnect();
-    this.operation = Operation.AUTH;
+      await this.ble.connect();
+      await this.ble.connectToWifi(this.wifiSsid, this.wifiPassword, this.wifiBssid);
+      this.ip = this.ble.getIp();
+      console.log(this.ip)
+      this.auth = new AuthService();
+      await this.ble.disconnect();
+      this.operation = Operation.AUTH;
+    } catch (err) {
+      console.log(err);
+    } finally {
+      this.isBle = false;
+    }
   }
 
   public async customBlePacketOnClick() {
-    const alert = await this.alertController.create({
-      header: 'CUSTOM CMD',
-      inputs: [
-        {
-          name: 'packet',
-          type: 'textarea',
-          value: `0x1234`,
-          placeholder: 'Enter hex to send through BLE'
-        }
-      ],
-      buttons: [
-        {
-          text: 'Cancel',
-          role: 'cancel',
-          cssClass: 'secondary',
-          handler: () => {
-            console.log('Confirm Cancel');
+    try {
+      this.isBle = true;
+      const alert = await this.alertController.create({
+        header: 'CUSTOM CMD',
+        inputs: [
+          {
+            name: 'packet',
+            type: 'textarea',
+            value: `0x1234`,
+            placeholder: 'Enter hex to send through BLE'
           }
-        }, {
-          text: 'Ok',
-          handler: async ans => {
-            this.customPacket = ans.packet;
+        ],
+        buttons: [
+          {
+            text: 'Cancel',
+            role: 'cancel',
+            cssClass: 'secondary',
+            handler: () => {
+              console.log('Confirm Cancel');
+            }
+          }, {
+            text: 'Ok',
+            handler: async ans => {
+              this.customPacket = ans.packet;
+            }
           }
-        }
-      ]
-    });
-  
-    await alert.present();
+        ]
+      });
+    
+      await alert.present();
 
-    await this.ble.connect();
-    await this.ble.getService();
-    await this.ble.getCharacteristics();
-    await this.ble.custom(this.customPacket);
-    await this.ble.disconnect();
-
-    this.customPacket = '';
+      await this.ble.connect();
+      await this.ble.custom(this.customPacket);
+      await this.ble.disconnect();
+    } catch (err) {
+      console.log(err);
+    } finally {
+      this.customPacket = '';
+      this.isBle = false;
+    }
   }
 
   public isBleConnected() {
     return this.ble.isConnected();
+  }
+
+  public isBleStarted() {
+    return this.isBle;
   }
 
   public isConnectedToWifi() {
@@ -326,100 +345,115 @@ export class DeviceService {
   }
 
   public async getKey() {
-    this.myPubKey = this.auth.getPubKey();
-    this.myPubKeyPem = forge.pki.publicKeyToPem(this.auth.getPubKey());
-    this.myPrivKeyPem = forge.pki.privateKeyToPem(this.auth.getPrivKey());
-    this.myPrivKey = this.auth.getPrivKey();
+    try {
+      this.myPubKey = this.auth.getPubKey();
+      this.myPubKeyPem = forge.pki.publicKeyToPem(this.auth.getPubKey());
+      this.myPrivKeyPem = forge.pki.privateKeyToPem(this.auth.getPrivKey());
+      this.myPrivKey = this.auth.getPrivKey();
 
-    const request = {
-      "key": this.myPubKeyPem
-    };
+      const request = {
+        "key": this.myPubKeyPem
+      };
 
-    const resp = await this.socket.localRequest(`ws://${this.ip}/get_key`, request, this.myPrivKey);
-    console.log(resp);
+      const resp = await this.socket.localRequest(`ws://${this.ip}/get_key`, request, this.myPrivKey);
+      console.log(resp);
 
-    this.devicePublicKey = importPubKeyRSA(JSON.parse(resp).key);
+      this.devicePublicKey = importPubKeyRSA(JSON.parse(resp).key);
 
-    printPubKeyRSA(this.devicePublicKey);
+      printPubKeyRSA(this.devicePublicKey);
 
-    this.socket.setState(DeviceState.SEND_CMD);
+      this.socket.setState(DeviceState.SEND_CMD);
 
-    if (this.devicePublicKey !== undefined) {
-      this.gotKey = true;
-    } else {
-      this.gotKey = false;
+      if (this.devicePublicKey !== undefined) {
+        this.gotKey = true;
+      } else {
+        this.gotKey = false;
+      } 
+    } catch (err) {
+      console.log(err);
     }
   }
 
   public async setSecret() {
-    this.secret = uint8ArrayToHexString(window.crypto.getRandomValues(new Uint8Array(16)));
-    let secretRequest = { 
-      'secret': this.secret,
-      'key': this.myPubKeyPem
-    };
-    
-    this.socket.setState(DeviceState.SEND_CMD);
+    try {
+      this.secret = uint8ArrayToHexString(window.crypto.getRandomValues(new Uint8Array(16)));
+      let secretRequest = { 
+        'secret': this.secret,
+        'key': this.myPubKeyPem
+      };
+      
+      this.socket.setState(DeviceState.SEND_CMD);
 
-    const resp = await this.socket.localRequest(`ws://${this.ip}/set_secret`, secretRequest, this.myPrivKey, this.devicePublicKey);
-    const msg = JSON.parse(resp).mg;
+      const resp = await this.socket.localRequest(`ws://${this.ip}/set_secret`, secretRequest, this.myPrivKey, this.devicePublicKey);
+      const msg = JSON.parse(resp).mg;
 
-    if (msg === 'success') {
-      this.secretSet = true;
-     } else {
-      this.secretSet = false;
-     }
+      if (msg === 'success') {
+        this.secretSet = true;
+      } else {
+        this.secretSet = false;
+      }
+    } catch (err) {
+      console.log(err);
+    }
   }
 
   public async registerDevice(place: string, addr: string, env: string, app: string) {
-    // const refreshToken = "eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICIwZDU4YmIzYy1hNzZjLTQwYzEtYjA4ZS01MjJkOGQwMmE1ZjUifQ.eyJqdGkiOiJiZmI4ZTA1MC0zMGE0LTQyMmItOTc5Ni0xMzEzMzQ3YjRjMTUiLCJleHAiOjAsIm5iZiI6MCwiaWF0IjoxNjI1NzQ4MDkwLCJpc3MiOiJodHRwczovL3N0YWdlLnBhZG90ZWMuY29tLmJyL2F1dGgvcmVhbG1zL2hhdXNlbm4iLCJhdWQiOiJodHRwczovL3N0YWdlLnBhZG90ZWMuY29tLmJyL2F1dGgvcmVhbG1zL2hhdXNlbm4iLCJzdWIiOiJkZTFjMmIyMy1hNGM0LTRiYzQtYjQ2Ni0zNTM4OTVmNTgxOTAiLCJ0eXAiOiJPZmZsaW5lIiwiYXpwIjoiaGF1c2Vubi1jbGllbnQtYXBwIiwiYXV0aF90aW1lIjowLCJzZXNzaW9uX3N0YXRlIjoiMTM5MzAyZjgtZDBhZC00ZjFjLWJlOWQtOTRlYjdkMGNhNTJmIiwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbIm9mZmxpbmVfYWNjZXNzIiwidW1hX2F1dGhvcml6YXRpb24iXX0sInJlc291cmNlX2FjY2VzcyI6eyJhY2NvdW50Ijp7InJvbGVzIjpbIm1hbmFnZS1hY2NvdW50IiwibWFuYWdlLWFjY291bnQtbGlua3MiLCJ2aWV3LXByb2ZpbGUiXX19LCJzY29wZSI6Im9wZW5pZCBvZmZsaW5lX2FjY2VzcyBlbWFpbCBwcm9maWxlIn0.TqvywFzLXqEYZHCi1w4EAwFNQPfGPyfA14IJ5Bu_bac";
-    this.token = await getAccessToken(this.refreshToken);
-    const user = await sync(this.token);
-    const placeId = await createPlace(this.token, place, addr);
-    const envId = await createEnvironment(this.token, placeId, env);
-    const dev = await createDevice(this.secret, this.token, envId, app, this.ip, '12:23:34:45:56:67', '12:23:34:45:56:69', this.wifiSsid, 'one', forge.pki.publicKeyToPem(this.devicePublicKey));
-    this.userTicket = user[1];
-    this.userUuid = user[0];
-    this.deviceTicket = dev[0];
-    this.deviceUuid = dev[1];
-    this.deviceToken = dev[2];
+    try {
+      // this.token = await getAccessToken(this.token);
+      const user = await sync(this.token);
+      const placeId = await createPlace(this.token, place, addr);
+      const envId = await createEnvironment(this.token, placeId, env);
+      const dev = await createDevice(this.secret, this.token, envId, app, this.ip, '12:23:34:45:56:67', '12:23:34:45:56:69', this.wifiSsid, 'one', forge.pki.publicKeyToPem(this.devicePublicKey));
+      this.userTicket = user[1];
+      this.userUuid = user[0];
+      this.deviceTicket = dev[0];
+      this.deviceUuid = dev[1];
+      this.deviceToken = dev[2];
 
-    console.log(this.deviceTicket);
-    console.log(this.deviceUuid);
-    console.log(this.deviceToken);
+      console.log(this.deviceTicket);
+      console.log(this.deviceUuid);
+      console.log(this.deviceToken);
 
-    if (dev !== undefined) {
-      this.deviceRegistered = true;
-    } else {
-      this.deviceRegistered = false;
+      if (dev !== undefined) {
+        this.deviceRegistered = true;
+      } else {
+        this.deviceRegistered = false;
+      }
+
+      this.remoteRequest = {
+        'payload': {
+          'macToken': this.deviceToken,
+        },
+        'sender': this.userUuid,
+        'recipient': this.deviceUuid,
+      };
+    } catch (err) {
+      console.log(err);
     }
-
-    this.remoteRequest = {
-      'payload': {
-        'macToken': this.deviceToken,
-      },
-      'sender': this.userUuid,
-      'recipient': this.deviceUuid,
-    };
   }
 
   public async setTicket() {
-    let ticketRequest = { 
-      'ticket': this.deviceTicket,
-      'uuid': this.deviceUuid,
-      'key': this.myPubKeyPem
-    };
-    
-    const resp = await this.socket.localRequest(`ws://${this.ip}/set_ticket`, ticketRequest, this.myPrivKey, this.devicePublicKey);
-    const msg = JSON.parse(resp).mg;
+    try {
+      let ticketRequest = { 
+        'ticket': this.deviceTicket,
+        'uuid': this.deviceUuid,
+        'key': this.myPubKeyPem
+      };
+      
+      const resp = await this.socket.localRequest(`ws://${this.ip}/set_ticket`, ticketRequest, this.myPrivKey, this.devicePublicKey);
+      const msg = JSON.parse(resp).mg;
 
-    // this.startTesting();
-    if (msg === 'success') {
-      this.ticketSet = true;
-      this.operation = Operation.MAN_TEST;
-      this.enableTesting();
-     } else {
-      this.ticketSet = false;
-     }
+      // this.startTesting();
+      if (msg === 'success') {
+        this.ticketSet = true;
+        this.operation = Operation.MAN_TEST;
+        this.enableTesting();
+      } else {
+        this.ticketSet = false;
+      }
+    } catch (err) {
+      console.log(err);
+    }
   }
 
   public async findMeWsHandler() {
@@ -531,11 +565,19 @@ export class DeviceService {
     }
   }
 
+  // public runSceneOnClick() {
+  //   if (this.local) {
+  //     this.manualLocalTest.RUN_SCENE();
+  //   } else {
+  //     this.manualRemoteTest.RUN_SCENE();
+  //   }
+  // }
+
   public runSceneOnClick() {
     if (this.local) {
-      this.manualLocalTest.RUN_SCENE();
+      this.luminaLocalTest.RUN_SCENE();
     } else {
-      this.manualRemoteTest.RUN_SCENE();
+      this.luminaLocalTest.RUN_SCENE();
     }
   }
 
@@ -820,8 +862,12 @@ export class DeviceService {
     return this.userTicket;
   }
 
-  public setToken(token) {
+  public setAccessToken(token) {
     this.token = token;
+  }
+
+  public getProduct() {
+    return this.ble.getProduct();
   }
 
   private start() {

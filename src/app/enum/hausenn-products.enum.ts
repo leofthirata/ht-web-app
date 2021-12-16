@@ -1,5 +1,5 @@
 export enum HausennProducts {
-  ONE = "One",
-  LUMINA = "Lumina",
-  TOMADA_INTELIGENTE = "Smart Plug"
+  ONE = "ONE",
+  LUMINA = "LUMINA",
+  TOMADA_INTELIGENTE = "SMART PLUG"
 }

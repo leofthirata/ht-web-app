@@ -1,5 +1,7 @@
 import { Packet } from "./packet";
 import { Observable, Subject } from 'rxjs';
+import { timeout_ms } from "src/app/utils/utils";
+import { HausennProducts } from "src/app/enum/hausenn-products.enum";
 
 export enum bleMode {
   SCAN = 'scan',
@@ -20,6 +22,8 @@ export class BluetoothService {
   private readonly HAUSENN_READ_CHARACTERISTIC = '3b274ac1-e910-4188-95aa-452018d93750';
   private readonly HAUSENN_WRITE_CHARACTERISTIC ='bf6d9667-bd7f-4e33-a608-21520546c82d';
   private readonly HAUSENN_SERVICE_UUID = '000075a5-0000-1000-8000-00805f9b34fb';
+  
+  private product = 'ONE';
 
   private readonly BUFFER_SIZE = 1024;
   private buffer = new Uint8Array(this.BUFFER_SIZE);
@@ -36,51 +40,34 @@ export class BluetoothService {
   }
 
   public find(): Promise<boolean> {
-    return new Promise(async resolve => {
+    return new Promise(async (resolve, reject) => {
       this.device = await navigator.bluetooth.requestDevice({
         filters: [ 
           {services: [0x75A5]}
         ] 
       });
-      
+
+      this.product = this.device.name.substring(8, this.device.name.length-6);
+
       if (this.device) {
         console.log("[BLE] Found device");
         resolve(true);
       } else {
         console.log("find false");
-        resolve(false);
+        reject(false);
       }
     });
   }
 
-  public async connect() {
-    this.service = undefined;
-    this.readCharacteristic = undefined;
-    this.writeCharacteristic = undefined;
-    let tries = 0;
-    while (!this.device.gatt.connected) {
-      try {
-        await this.device.gatt.connect();
-      } catch (err) {
-        console.log(err);
-
-        if (tries == 5) {
-          break;
-        }
-      } finally {
-        console.log("[BLE] Connect: " + this.device.gatt.connected);
-      }
-    }
+  public getProduct() {
+    return this.product;
   }
 
-  public disconnect() {
-    try {
-      if (this.device.gatt.connected) {
-        this.device.gatt.disconnect();
-        console.log("[BLE] Disconnected by user");
-      }
-    } catch (err) {
-      console.log(err);
+  public async disconnect() {
+    if (this.device.gatt.connected) {
+      this.device.gatt.disconnect();
+      console.log("[BLE] Disconnected by user");
+      await timeout_ms(1000);
     }
   }
 
@@ -88,61 +75,25 @@ export class BluetoothService {
     return this.device.gatt.connected;
   }
 
-  public async getService() {
-    let tries = 0;
-    while (this.service === undefined) {
-      try {
-        this.service = await this.device.gatt.getPrimaryService(this.HAUSENN_SERVICE_UUID);
-      } catch (err) {
-        console.log(err);
-
-        if (tries == 5) {
-          break;
-        }
-        } finally {
-          console.log(this.device.gatt.connected);
-          console.log("[BLE] Service: " + this.service);
-      }
-    }
-  }
-
-  public async getCharacteristics() {
-    let tries = 0;
-
-    while (this.readCharacteristic === undefined || this.writeCharacteristic === undefined) {
-      try {
-        this.readCharacteristic = await this.service.getCharacteristic(
-                this.HAUSENN_READ_CHARACTERISTIC);
-        this.writeCharacteristic = await this.service.getCharacteristic(
-                this.HAUSENN_WRITE_CHARACTERISTIC);
-      } catch (err) {
-        console.log(err);
-
-        if (tries == 5) {
-          break;
-        }
-        } finally {
-        console.log("[BLE] Characteristic: ");
-        console.log(this.readCharacteristic);
-        console.log(this.writeCharacteristic);
-      }
-    }
-  }
-
-  public async startBle() {
+  public async connect() {
     let tries = 0;
     this.service = undefined;
     this.readCharacteristic = undefined;
     this.writeCharacteristic = undefined;
 
+    this.disconnect();
+
     while (this.readCharacteristic === undefined || this.writeCharacteristic === undefined) {
       try {
         await this.device.gatt.connect();
+        console.log('[BLE] Connected');
         this.service = await this.device.gatt.getPrimaryService(this.HAUSENN_SERVICE_UUID);
+        console.log('[BLE] Got service');
         this.readCharacteristic = await this.service.getCharacteristic(
               this.HAUSENN_READ_CHARACTERISTIC);
         this.writeCharacteristic = await this.service.getCharacteristic(
               this.HAUSENN_WRITE_CHARACTERISTIC);
+        console.log('[BLE] Got characteristics');
       } catch (err) {
         console.log(err); 
         tries++;
@@ -151,10 +102,14 @@ export class BluetoothService {
         }
       }
     }
+
+    if (this.readCharacteristic === undefined) {
+      throw new Error('[BLE] Failed to estabilish connection');
+    }
   }
 
   private listen(): Promise<boolean> {
-    return new Promise(async resolve => {
+    return new Promise(async (resolve) => {
       try {
         console.log('listening');
         const notify = await this.readCharacteristic.startNotifications();
@@ -196,7 +151,7 @@ export class BluetoothService {
         
         notify.addEventListener('characteristicvaluechanged', read);
       } catch (err) {
-        console.log(err);
+        throw err;
       }
     });
   }
@@ -246,16 +201,18 @@ export class BluetoothService {
     return this.rcvParsedSubject$.asObservable();
   }
 
-  private write(buffer: ArrayBuffer, length: number): Promise<void> {
-    return new Promise(async resolve => {
+  private async write(buffer: ArrayBuffer, length: number) {
+    try {
       for (let i = 0; i < length/16; i++) {
-        await this.writeCharacteristic.writeValue(buffer.slice(i*16, (i+1)*16));
+      await this.writeCharacteristic.writeValue(buffer.slice(i*16, (i+1)*16));
       }
-    });
+    } catch (err) {
+      console.log(err);
+    }
   }
 
-  public scanWifi(ap: number): Promise<boolean> {
-    return new Promise(async resolve => {
+  public async scanWifi(ap: number) {
+    try {
       this.setMode(bleMode.SCAN);
 
       const request = new Packet(bleMode.SCAN);
@@ -283,15 +240,13 @@ export class BluetoothService {
       const prom = await this.listen();
 
       Promise.all([prom]);
-
-      console.log('bbbbbbbbbb');
-
-      resolve(true);
-    });
+    } catch (err) {
+      throw err;
+    }
   }
 
-  public connectToWifi(ssid: string, pswd: string, bssid: string): Promise<boolean> {
-    return new Promise(async resolve => {
+  public async connectToWifi(ssid: string, pswd: string, bssid: string) {
+    try {
       this.setMode(bleMode.CONN);
 
       const request = new Packet(bleMode.CONN);
@@ -321,15 +276,13 @@ export class BluetoothService {
       const prom = await this.listen();
 
       Promise.all([prom]);
-
-      console.log('aaaaaaaaaaa');
-
-      resolve(true);
-    });
+    } catch (err) {
+      throw err;
+    }
   }
 
-  public findMe(): Promise<boolean> {
-    return new Promise(async resolve => {
+  public async findMe() {
+    try {
       this.setMode(bleMode.FIND_ME);
 
       const request = new Packet(bleMode.FIND_ME);
@@ -348,19 +301,16 @@ export class BluetoothService {
 
       await this.readCharacteristic.startNotifications();
 
-      // const prom = await this.listen();
+      const prom = await this.listen();
 
-      // Promise.all([prom]);
-      await this.listen();
-
-      console.log('cccccccccc');
-
-      resolve(true);
-    });
+      Promise.all([prom]);
+    } catch (err) {
+      throw err;
+    }
   }
 
-  public custom(data): Promise<boolean> {
-    return new Promise(async resolve => {
+  public async custom(data) {
+    try {
       this.setMode(bleMode.CUSTOM);
 
       const request = new Packet(bleMode.CUSTOM);
@@ -379,10 +329,12 @@ export class BluetoothService {
 
       await this.readCharacteristic.startNotifications();
 
-      await this.listen();
+      const prom = await this.listen();
 
-      resolve(true);
-    });
+      Promise.all([prom]);
+    } catch (err) {
+      throw err;
+    }
   }
 
   public getIp() {

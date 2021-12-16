@@ -48,12 +48,6 @@
         <ion-select-option value="Production">Production</ion-select-option>
       </ion-select>
 
-      <ion-select slot="end" class="select" [(ngModel)]="product">
-        <ion-select-option value="ONE">ONE</ion-select-option>
-        <ion-select-option value="LUMINA">LUMINA</ion-select-option>
-        <ion-select-option value="tbd">tbd</ion-select-option>
-      </ion-select>
-
       <ion-buttons slot="end" class="button-end">
         <ion-button (click)="chooseSourceOnClick()" expand="full" color="dark">
           SOURCE
@@ -220,19 +214,19 @@
     </h4>
     <div class="box-connect">
       <div [hidden]="isConnectedToWifi()">
-        <ion-button (click)="scanWifiOnClick()" expand="full" color="dark" [disabled]="!isDeviceSelected()">
+        <ion-button (click)="scanWifiOnClick()" expand="full" color="dark" [disabled]="!isDeviceSelected() || isBleStarted()">
           SCAN WIFI
         </ion-button>
         <br/>
-        <ion-button (click)="findMeOnClick()" expand="full" color="dark" [disabled]="!isDeviceSelected()">
+        <ion-button (click)="findMeOnClick()" expand="full" color="dark" [disabled]="!isDeviceSelected() || isBleStarted()">
           FIND ME
         </ion-button>
         <br/>
-        <ion-button (click)="wifiConfigAndConnectOnClick()" expand="full" color="dark" [disabled]="!isDeviceSelected()">
+        <ion-button (click)="wifiConfigAndConnectOnClick()" expand="full" color="dark" [disabled]="!isDeviceSelected() || isBleStarted()">
           CONNECT TO WIFI
         </ion-button>
         <br/>
-        <ion-button (click)="customBlePacketOnClick()" expand="full" color="dark" [disabled]="!isDeviceSelected()">
+        <ion-button (click)="customBlePacketOnClick()" expand="full" color="dark" [disabled]="!isDeviceSelected() || isBleStarted()">
           CUSTOM
         </ion-button>
         <!-- <br/> -->
