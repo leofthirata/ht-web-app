@@ -140,12 +140,14 @@ export class BluetoothService {
             else if (this.mode == bleMode.FIND_ME) {
               done = true;
             }
-          } finally {
             if (done) {
-              notify.removeEventListener('characteristicvaluechanged', read);
               await this.readCharacteristic.stopNotifications();
+              notify.removeEventListener('characteristicvaluechanged', read);
               resolve(true);
             }
+          } catch (err) {
+            console.log(err);
+            resolve(false);
           }
         }
         

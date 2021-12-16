@@ -1,6 +1,6 @@
 import { encryptRSA, decryptRSA } from "../../utils/encrypt";
 import { Observable, Subject } from 'rxjs';
-import { uint8ArrayToHexString } from '../../utils/utils';
+import { timeout_ms, uint8ArrayToHexString } from '../../utils/utils';
 import { Cast } from '../../utils/cast';
 
 export enum DeviceState {
@@ -34,31 +34,34 @@ export class WebSocketService {
       this.m_uri = uri;
       this.m_privKey = privKey;
 
+      var timer;
+
       return new Promise(resolve => {
-        while(this.isOpen) {
-          this.m_ws.close();
-        }
+        // while(this.isOpen) {
+        //   this.m_ws.close();
+        // }
 
         this.m_ws = new WebSocket(uri);
 
         this.m_ws.onopen = async event => {
-          console.log(event);
+          // console.log(event);
           this.isOpen = true;
           resolve(true);
 
-          await setTimeout(() => {
+          timer = await window.setTimeout(() => {
             this.m_ws.close();
           }, 10000);
         };
 
         this.m_ws.onerror = error => {
-          console.log(error);
+          // console.log(error);
           resolve(false);
         }
 
         this.m_ws.onclose = event => {
-          console.log(event);
+          // console.log(event);
           this.isOpen = false;
+          window.clearTimeout(timer);
         }
       });
   }
@@ -84,6 +87,9 @@ export class WebSocketService {
         this.m_devicePublicKey = devicePublicKey;
         this.m_privKey = privKey;
 
+        while(this.m_ws.readyState !== 1) {
+          await timeout_ms(100);
+        }
         this.send(request);
 
         const socket = uint8ArrayToHexString(window.crypto.getRandomValues(new Uint8Array(8)));
