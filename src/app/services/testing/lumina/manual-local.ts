@@ -63,7 +63,7 @@ export class LuminaLocalTestingService {
 
       this.check(pResp.cm !== this.request.command.cm, 'Invalid "cm": ' + pResp.cm);
       this.check(pResp.ch !== this.request.command.ch, 'Invalid "ch": ' + pResp.ch);
-      this.check(pResp.mg !== 'ok', 'Invalid "mg": ' + pResp.mg);
+      this.check(pResp.st !== 'ok', 'Invalid "st": ' + pResp.st);
     } catch (err) {
       console.log(err);
     }
@@ -80,7 +80,7 @@ export class LuminaLocalTestingService {
 
       this.check(pResp.cm !== this.request.command.cm, 'Invalid "cm": ' + pResp.cm);
       this.check(pResp.ch !== this.request.command.ch, 'Invalid "ch": ' + pResp.ch);
-      this.check(pResp.mg !== 'ok', 'Invalid "mg": ' + pResp.mg);
+      this.check(pResp.st !== 'ok', 'Invalid "st": ' + pResp.st);
     } catch (err) {
       console.log(err);
     }
