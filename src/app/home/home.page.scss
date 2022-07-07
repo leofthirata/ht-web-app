@@ -54,8 +54,7 @@
 // }
 
 .term {
-  flex: 1;
-  border: 1px solid white;
+  overflow: hidden;
 }
 
 .wrapper {
@@ -121,3 +120,11 @@ h2 {
 .state-pass {
   color: var(--ion-color-success);
 }
+
+// ion-grid {
+//   height: 100%;
+
+//   ion-row {
+//     height: 33.33%;
+//   }
+// }

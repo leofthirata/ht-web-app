@@ -157,20 +157,20 @@ export class HomePage implements AfterViewInit {
     this.term.open(this.terminal.nativeElement);
     fitAddon.fit();
 
-    const fitAddon2 = new FitAddon();
-    this.term2.loadAddon(fitAddon2);
-    this.term2.open(this.terminal2.nativeElement);
-    fitAddon2.fit();
+    // const fitAddon2 = new FitAddon();
+    // this.term2.loadAddon(fitAddon2);
+    // this.term2.open(this.terminal2.nativeElement);
+    // fitAddon2.fit();
 
     const fitAddon3 = new FitAddon();
     this.term3.loadAddon(fitAddon3);
     this.term3.open(this.terminal3.nativeElement);
     fitAddon3.fit();
 
-    const fitAddon4 = new FitAddon();
-    this.term4.loadAddon(fitAddon4);
-    this.term4.open(this.terminal4.nativeElement);
-    fitAddon4.fit();
+    // const fitAddon4 = new FitAddon();
+    // this.term4.loadAddon(fitAddon4);
+    // this.term4.open(this.terminal4.nativeElement);
+    // fitAddon4.fit();
   }
 
   public addNewDeviceOnClick() {
