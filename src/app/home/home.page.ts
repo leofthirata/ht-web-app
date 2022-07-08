@@ -44,8 +44,8 @@ export class HomePage implements AfterViewInit {
   public deviceSelected2 = false;
   public backend = "Production";
   public product = "ONE";
-  public wifiSsid = "PADOTEC";
-  public wifiPassword = "P@d0t3c2021";
+  public wifiSsid = "leo";
+  public wifiPassword = "123456789";
   public wifiBssid = 'EE63DA3A342A';
 
   // public isTesting = false;

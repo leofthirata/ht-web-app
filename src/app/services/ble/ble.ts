@@ -2,6 +2,7 @@ import { Packet } from "./packet";
 import { Observable, Subject } from 'rxjs';
 import { timeout_ms } from "src/app/utils/utils";
 import { HausennProducts } from "src/app/enum/hausenn-products.enum";
+import { doesNotReject } from "assert";
 
 export enum bleMode {
   SCAN = 'scan',
@@ -81,7 +82,9 @@ export class BluetoothService {
     this.readCharacteristic = undefined;
     this.writeCharacteristic = undefined;
 
-    this.disconnect();
+    if (this.device.gatt.connected) {
+      this.disconnect();
+    }
 
     while (this.readCharacteristic === undefined || this.writeCharacteristic === undefined) {
       try {
@@ -115,7 +118,7 @@ export class BluetoothService {
         const notify = await this.readCharacteristic.startNotifications();
 
         let read = async ev => {
-          var done = false;
+          let done = false;
           try {
             const target = (<BluetoothRemoteGATTCharacteristic>ev.target);
             const data = new Uint8Array(target.value.buffer);
@@ -138,9 +141,11 @@ export class BluetoothService {
               }
             }
             else if (this.mode == bleMode.FIND_ME) {
+              console.log('AAAAAAAAAAAAAAAAAAAAAAAAAa');
               done = true;
             }
             if (done) {
+              console.log('AAAAAAAAAAAAAAAAAAAAAAAAAa');
               await this.readCharacteristic.stopNotifications();
               notify.removeEventListener('characteristicvaluechanged', read);
               resolve(true);
@@ -149,8 +154,8 @@ export class BluetoothService {
             console.log(err);
             resolve(false);
           }
-        }
-        
+        };
+
         notify.addEventListener('characteristicvaluechanged', read);
       } catch (err) {
         throw err;
@@ -162,16 +167,16 @@ export class BluetoothService {
     return new Promise(async resolve => {
       this.buffer.set(data, this.index);
       this.index += data.length;
-      
-      if (this.buffer[0] != 0x75 || this.buffer[1] != 0xa5) {
+
+      if (this.buffer[0] !== 0x75 || this.buffer[1] !== 0xa5) {
         this.index = 0;
         console.warn('Dropped packet: [' + data.toString() + ']');
       }
 
       // End of packet, assemble  and report.
       if (
-        this.buffer[this.index - 2] == 0xa5 &&
-        this.buffer[this.index - 1] == 0xd5
+        this.buffer[this.index - 2] === 0xa5 &&
+        this.buffer[this.index - 1] === 0xd5
       ) {
         const buf = this.buffer.subarray(0, this.index);
         this.index = 0;
@@ -203,17 +208,33 @@ export class BluetoothService {
     return this.rcvParsedSubject$.asObservable();
   }
 
-  private async write(buffer: ArrayBuffer, length: number) {
-    try {
-      for (let i = 0; i < length/16; i++) {
-      await this.writeCharacteristic.writeValue(buffer.slice(i*16, (i+1)*16));
+  private async write(buffer: ArrayBuffer, length: number): Promise<boolean> {
+    return new Promise(async resolve => {
+      let wrote = false;
+
+      try {
+        // if (this.isConnected() === false) {
+        //   this.connect();
+        // }
+
+        for (let i = 0; i < length/16; i++) {
+          await this.writeCharacteristic.writeValue(buffer.slice(i*16, (i+1)*16));
+        }
+        console.log('wrote');
+
+        wrote = true;
+
+      } catch (err) {
+        console.log(err);
+      } finally {
+        resolve(wrote);
       }
-    } catch (err) {
-      console.log(err);
-    }
+    });
   }
 
   public async scanWifi(ap: number) {
+    var wrote = false;
+
     try {
       this.setMode(bleMode.SCAN);
 
@@ -233,11 +254,9 @@ export class BluetoothService {
 
       this.sentPacketSubject$.next(new Uint8Array(packet));
 
-      this.write(packet, packet.byteLength);
-
-      await this.readCharacteristic.readValue();
-
-      await this.readCharacteristic.startNotifications();
+      // while (wrote === false) {
+        wrote = await this.write(packet, packet.byteLength);
+      // }
 
       const prom = await this.listen();
 
@@ -248,13 +267,14 @@ export class BluetoothService {
   }
 
   public async connectToWifi(ssid: string, pswd: string, bssid: string) {
+    var wrote = false;
+
     try {
       this.setMode(bleMode.CONN);
 
       const request = new Packet(bleMode.CONN);
 
       console.log(request);
-      console.log()
 
       const data = {
         "ap": null,
@@ -269,11 +289,9 @@ export class BluetoothService {
 
       this.sentPacketSubject$.next(new Uint8Array(packet));
 
-       this.write(packet, packet.byteLength);
-
-      await this.readCharacteristic.readValue();
-
-      await this.readCharacteristic.startNotifications();
+      // while (wrote === false) {
+        wrote = await this.write(packet, packet.byteLength);
+      // }
 
       const prom = await this.listen();
 
@@ -284,6 +302,8 @@ export class BluetoothService {
   }
 
   public async findMe() {
+    var wrote = false;
+
     try {
       this.setMode(bleMode.FIND_ME);
 
@@ -297,11 +317,9 @@ export class BluetoothService {
 
       this.sentPacketSubject$.next(new Uint8Array(packet));
 
-       this.write(packet, packet.byteLength);
-
-      await this.readCharacteristic.readValue();
-
-      await this.readCharacteristic.startNotifications();
+      // while (wrote === false) {
+        wrote = await this.write(packet, packet.byteLength);
+      // }
 
       const prom = await this.listen();
 
@@ -312,6 +330,8 @@ export class BluetoothService {
   }
 
   public async custom(data) {
+    var wrote = false;
+
     try {
       this.setMode(bleMode.CUSTOM);
 
@@ -325,11 +345,9 @@ export class BluetoothService {
 
       this.sentPacketSubject$.next(new Uint8Array(packet));
 
-       this.write(packet, packet.byteLength);
-
-      await this.readCharacteristic.readValue();
-
-      await this.readCharacteristic.startNotifications();
+      // while (wrote === false) {
+        wrote = await this.write(packet, packet.byteLength);
+      // }
 
       const prom = await this.listen();
 
